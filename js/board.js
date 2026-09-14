@@ -273,4 +273,156 @@ document.addEventListener('DOMContentLoaded', () => {
       let sourceTimeKST = fetchTimeKST;
       if (json.time_last_update_utc) {
         const utcDate = new Date(json.time_last_update_utc);
-        sourceTimeKST
+        sourceTimeKST = utcDate.toLocaleString('ko-KR', {
+          timeZone: 'Asia/Seoul',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        }) + ' KST';
+      }
+
+      state.freshness = 'fresh';
+      state.errorCode = 'none';
+      state.errorDetails = null;
+      state.lastKnownGood = {
+        value: roundedVal,
+        unit: METRIC_UNIT,
+        sourceUrl: PUBLIC_API_URL,
+        sourceTimeKST: sourceTimeKST,
+        fetchTimeKST: fetchTimeKST
+      };
+      saveLKG();
+
+      upsertDailyRecord(todayKey, roundedVal, sourceTimeKST, fetchTimeKST);
+      updateDisplayFromLKG();
+    } catch (err) {
+      handleFailureState('offline', {
+        title: '실시간 네트워크 조회 실패',
+        message: `공개 환율 원천 API 통신 중 문제가 발생했습니다 (${err.message}).`,
+        nextAction: '인터넷 연결 상태를 점검하거나 잠시 후 [다시 시도]를 누르세요.'
+      });
+    }
+  };
+
+  const upsertDailyRecord = (dateKey, value, sourceTimeKST, fetchTimeKST) => {
+    const existingIdx = dailyRecords.findIndex(r => r.dateKey === dateKey);
+
+    let changeVal = 0;
+    let changeRate = 0;
+    const sorted = [...dailyRecords].filter(r => r.dateKey !== dateKey).sort((a, b) => a.dateKey.localeCompare(b.dateKey));
+    if (sorted.length > 0) {
+      const prev = sorted[sorted.length - 1];
+      changeVal = Math.round((value - prev.value) * 100) / 100;
+      changeRate = Math.round(((changeVal / prev.value) * 100) * 100) / 100;
+    }
+
+    const recordObj = {
+      dateKey,
+      sourceUrl: PUBLIC_API_URL,
+      sourceTimeKST,
+      fetchTimeKST,
+      value,
+      unit: METRIC_UNIT,
+      changeVal,
+      changeRate
+    };
+
+    if (existingIdx >= 0) {
+      dailyRecords[existingIdx] = recordObj;
+    } else {
+      dailyRecords.push(recordObj);
+    }
+
+    saveRecords();
+    renderTable();
+  };
+
+  const handleFailureState = (errorCode, details) => {
+    state.freshness = 'stale';
+    state.errorCode = errorCode;
+    state.errorDetails = details;
+    updateDisplayFromLKG();
+  };
+
+  if (btnSimTimeout) {
+    btnSimTimeout.addEventListener('click', () => {
+      handleFailureState('timeout', {
+        title: '외부 원천 응답 지연 (TIMEOUT 5000ms)',
+        message: '환율 제공 서버의 응답 시간이 허용 임계치(5초)를 초과하여 연결이 취소되었습니다.',
+        nextAction: '원천 서버 대기열 혼잡일 수 있습니다. 마지막 정상값을 유지한 채 잠시 후 [다시 시도]하세요.'
+      });
+    });
+  }
+
+  if (btnSimAuth) {
+    btnSimAuth.addEventListener('click', () => {
+      handleFailureState('auth_error', {
+        title: '외부 원천 인증/인가 거절 (HTTP 403 Forbidden)',
+        message: '원천 API 서버로부터 클라이언트 접근 거절(403) 응답을 수신했습니다.',
+        nextAction: 'API 엔드포인트 도메인 정책 및 방화벽 인가 설정을 점검하세요.'
+      });
+    });
+  }
+
+  if (btnSimRate) {
+    btnSimRate.addEventListener('click', () => {
+      handleFailureState('rate_limit', {
+        title: '호출 한도 초과 (HTTP 429 Too Many Requests)',
+        message: '단시간 내 외부 환율 API 허용 쿼터가 초과되었습니다 (Rate Limit).',
+        nextAction: '호출 주기를 준수해야 합니다. 1분간 쿼리를 일시 중단한 뒤 [다시 시도]를 누르세요.'
+      });
+    });
+  }
+
+  if (btnSimOffline) {
+    btnSimOffline.addEventListener('click', () => {
+      handleFailureState('offline', {
+        title: '클라이언트 오프라인 상태 (NETWORK_DISCONNECTED)',
+        message: '로컬 네트워크 연결이 끊어져 외부 API에 도달할 수 없습니다.',
+        nextAction: 'Wi-Fi 및 인터넷 연결을 확인하고 다시 연결되었을 때 [다시 시도]하세요.'
+      });
+    });
+  }
+
+  if (btnSimSchema) {
+    btnSimSchema.addEventListener('click', () => {
+      handleFailureState('schema_mismatch', {
+        title: '응답 데이터 형식 변조 (SCHEMA_MISMATCH)',
+        message: '응답 JSON 내 필수 통화 필드(rates.KRW)가 누락되었거나 타입이 손상되었습니다.',
+        nextAction: '원천 API 명세 변경 여부를 확인하고 어댑터 파서를 점검하세요.'
+      });
+    });
+  }
+
+  if (btnRecoverD2) {
+    btnRecoverD2.addEventListener('click', () => {
+      const d2Time = '2026-09-14 15:30:00 KST';
+      const d2Val = 1338.20;
+
+      state.freshness = 'fresh';
+      state.errorCode = 'none';
+      state.errorDetails = null;
+
+      state.lastKnownGood = {
+        value: d2Val,
+        unit: METRIC_UNIT,
+        sourceUrl: PUBLIC_API_URL,
+        sourceTimeKST: '2026-09-14 09:10:00 KST',
+        fetchTimeKST: d2Time
+      };
+      saveLKG();
+
+      upsertDailyRecord('2026-09-14', d2Val, '2026-09-14 09:10:00 KST', d2Time);
+      updateDisplayFromLKG();
+    });
+  }
+
+  if (btnRetry) btnRetry.addEventListener('click', fetchRealData);
+  if (btnFetchReal) btnFetchReal.addEventListener('click', fetchRealData);
+
+  initStorage();
+});
