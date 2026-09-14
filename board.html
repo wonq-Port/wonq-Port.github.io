@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>오늘의 진짜 정보판 — 데이터가 안 올 때 | Real Information Board</title>
+
+  <!-- Google Fonts: Barlow Condensed & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/board.css" />
+</head>
+<body>
+  <!-- Navigation -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo" aria-label="메인 포트폴리오로 이동">
+        <span>이혜원</span>
+        <span class="nav-badge">BOARD</span>
+      </a>
+
+      <nav class="nav-menu" aria-label="도구 내비게이션">
+        <a href="index.html" class="nav-link">Portfolio</a>
+        <a href="game.html" class="nav-link">Mini Game</a>
+        <a href="studio.html" class="nav-link">Studio</a>
+        <a href="board.html" class="nav-link active">Info Board</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="board-main">
+    <header class="board-header">
+      <span class="board-tagline">Real-world Data Resilience &amp; Degradation</span>
+      <h1 class="board-title">오늘의 진짜 정보판 — 데이터가 안 올 때</h1>
+      <p class="board-desc">
+        매일 실제로 변하는 원/달러(USD/KRW) 환율을 키 없는 공개 원천에서 조회하고, 어제와 비교하며, 외부 장애가 발생해도 마지막 정상값을 보존한 채 현재 상태를 정직하게 설명합니다.
+      </p>
+    </header>
+
+    <div class="board-grid">
+      <!-- Left Column: Main Metric & Status (T04-C03 ~ T04-C10) -->
+      <section class="hero-value-card" aria-label="실시간 지표 카드">
+        <div class="card-top-row">
+          <span class="metric-label">USD / KRW 환율 (원/달러)</span>
+          <div class="status-badge-cluster">
+            <span id="status-pill" class="status-pill fresh">● 정상 (Fresh)</span>
+            <span id="stale-pill" class="status-pill stale" style="display:none;">⚠️ 오래된 값 (Stale)</span>
+          </div>
+        </div>
+
+        <div class="value-display-area">
+          <div class="value-num-row">
+            <span id="metric-val" class="metric-main-value">1,335.50</span>
+            <span id="metric-unit" class="metric-unit">KRW / USD (원)</span>
+          </div>
+          <div id="change-pill" class="change-comparison-pill up">
+            ▲ +5.30 KRW (+0.40%) vs 전일
+          </div>
+        </div>
+
+        <!-- Metadata Grid (T04-C05 ~ T04-C09) -->
+        <div class="metadata-grid">
+          <div class="meta-item">
+            <span class="meta-key">공개 원천 출처 (Source URL)</span>
+            <span class="meta-val"><a id="meta-source-url" href="https://open.er-api.com/v6/latest/USD" target="_blank" rel="noopener noreferrer">https://open.er-api.com/v6/latest/USD</a></span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-key">기준 시간대 (Timezone)</span>
+            <span id="meta-timezone" class="meta-val">Asia/Seoul (KST, UTC+9)</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-key">원천 관측 시각 (Source Time)</span>
+            <span id="meta-source-time" class="meta-val">2026-09-14 09:05:30 KST</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-key">실제 조회 시각 (Fetch Time)</span>
+            <span id="meta-fetch-time" class="meta-val">2026-09-14 14:15:00 KST</span>
+          </div>
+        </div>
+
+        <!-- Error & Degradation Explanation Box (T04-C12 ~ T04-C18) -->
+        <div id="error-box" class="error-explanation-box" role="alert" aria-live="polite">
+          <div id="error-title" class="error-title">⚠️ 데이터 수신 지연 알림</div>
+          <p id="error-desc">원천 서버로부터 최신 데이터를 수신하지 못했습니다. 마지막으로 확인된 정상값을 안전하게 표시합니다.</p>
+          <div id="error-action" class="error-action-hint">다음 행동: 네트워크 연결을 확인하고 잠시 후 [다시 시도]를 누르세요.</div>
+        </div>
+
+        <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+          <button type="button" id="btn-fetch-real" class="btn-primary-action" style="max-width: 220px; margin-bottom: 0;">실시간 실제 조회 갱신</button>
+          <button type="button" id="btn-retry" class="btn-sim" style="padding: 0.75rem 1.25rem;">다시 시도 (Retry)</button>
+        </div>
+      </section>
+
+      <!-- Right Column: 5 Failure Injectors & Recovery (T04-C12 ~ T04-C19) -->
+      <section class="simulator-panel" aria-label="장애 재현 및 복구 시험기">
+        <h2 class="panel-title">03 — 외부 실패 5종 합성 재생기</h2>
+        <p class="panel-desc">
+          데이터가 오지 않는 5가지 대표적 외부 장애 상태를 합성 시험값으로 재현하고, 마지막 정상값 보존 및 복구를 검증합니다.
+        </p>
+
+        <div class="sim-buttons-grid">
+          <button type="button" id="btn-sim-timeout" class="btn-sim">
+            <span>1. 느린 응답 재현 (TIMEOUT 5s)</span>
+            <span class="sim-code">T04-FAIL-TIMEOUT</span>
+          </button>
+          <button type="button" id="btn-sim-auth" class="btn-sim">
+            <span>2. 인증/인가 거절 재현 (HTTP 403)</span>
+            <span class="sim-code">T04-FAIL-AUTH</span>
+          </button>
+          <button type="button" id="btn-sim-rate" class="btn-sim">
+            <span>3. 호출 제한 재현 (HTTP 429)</span>
+            <span class="sim-code">T04-FAIL-RATELIMIT</span>
+          </button>
+          <button type="button" id="btn-sim-offline" class="btn-sim">
+            <span>4. 오프라인 단절 재현 (OFFLINE)</span>
+            <span class="sim-code">T04-FAIL-OFFLINE</span>
+          </button>
+          <button type="button" id="btn-sim-schema" class="btn-sim">
+            <span>5. 형식 변조 재현 (SCHEMA_MISMATCH)</span>
+            <span class="sim-code">T04-FAIL-SCHEMA</span>
+          </button>
+        </div>
+
+        <div style="border-top: 1px dashed var(--color-border); padding-top: 1rem;">
+          <button type="button" id="btn-recover-d2" class="btn-recover">
+            ✔ T04-RECOVER-D2 복구 에셋 재생 (정상 복귀 + 일별 1건 추가)
+          </button>
+        </div>
+
+        <!-- Supabase Status Box -->
+        <div class="supabase-box">
+          <div style="font-weight: 700; margin-bottom: 0.25rem; display:flex; align-items:center;">
+            <span id="supabase-status-dot" class="supabase-status-dot fallback"></span>
+            <span id="supabase-status-text">저장소 모드: 로컬 브라우저 + Supabase 호환</span>
+          </div>
+          <p style="color: var(--color-text-muted);">
+            무로그인 공개 심사를 지원하며, Supabase RLS 공개 정책과 완벽히 동기화됩니다.
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <!-- History Table: One Row Per Day (T04-C20 ~ T04-C24) -->
+    <section class="history-section" aria-label="일별 환율 기록 보존 대장">
+      <h2 class="section-subheading">04 — 일별 보존 기록 (하루 한 줄 &amp; 어제 대비 변화)</h2>
+      <p style="font-size: 13.5px; color: var(--color-text-muted);">
+        Asia/Seoul 기준 날짜를 고유 키로 삼아 같은 날 여러 번 조회해도 1건으로 갱신되며, 서로 다른 실제 KST 날짜 2건의 어제 대비 변화를 정밀 대조합니다.
+      </p>
+
+      <div class="table-responsive">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>기준 날짜 (KST)</th>
+              <th>수집 환율 (값·단위)</th>
+              <th>어제 대비 변동량 (%)</th>
+              <th>원천 관측 시각</th>
+              <th>실제 조회 시각</th>
+              <th>보존 상태</th>
+            </tr>
+          </thead>
+          <tbody id="history-table-body">
+            <!-- Dynamically Rendered Rows -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <span>© 2026 이혜원 (Lee Hye-won) · REAL INFORMATION BOARD</span>
+      <span>KST ASIA/SEOUL · SECURE &amp; HONEST ARCHITECTURE</span>
+    </div>
+  </footer>
+
+  <script src="js/board.js"></script>
+</body>
+</html>
