@@ -1,10 +1,18 @@
 /**
  * Real Information Board Engine
+ * Fully integrated with Supabase + LocalStorage Fallback
  * Compliant with T04-C01 ~ T04-C28
- * Zero Secret Keys, Pure Client/Serverless Architecture
+ * Zero Secret Keys, Pure Client Architecture
  */
 
+// ==========================================================================
+// [1] Supabase 설정 (복사해 두신 URL과 anon 키를 아래 따옴표 안에 넣어주세요)
+// ==========================================================================
+const SUPABASE_URL = 'https://ldxrkppvyhleagabavbd.supabase.co/rest/v1/'; // 복사한 Supabase URL 입력
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkeHJrcHB2eWhsZWFnYWJhdmJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzNDE0OTksImV4cCI6MjEwNDkxNzQ5OX0.v9qlvsvE7XrX4oTxKndDYel4dwg82Zg6sSHWVeqmFiE';                   // 복사한 anon public 키 입력
+
 document.addEventListener('DOMContentLoaded', () => {
+  // DOM Elements
   const metricValEl = document.getElementById('metric-val');
   const metricUnitEl = document.getElementById('metric-unit');
   const statusPillEl = document.getElementById('status-pill');
@@ -15,30 +23,39 @@ document.addEventListener('DOMContentLoaded', () => {
   const metaFetchTimeEl = document.getElementById('meta-fetch-time');
   const metaTimezoneEl = document.getElementById('meta-timezone');
 
+  // Error Banner Elements
   const errorBoxEl = document.getElementById('error-box');
   const errorTitleEl = document.getElementById('error-title');
   const errorDescEl = document.getElementById('error-desc');
   const errorActionEl = document.getElementById('error-action');
 
+  // Action Buttons
   const btnFetchReal = document.getElementById('btn-fetch-real');
   const btnRetry = document.getElementById('btn-retry');
   const btnRecoverD2 = document.getElementById('btn-recover-d2');
 
+  // 5 Failure Injectors (T04-C12 ~ T04-C16)
   const btnSimTimeout = document.getElementById('btn-sim-timeout');
   const btnSimAuth = document.getElementById('btn-sim-auth');
   const btnSimRate = document.getElementById('btn-sim-rate');
   const btnSimOffline = document.getElementById('btn-sim-offline');
   const btnSimSchema = document.getElementById('btn-sim-schema');
 
+  // Table & Supabase Status Elements
   const historyTableBody = document.getElementById('history-table-body');
+  const supabaseStatusText = document.getElementById('supabase-status-text');
+  const supabaseStatusDot = document.getElementById('supabase-status-dot');
 
+  // Storage Constants
   const STORAGE_KEY_RECORDS = 't04_daily_records';
   const STORAGE_KEY_LKG = 't04_last_known_good';
 
+  // Public Endpoint (Zero Secret Keys Required, T04-C03, T04-C11)
   const PUBLIC_API_URL = 'https://open.er-api.com/v6/latest/USD';
   const METRIC_UNIT = 'KRW / USD (원)';
   const TIMEZONE_LABEL = 'Asia/Seoul (KST, UTC+9)';
 
+  // Application State
   let state = {
     freshness: 'fresh',
     errorCode: 'none',
@@ -51,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     errorDetails: null
   };
 
+  // 2 Real Actual Records for Baseline (T04-C22 ~ T04-C24)
   const INITIAL_BASELINE_RECORDS = [
     {
       dateKey: '2026-09-13',
@@ -76,6 +94,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let dailyRecords = [];
 
+  // ==========================================================================
+  // [2] Supabase Client 초기화 (라이브러리 및 설정 확인)
+  // ==========================================================================
+  let supabaseClient = null;
+  const isSupabaseConfigured = SUPABASE_URL &&
+    SUPABASE_ANON_KEY &&
+    !SUPABASE_URL.includes('본인의_프로젝트_ID') &&
+    !SUPABASE_ANON_KEY.includes('...');
+
+  if (window.supabase && isSupabaseConfigured) {
+    try {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      if (supabaseStatusText) supabaseStatusText.textContent = '저장소 모드: Supabase DB 연결됨 (클라우드 동기화)';
+      if (supabaseStatusDot) supabaseStatusDot.className = 'supabase-status-dot active';
+    } catch (err) {
+      console.warn('Supabase 초기화 실패, 로컬 스토리지로 전환합니다:', err);
+    }
+  } else {
+    if (supabaseStatusText) supabaseStatusText.textContent = '저장소 모드: 로컬 브라우저 (무로그인 공개 심사용)';
+    if (supabaseStatusDot) supabaseStatusDot.className = 'supabase-status-dot fallback';
+  }
+
+  /* --------------------------------------------------------------------------
+     [3] Date & Time Helpers (Strict KST / Asia/Seoul)
+     -------------------------------------------------------------------------- */
   const getNowKSTString = () => {
     const d = new Date();
     return d.toLocaleString('ko-KR', {
@@ -92,16 +135,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const getTodayKSTKey = (customDate = null) => {
     const d = customDate || new Date();
-    const parts = new Intl.DateTimeFormat('en-CA', {
+    return new Intl.DateTimeFormat('en-CA', {
       timeZone: 'Asia/Seoul',
       year: 'numeric',
       month: '2-digit',
       day: '2-digit'
     }).format(d);
-    return parts;
   };
 
-  const initStorage = () => {
+  /* --------------------------------------------------------------------------
+     [4] Data Persistence (Supabase + LocalStorage Fallback)
+     -------------------------------------------------------------------------- */
+  const loadRecords = async () => {
+    // 1. Supabase에서 먼저 불러오기 시도
+    if (supabaseClient) {
+      try {
+        const { data, error } = await supabaseClient
+          .from('daily_records')
+          .select('*')
+          .order('date_key', { ascending: false });
+
+        if (!error && data && data.length > 0) {
+          dailyRecords = data.map(item => ({
+            dateKey: item.date_key,
+            sourceUrl: item.source_url,
+            sourceTimeKST: item.source_time_kst,
+            fetchTimeKST: item.fetch_time_kst,
+            value: parseFloat(item.metric_value),
+            unit: item.metric_unit,
+            changeVal: parseFloat(item.change_val || 0),
+            changeRate: parseFloat(item.change_rate || 0)
+          }));
+          if (supabaseStatusText) supabaseStatusText.textContent = '저장소 모드: Supabase DB 연결됨 (클라우드 동기화)';
+          if (supabaseStatusDot) supabaseStatusDot.className = 'supabase-status-dot active';
+          renderTable();
+          calculateAndRenderChangePill();
+          return;
+        }
+      } catch (err) {
+        console.warn('Supabase 통신 오류로 로컬 저장소를 확인합니다:', err);
+      }
+    }
+
+    // 2. 로컬 스토리지 또는 베이스라인 Fallback
     try {
       const stored = localStorage.getItem(STORAGE_KEY_RECORDS);
       if (stored) {
@@ -110,16 +186,57 @@ document.addEventListener('DOMContentLoaded', () => {
           dailyRecords = parsed;
         } else {
           dailyRecords = [...INITIAL_BASELINE_RECORDS];
-          saveRecords();
+          saveRecordsLocally();
         }
       } else {
         dailyRecords = [...INITIAL_BASELINE_RECORDS];
-        saveRecords();
+        saveRecordsLocally();
       }
     } catch (e) {
       dailyRecords = [...INITIAL_BASELINE_RECORDS];
     }
 
+    renderTable();
+    calculateAndRenderChangePill();
+  };
+
+  const saveRecordsLocally = () => {
+    try {
+      localStorage.setItem(STORAGE_KEY_RECORDS, JSON.stringify(dailyRecords));
+    } catch (e) {}
+  };
+
+  const saveRecord = async (recordObj) => {
+    // 1. Supabase에 저장 (연결된 경우)
+    if (supabaseClient) {
+      try {
+        const { error } = await supabaseClient
+          .from('daily_records')
+          .upsert({
+            date_key: recordObj.dateKey,
+            source_url: recordObj.sourceUrl,
+            source_time_kst: recordObj.sourceTimeKST,
+            fetch_time_kst: recordObj.fetchTimeKST,
+            metric_value: recordObj.value,
+            metric_unit: recordObj.unit,
+            change_val: recordObj.changeVal,
+            change_rate: recordObj.changeRate
+          }, { onConflict: 'date_key' });
+
+        if (!error) {
+          if (supabaseStatusText) supabaseStatusText.textContent = '저장소 모드: Supabase DB 연결됨 (클라우드 동기화)';
+          if (supabaseStatusDot) supabaseStatusDot.className = 'supabase-status-dot active';
+        }
+      } catch (e) {
+        console.warn('Supabase upsert 예외:', e);
+      }
+    }
+
+    // 2. 로컬 저장소 동시 보존
+    saveRecordsLocally();
+  };
+
+  const loadLKG = () => {
     try {
       const lkgRaw = localStorage.getItem(STORAGE_KEY_LKG);
       if (lkgRaw) {
@@ -142,15 +259,6 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchTimeKST: '2026-09-14 14:15:00 KST'
       };
     }
-
-    renderTable();
-    updateDisplayFromLKG();
-  };
-
-  const saveRecords = () => {
-    try {
-      localStorage.setItem(STORAGE_KEY_RECORDS, JSON.stringify(dailyRecords));
-    } catch (e) {}
   };
 
   const saveLKG = () => {
@@ -159,6 +267,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {}
   };
 
+  /* --------------------------------------------------------------------------
+     [5] Display Rendering (Live Card, Badges, Table)
+     -------------------------------------------------------------------------- */
   const updateDisplayFromLKG = () => {
     if (!state.lastKnownGood) return;
 
@@ -174,6 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (metaFetchTimeEl) metaFetchTimeEl.textContent = state.lastKnownGood.fetchTimeKST;
     if (metaTimezoneEl) metaTimezoneEl.textContent = TIMEZONE_LABEL;
 
+    // Freshness & Stale Indicators (T04-C17, T04-C18)
     if (state.freshness === 'fresh') {
       if (statusPillEl) {
         statusPillEl.className = 'status-pill fresh';
@@ -241,12 +353,15 @@ document.addEventListener('DOMContentLoaded', () => {
         <td style="color:${rec.changeVal > 0 ? 'var(--color-accent-red)' : (rec.changeVal < 0 ? '#1d4ed8' : 'inherit')}">${changeStr}</td>
         <td style="font-size:12px;">${rec.sourceTimeKST}</td>
         <td style="font-size:12px;">${rec.fetchTimeKST}</td>
-        <td><span style="font-size:11px; padding:2px 6px; border-radius:2px; background:#f1f5f9;">정상 보존</span></td>
+        <td><span style="font-size:11px; padding:2px 6px; border-radius:2px; background:#f1f5f9;">보존 완료</span></td>
       `;
       historyTableBody.appendChild(tr);
     });
   };
 
+  /* --------------------------------------------------------------------------
+     [6] Real Data Fetching (T04-C03 ~ T04-C10)
+     -------------------------------------------------------------------------- */
   const fetchRealData = async () => {
     const fetchTimeKST = getNowKSTString();
     const todayKey = getTodayKSTKey();
@@ -308,6 +423,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  /* --------------------------------------------------------------------------
+     [7] One Row Per Day (T04-C20, T04-C21)
+     -------------------------------------------------------------------------- */
   const upsertDailyRecord = (dateKey, value, sourceTimeKST, fetchTimeKST) => {
     const existingIdx = dailyRecords.findIndex(r => r.dateKey === dateKey);
 
@@ -337,10 +455,13 @@ document.addEventListener('DOMContentLoaded', () => {
       dailyRecords.push(recordObj);
     }
 
-    saveRecords();
+    saveRecord(recordObj);
     renderTable();
   };
 
+  /* --------------------------------------------------------------------------
+     [8] Five Synthetic Failure Injectors (T04-C12 ~ T04-C16)
+     -------------------------------------------------------------------------- */
   const handleFailureState = (errorCode, details) => {
     state.freshness = 'stale';
     state.errorCode = errorCode;
@@ -348,6 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateDisplayFromLKG();
   };
 
+  // 1. Slow / Timeout (T04-C12)
   if (btnSimTimeout) {
     btnSimTimeout.addEventListener('click', () => {
       handleFailureState('timeout', {
@@ -358,6 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // 2. Auth Error 401/403 (T04-C13)
   if (btnSimAuth) {
     btnSimAuth.addEventListener('click', () => {
       handleFailureState('auth_error', {
@@ -368,6 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // 3. Rate Limit 429 (T04-C14)
   if (btnSimRate) {
     btnSimRate.addEventListener('click', () => {
       handleFailureState('rate_limit', {
@@ -378,6 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // 4. Offline (T04-C15)
   if (btnSimOffline) {
     btnSimOffline.addEventListener('click', () => {
       handleFailureState('offline', {
@@ -388,6 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // 5. Schema Mismatch (T04-C16)
   if (btnSimSchema) {
     btnSimSchema.addEventListener('click', () => {
       handleFailureState('schema_mismatch', {
@@ -398,6 +524,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  /* --------------------------------------------------------------------------
+     [9] Recovery Action (T04-RECOVER-D2 - T04-C19)
+     -------------------------------------------------------------------------- */
   if (btnRecoverD2) {
     btnRecoverD2.addEventListener('click', () => {
       const d2Time = '2026-09-14 15:30:00 KST';
@@ -424,5 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnRetry) btnRetry.addEventListener('click', fetchRealData);
   if (btnFetchReal) btnFetchReal.addEventListener('click', fetchRealData);
 
-  initStorage();
+  // Initial Boot
+  loadLKG();
+  loadRecords();
 });
