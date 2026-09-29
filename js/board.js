@@ -557,3 +557,207 @@ document.addEventListener('DOMContentLoaded', () => {
   loadLKG();
   loadRecords();
 });
+
+/* ==========================================================================
+   🎯 환율 목표 알림 및 경보 모니터 로직 (Target Rate Alert Monitor)
+   ========================================================================== */
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. DOM 요소 선택
+    const upperLimitInput = document.getElementById('upper-limit');
+    const lowerLimitInput = document.getElementById('lower-limit');
+    const saveBtn = document.getElementById('save-alert-btn');
+    const resetBtn = document.getElementById('reset-alert-btn');
+    const validationMsg = document.getElementById('alert-validation-msg');
+    
+    const alertBanner = document.getElementById('rate-alert-banner');
+    const alertPill = document.getElementById('alert-pill');
+    const alertMessage = document.getElementById('alert-message');
+    const historyList = document.getElementById('alert-history-list');
+    const metricValEl = document.getElementById('metric-val');
+
+    // 2. 상태 관리 변수 (AI A의 스키마 인수인계)
+    let alertConfig = JSON.parse(localStorage.getItem('alertConfig')) || { upper: null, lower: null };
+    let alertHistory = JSON.parse(localStorage.getItem('alertHistory')) || [];
+    let currentAlertState = 'NORMAL'; // 'NORMAL', 'UPPER', 'LOWER'
+
+    // 3. 초기화 함수
+    function initAlertMonitor() {
+        // [T07] 저장된 설정값 불러오기
+        if (alertConfig.upper) upperLimitInput.value = alertConfig.upper;
+        if (alertConfig.lower) lowerLimitInput.value = alertConfig.lower;
+        
+        renderHistory();
+        
+        // 기존 환율 값이 렌더링되어 있다면 즉시 1회 평가
+        if (metricValEl && metricValEl.textContent) {
+            const initialRate = parseFloat(metricValEl.textContent.replace(/,/g, ''));
+            if (!isNaN(initialRate)) {
+                evaluateRateAlert(initialRate);
+            }
+        }
+    }
+
+    // 4. 유효성 검증 알고리즘 [T02]
+    function validateThreshold(upper, lower) {
+        if (upper !== null && (upper <= 0 || isNaN(upper))) return "상한값은 0보다 큰 숫자여야 합니다.";
+        if (lower !== null && (lower <= 0 || isNaN(lower))) return "하한값은 0보다 큰 숫자여야 합니다.";
+        if (upper !== null && lower !== null && lower >= upper) return "하한값은 상한값보다 커야 합니다.";
+        return null; // 정상
+    }
+
+    // 5. 설정 저장 로직 [T01]
+    saveBtn.addEventListener('click', () => {
+        const upperVal = upperLimitInput.value ? parseFloat(upperLimitInput.value) : null;
+        const lowerVal = lowerLimitInput.value ? parseFloat(lowerLimitInput.value) : null;
+
+        const errorMsg = validateThreshold(upperVal, lowerVal);
+        if (errorMsg) {
+            validationMsg.textContent = errorMsg;
+            validationMsg.classList.remove('hidden');
+            return;
+        }
+
+        validationMsg.classList.add('hidden');
+        alertConfig = { upper: upperVal, lower: lowerVal };
+        localStorage.setItem('alertConfig', JSON.stringify(alertConfig)); // 로컬스토리지 영속화
+        
+        // 설정 변경 시 즉시 현재 환율 재평가
+        const currentRate = parseFloat(metricValEl.textContent.replace(/,/g, ''));
+        if (!isNaN(currentRate)) evaluateRateAlert(currentRate);
+        
+        alert('환율 알림 설정이 저장되었습니다.');
+    });
+
+    // 6. 설정 초기화 로직 [T06]
+    resetBtn.addEventListener('click', () => {
+        alertConfig = { upper: null, lower: null };
+        localStorage.removeItem('alertConfig');
+        upperLimitInput.value = '';
+        lowerLimitInput.value = '';
+        validationMsg.classList.add('hidden');
+        
+        // 상태 리셋 및 배너 숨김
+        currentAlertState = 'NORMAL';
+        hideBanner();
+        alert('알림 설정이 초기화되었습니다.');
+    });
+
+    // 7. 배너 제어 (시각적 렌더링 결합)
+    function showBanner(type, message, rate) {
+        alertBanner.classList.remove('hidden', 'danger', 'warning');
+        
+        if (type === 'UPPER') {
+            alertBanner.classList.add('danger');
+            alertPill.textContent = '🚨 상한 돌파';
+        } else if (type === 'LOWER') {
+            alertBanner.classList.add('warning');
+            alertPill.textContent = '⚠️ 하한 미달';
+        }
+        
+        alertMessage.textContent = `${message} (현재: ${rate.toLocaleString('ko-KR')}원)`;
+    }
+
+    function hideBanner() {
+        alertBanner.classList.add('hidden');
+        alertBanner.classList.remove('danger', 'warning');
+    }
+
+    // 8. 최근 5건 경보 발동 이력 대장 기록 [T09]
+    function addHistory(type, message, rate) {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('ko-KR', { hour12: false });
+        const dateString = now.toLocaleDateString('ko-KR');
+        
+        const newRecord = {
+            id: Date.now(),
+            type: type,
+            rate: rate,
+            time: `${dateString} ${timeString}`
+        };
+
+        alertHistory.unshift(newRecord);
+        if (alertHistory.length > 5) alertHistory.pop(); // 최대 5건 유지
+        
+        localStorage.setItem('alertHistory', JSON.stringify(alertHistory));
+        renderHistory();
+    }
+
+    function renderHistory() {
+        historyList.innerHTML = '';
+        if (alertHistory.length === 0) {
+            historyList.innerHTML = '<li class="empty-history">기록이 없습니다.</li>';
+            return;
+        }
+
+        alertHistory.forEach(record => {
+            const li = document.createElement('li');
+            const badge = record.type === 'UPPER' ? '🚨 상한' : '⚠️ 하한';
+            const color = record.type === 'UPPER' ? '#ef4444' : '#f59e0b';
+            
+            li.innerHTML = `
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <span style="color:${color}; font-weight:700;">${badge}</span>
+                    <span>${record.rate.toLocaleString('ko-KR')}원</span>
+                </div>
+                <span class="time">${record.time}</span>
+            `;
+            historyList.appendChild(li);
+        });
+    }
+
+    // 9. 코어 판정 알고리즘 [T03, T04, T05]
+    function evaluateRateAlert(currentRate) {
+        if (!alertConfig.upper && !alertConfig.lower) {
+            hideBanner();
+            currentAlertState = 'NORMAL';
+            return;
+        }
+
+        let newState = 'NORMAL';
+        let alertMsg = '';
+
+        if (alertConfig.upper && currentRate >= alertConfig.upper) {
+            newState = 'UPPER';
+            alertMsg = `목표 상한선(${alertConfig.upper}원)을 돌파했습니다!`;
+        } else if (alertConfig.lower && currentRate <= alertConfig.lower) {
+            newState = 'LOWER';
+            alertMsg = `목표 하한선(${alertConfig.lower}원) 밑으로 떨어졌습니다!`;
+        }
+
+        // 상태가 '변화'했을 때만 1회 이력 추가 (반복 기록 스팸 방지)
+        if (newState !== currentAlertState) {
+            if (newState === 'NORMAL') {
+                hideBanner(); // 정상 범위 복귀 시 경보 자동 해제 [T05]
+            } else {
+                showBanner(newState, alertMsg, currentRate);
+                addHistory(newState, alertMsg, currentRate);
+            }
+            currentAlertState = newState;
+        } else if (newState !== 'NORMAL') {
+            // 이미 발동 중인 상태에서 환율이 변동되면 텍스트(현재 값)만 갱신
+            showBanner(newState, alertMsg, currentRate);
+        }
+    }
+
+    // 10. MutationObserver를 통한 결합 [T08 - 외부 장애 발생 시 마지막 정상값 추적]
+    // 기존 환율 데이터 Fetch 로직을 건드리지 않고, HTML 텍스트가 바뀔 때마다 자동으로 실행되게 만듭니다.
+    if (metricValEl) {
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'characterData' || mutation.type === 'childList') {
+                    const newRateText = metricValEl.textContent.replace(/,/g, ''); // 콤마 제거
+                    const newRate = parseFloat(newRateText);
+                    if (!isNaN(newRate)) {
+                        evaluateRateAlert(newRate);
+                    }
+                }
+            });
+        });
+        
+        // 대상 노드의 텍스트 변화를 감시
+        observer.observe(metricValEl, { childList: true, characterData: true, subtree: true });
+    }
+
+    // 모니터 시작
+    initAlertMonitor();
+});
