@@ -13,7 +13,7 @@
   <!-- Stylesheet -->
   <link rel="stylesheet" href="css/board.css" />
   <!-- Supabase 공식 클라이언트 라이브러리 CDN -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <!-- Navigation -->
@@ -34,6 +34,12 @@
   </header>
 
   <main class="board-main">
+    <!-- 1️⃣ 실시간 경보 배너 (최상단) -->
+    <div id="rate-alert-banner" class="alert-banner hidden">
+        <span id="alert-pill" class="pill"></span>
+        <span id="alert-message"></span>
+    </div>
+    
     <header class="board-header">
       <span class="board-tagline">Real-world Data Resilience &amp; Degradation</span>
       <h1 class="board-title">오늘의 진짜 정보판 — 데이터가 안 올 때</h1>
@@ -43,7 +49,7 @@
     </header>
 
     <div class="board-grid">
-      <!-- Left Column: Main Metric & Status (T04-C03 ~ T04-C10) -->
+      <!-- Left Column: Main Metric & Status -->
       <section class="hero-value-card" aria-label="실시간 지표 카드">
         <div class="card-top-row">
           <span class="metric-label">USD / KRW 환율 (원/달러)</span>
@@ -63,7 +69,7 @@
           </div>
         </div>
 
-        <!-- Metadata Grid (T04-C05 ~ T04-C09) -->
+        <!-- Metadata Grid -->
         <div class="metadata-grid">
           <div class="meta-item">
             <span class="meta-key">공개 원천 출처 (Source URL)</span>
@@ -83,7 +89,7 @@
           </div>
         </div>
 
-        <!-- Error & Degradation Explanation Box (T04-C12 ~ T04-C18) -->
+        <!-- Error Box -->
         <div id="error-box" class="error-explanation-box" role="alert" aria-live="polite">
           <div id="error-title" class="error-title">⚠️ 데이터 수신 지연 알림</div>
           <p id="error-desc">원천 서버로부터 최신 데이터를 수신하지 못했습니다. 마지막으로 확인된 정상값을 안전하게 표시합니다.</p>
@@ -96,7 +102,7 @@
         </div>
       </section>
 
-      <!-- Right Column: 5 Failure Injectors & Recovery (T04-C12 ~ T04-C19) -->
+      <!-- Right Column: 5 Failure Injectors & Recovery -->
       <section class="simulator-panel" aria-label="장애 재현 및 복구 시험기">
         <h2 class="panel-title">03 — 외부 실패 5종 합성 재생기</h2>
         <p class="panel-desc">
@@ -143,9 +149,43 @@
           </p>
         </div>
       </section>
-    </div>
+    </div> <!-- .board-grid 종료 -->
 
-    <!-- History Table: One Row Per Day (T04-C20 ~ T04-C24) -->
+    <!-- 2️⃣ 환율 목표 알림 설정 카드 (그리드와 히스토리 사이 레이아웃 안전 영역) -->
+    <section id="alert-monitor-card" class="monitor-card" style="margin-top: 2rem;">
+        <h2 class="section-subheading">🎯 환율 목표 알림 설정</h2>
+        <p style="font-size: 13.5px; color: var(--color-text-muted); margin-bottom: 1.5rem;">
+          원하는 상한/하한 환율을 입력해두면, 목표치 도달 시 상단에 경보 배너가 나타납니다.
+        </p>
+        
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+            <div class="input-group" style="flex: 1; min-width: 200px;">
+                <label for="upper-limit" style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 0.5rem;">상한 돌파 경보 (원/달러) 🚨</label>
+                <input type="number" id="upper-limit" placeholder="예: 1400" min="1" step="0.1" style="width: 100%; padding: 0.75rem; border: 1px solid var(--color-border); border-radius: 6px;">
+            </div>
+            
+            <div class="input-group" style="flex: 1; min-width: 200px;">
+                <label for="lower-limit" style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 0.5rem;">하한 미달 경보 (원/달러) ⚠️</label>
+                <input type="number" id="lower-limit" placeholder="예: 1300" min="1" step="0.1" style="width: 100%; padding: 0.75rem; border: 1px solid var(--color-border); border-radius: 6px;">
+            </div>
+        </div>
+        
+        <p id="alert-validation-msg" class="error-msg hidden" style="color: #ef4444; font-size: 14px; font-weight: 600; margin-bottom: 1rem;"></p>
+        
+        <div class="btn-group" style="display: flex; gap: 0.75rem; margin-bottom: 2rem;">
+            <button id="save-alert-btn" class="btn-primary-action" style="flex: 1;">설정 저장</button>
+            <button id="reset-alert-btn" class="btn-sim" style="flex: 1;">초기화</button>
+        </div>
+
+        <div class="alert-history-container" style="background: #f8fafc; padding: 1rem; border-radius: 8px;">
+            <h4 style="margin: 0 0 1rem 0; font-size: 15px; color: var(--color-text-main);">최근 경보 이력</h4>
+            <ul id="alert-history-list" style="list-style: none; padding: 0; margin: 0; font-size: 14px;">
+                <li class="empty-history" style="color: var(--color-text-muted);">기록이 없습니다.</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- History Table: One Row Per Day -->
     <section class="history-section" aria-label="일별 환율 기록 보존 대장">
       <h2 class="section-subheading">04 — 일별 보존 기록 (하루 한 줄 &amp; 어제 대비 변화)</h2>
       <p style="font-size: 13.5px; color: var(--color-text-muted);">
