@@ -109,6 +109,17 @@ function lsSave(key, data) {
   localStorage.setItem(key, JSON.stringify(data));
 }
 
+// 중복된 ID 중 사용자가 실제 값을 입력한 필드를 우선 탐색하는 헬퍼 함수
+function getVal(idList) {
+  for (var i = 0; i < idList.length; i++) {
+    var el = document.getElementById(idList[i]);
+    if (el && el.value && el.value.trim().length > 0) {
+      return el.value.trim();
+    }
+  }
+  return '';
+}
+
 // ===== DB OPERATIONS =====
 const DB = {
   loadAll: async function() {
@@ -353,7 +364,7 @@ function closeModal(id) {
 function openPlanModal(id) {
   S.editPlanId = id || null;
   var titleEl = document.getElementById('modal-plan-title');
-  var prioEl = document.getElementById('plan-prio') || document.getElementById('plan-priority');
+  var prioSelect = document.getElementById('plan-prio') || document.getElementById('plan-priority');
   if (id) {
     var p = S.plans.find(function(x) { return x.id === id; });
     if (!p) return;
@@ -361,7 +372,7 @@ function openPlanModal(id) {
     if (document.getElementById('plan-title')) document.getElementById('plan-title').value = p.title || '';
     if (document.getElementById('plan-start')) document.getElementById('plan-start').value = fmtDate(p.period_start);
     if (document.getElementById('plan-end')) document.getElementById('plan-end').value = fmtDate(p.period_end);
-    if (prioEl) prioEl.value = p.priority || 'medium';
+    if (prioSelect) prioSelect.value = p.priority || 'medium';
     if (document.getElementById('plan-criteria')) document.getElementById('plan-criteria').value = p.success_criteria || '';
     if (document.getElementById('plan-minutes')) document.getElementById('plan-minutes').value = p.estimated_minutes || '';
     if (document.getElementById('plan-notes')) document.getElementById('plan-notes').value = p.notes || '';
@@ -370,7 +381,7 @@ function openPlanModal(id) {
     if (document.getElementById('plan-title')) document.getElementById('plan-title').value = '';
     if (document.getElementById('plan-start')) document.getElementById('plan-start').value = '';
     if (document.getElementById('plan-end')) document.getElementById('plan-end').value = '';
-    if (prioEl) prioEl.value = 'medium';
+    if (prioSelect) prioSelect.value = 'medium';
     if (document.getElementById('plan-criteria')) document.getElementById('plan-criteria').value = '';
     if (document.getElementById('plan-minutes')) document.getElementById('plan-minutes').value = '';
     if (document.getElementById('plan-notes')) document.getElementById('plan-notes').value = '';
@@ -386,8 +397,7 @@ async function savePlan() {
   var end = document.getElementById('plan-end') ? document.getElementById('plan-end').value : null;
   if (start && end && end < start) { alert('종료일은 시작일 이후여야 합니다.'); return; }
 
-  var prioEl = document.getElementById('plan-prio') || document.getElementById('plan-priority');
-  var prio = prioEl ? prioEl.value : 'medium';
+  var prio = getVal(['plan-prio', 'plan-priority']) || 'medium';
   var critEl = document.getElementById('plan-criteria');
   var minEl = document.getElementById('plan-minutes');
   var notesEl = document.getElementById('plan-notes');
@@ -453,7 +463,7 @@ function openTaskModal(id) {
   S.editTaskId = id || null;
   populateTaskPlanSelect();
   var titleEl = document.getElementById('modal-task-title');
-  var prioEl = document.getElementById('task-prio') || document.getElementById('task-priority');
+  var prioSelect = document.getElementById('task-prio') || document.getElementById('task-priority');
   if (id) {
     var t = S.tasks.find(function(x) { return x.id === id; });
     if (!t) return;
@@ -461,7 +471,7 @@ function openTaskModal(id) {
     if (document.getElementById('task-plan-id')) document.getElementById('task-plan-id').value = t.plan_id || '';
     if (document.getElementById('task-title')) document.getElementById('task-title').value = t.title || '';
     if (document.getElementById('task-due')) document.getElementById('task-due').value = fmtDate(t.due_date);
-    if (prioEl) prioEl.value = t.priority || 'medium';
+    if (prioSelect) prioSelect.value = t.priority || 'medium';
     if (document.getElementById('task-tags')) document.getElementById('task-tags').value = t.tags || '';
     if (document.getElementById('task-minutes')) document.getElementById('task-minutes').value = t.estimated_minutes || '';
     if (document.getElementById('task-notes')) document.getElementById('task-notes').value = t.notes || '';
@@ -470,7 +480,7 @@ function openTaskModal(id) {
     if (document.getElementById('task-plan-id')) document.getElementById('task-plan-id').value = S.tPlan || '';
     if (document.getElementById('task-title')) document.getElementById('task-title').value = '';
     if (document.getElementById('task-due')) document.getElementById('task-due').value = '';
-    if (prioEl) prioEl.value = 'medium';
+    if (prioSelect) prioSelect.value = 'medium';
     if (document.getElementById('task-tags')) document.getElementById('task-tags').value = '';
     if (document.getElementById('task-minutes')) document.getElementById('task-minutes').value = '';
     if (document.getElementById('task-notes')) document.getElementById('task-notes').value = '';
@@ -484,8 +494,7 @@ async function saveTask() {
   if (!title) { alert('할 일 제목을 입력하세요.'); return; }
   var planId = document.getElementById('task-plan-id') ? document.getElementById('task-plan-id').value || null : null;
   var due = document.getElementById('task-due') ? document.getElementById('task-due').value || null : null;
-  var prioEl = document.getElementById('task-prio') || document.getElementById('task-priority');
-  var prio = prioEl ? prioEl.value : 'medium';
+  var prio = getVal(['task-prio', 'task-priority']) || 'medium';
   var tagsEl = document.getElementById('task-tags');
   var minEl = document.getElementById('task-minutes');
   var notesEl = document.getElementById('task-notes');
@@ -921,7 +930,7 @@ function renderAll() {
 }
 
 // ==============================================================================
-// ===== SUPABASE DB 연결 및 AUTH (HTML onclick 함수명 및 모달/게이트 100% 호환) =====
+// ===== SUPABASE DB 연결 및 AUTH =====
 // ==============================================================================
 
 // 1. Supabase 클라이언트 초기화 함수
@@ -958,16 +967,22 @@ async function initSupabaseClient() {
 
 // 2. 메시지 알림 헬퍼 (alert와 화면 표시 동시 지원)
 function notifyUser(msg, isError) {
-  var errEl = document.getElementById('auth-error-msg') || document.getElementById('gate-error-msg');
-  if (errEl) {
-    errEl.innerHTML = msg;
-    errEl.style.display = 'block';
-    errEl.style.color = isError ? 'var(--accent)' : 'var(--green)';
+  var gateErr = document.getElementById('gate-error-msg');
+  var authErr = document.getElementById('auth-error-msg');
+  if (gateErr) {
+    gateErr.innerHTML = msg;
+    gateErr.style.display = 'block';
+    gateErr.style.color = isError ? 'var(--accent)' : 'var(--green)';
+  }
+  if (authErr) {
+    authErr.innerHTML = msg;
+    authErr.style.display = 'block';
+    authErr.style.color = isError ? 'var(--accent)' : 'var(--green)';
   }
   alert(msg.replace(/<br>/g, '\n').replace(/<\/?[^>]+(>|$)/g, ''));
 }
 
-// 3. DB 연결 모달 열기 (HTML: onclick="openDbModal()")
+// 3. DB 연결 모달 열기
 function openDbModal() {
   var urlEl = document.getElementById('sb-url') || document.getElementById('manual-sb-url');
   var keyEl = document.getElementById('sb-key') || document.getElementById('manual-sb-key');
@@ -978,10 +993,8 @@ function openDbModal() {
 
 // 4. DB 연결 실행 (HTML: onclick="connectSupabase()" 및 onclick="saveManualDbAndConnect()")
 async function connectSupabase() {
-  var urlEl = document.getElementById('sb-url') || document.getElementById('manual-sb-url');
-  var keyEl = document.getElementById('sb-key') || document.getElementById('manual-sb-key');
-  var url = urlEl ? urlEl.value.trim() : '';
-  var key = keyEl ? keyEl.value.trim() : '';
+  var url = getVal(['manual-sb-url', 'sb-url']);
+  var key = getVal(['manual-sb-key', 'sb-key']);
 
   if (!url || !key) {
     alert('Supabase Project URL과 Anon Key를 모두 입력해 주세요.');
@@ -995,7 +1008,6 @@ async function connectSupabase() {
 
   try {
     var client = window.supabase.createClient(url, key);
-    // 연결 테스트
     var testRes = await client.from('plans').select('id').limit(1);
     if (testRes.error && testRes.error.code !== 'PGRST116') {
       console.warn('DB 테스트 응답:', testRes.error);
@@ -1053,10 +1065,8 @@ function openAuthModal() {
 
 // 8. 로그인 (HTML: onclick="handleSignIn()" 및 onclick="gateSignIn()")
 async function handleSignIn() {
-  var emailEl = document.getElementById('auth-email') || document.getElementById('gate-email');
-  var passEl = document.getElementById('auth-password') || document.getElementById('gate-password');
-  var email = emailEl ? emailEl.value.trim() : '';
-  var password = passEl ? passEl.value.trim() : '';
+  var email = getVal(['gate-email', 'auth-email']);
+  var password = getVal(['gate-password', 'auth-password']);
 
   if (!email || !password) {
     notifyUser('이메일과 비밀번호를 모두 입력해 주세요.', true);
@@ -1068,7 +1078,9 @@ async function handleSignIn() {
   }
 
   if (!SB) {
-    notifyUser('데이터베이스(DB) 연결이 먼저 필요합니다.\n상단의 [DB 연결] 버튼을 눌러 Supabase URL과 Key를 설정해 주세요.', true);
+    notifyUser('데이터베이스(DB) 연결이 먼저 필요합니다.\n하단의 [데이터베이스 직접 연결 설정] 또는 상단 [DB 연결]에서 Supabase URL과 Key를 설정해 주세요.', true);
+    var manualArea = document.getElementById('gate-manual-db');
+    if (manualArea) manualArea.style.display = 'block';
     openDbModal();
     return;
   }
@@ -1095,10 +1107,8 @@ const gateSignIn = handleSignIn;
 
 // 9. 회원가입 (HTML: onclick="handleSignUp()" 및 onclick="gateSignUp()")
 async function handleSignUp() {
-  var emailEl = document.getElementById('auth-email') || document.getElementById('gate-email');
-  var passEl = document.getElementById('auth-password') || document.getElementById('gate-password');
-  var email = emailEl ? emailEl.value.trim() : '';
-  var password = passEl ? passEl.value.trim() : '';
+  var email = getVal(['gate-email', 'auth-email']);
+  var password = getVal(['gate-password', 'auth-password']);
 
   if (!email || !password) {
     notifyUser('이메일과 비밀번호를 모두 입력해 주세요.', true);
@@ -1114,7 +1124,9 @@ async function handleSignUp() {
   }
 
   if (!SB) {
-    notifyUser('데이터베이스(DB) 연결이 먼저 필요합니다.\n상단의 [DB 연결] 버튼을 눌러 Supabase URL과 Key를 설정해 주세요.', true);
+    notifyUser('데이터베이스(DB) 연결이 먼저 필요합니다.\n하단의 [데이터베이스 직접 연결 설정] 또는 상단 [DB 연결]에서 Supabase URL과 Key를 설정해 주세요.', true);
+    var manualArea = document.getElementById('gate-manual-db');
+    if (manualArea) manualArea.style.display = 'block';
     openDbModal();
     return;
   }
@@ -1228,5 +1240,13 @@ document.addEventListener('DOMContentLoaded', async function() {
   if (seePlan) seePlan.addEventListener('change', function(e) {
     S.seePlan = e.target.value;
     renderSee();
+  });
+
+  // Enter 키 로그인 지원
+  ['gate-password', 'auth-password'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') handleSignIn();
+    });
   });
 });
