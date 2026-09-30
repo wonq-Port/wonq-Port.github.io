@@ -122,8 +122,8 @@ const DB = {
           SB.from('sees').select('*'),
         ]);
         S.plans = results[0].data || [];
-        S.planVers = results.data || [];
-        S.tasks = results.data || [];
+        S.planVers = results[1].data || [];
+        S.tasks = results[2].data || [];
         S.execs = results[3].data || [];
         S.see = (results[4].data || []).find(function(r) { return r.date === kstToday(); }) || null;
         return;
@@ -271,21 +271,25 @@ function autoCalcMinutes() {
   var s = new Date(sv);
   var e = new Date(ev);
   var diff = Math.round((e - s) / 60000);
-  if (diff >= 0 && document.getElementById('exec-actual')) {
-    document.getElementById('exec-actual').value = diff;
+  if (diff >= 0) {
+    var minEl = document.getElementById('exec-minutes') || document.getElementById('exec-actual');
+    if (minEl) minEl.value = diff;
   }
 }
 
-// ===== SUBMIT EXECUTION (DOUBLE-SUBMISSION PREVENTION) =====
+// ===== SUBMIT EXECUTION =====
 async function submitExec() {
-  var taskId = document.getElementById('exec-task').value;
+  var taskEl = document.getElementById('exec-task');
+  var taskId = taskEl ? taskEl.value : '';
   if (!taskId) { alert('할 일을 선택하세요.'); return; }
   if (S.pending.has(taskId)) return;
 
-  var sv = document.getElementById('exec-start').value;
-  var ev = document.getElementById('exec-end').value;
-  var actual = parseInt(document.getElementById('exec-actual').value) || 0;
-  var blocker = document.getElementById('exec-blocker').value.trim();
+  var sv = document.getElementById('exec-start') ? document.getElementById('exec-start').value : '';
+  var ev = document.getElementById('exec-end') ? document.getElementById('exec-end').value : '';
+  var minEl = document.getElementById('exec-minutes') || document.getElementById('exec-actual');
+  var actual = minEl ? (parseInt(minEl.value) || 0) : 0;
+  var blockerEl = document.getElementById('exec-blocker');
+  var blocker = blockerEl ? blockerEl.value.trim() : '';
 
   if (sv && ev && new Date(ev) < new Date(sv)) {
     alert('종료 시각은 시작 시각 이후여야 합니다.');
@@ -293,9 +297,6 @@ async function submitExec() {
   }
 
   S.pending.add(taskId);
-  var submitBtn = document.getElementById('exec-submit-btn');
-  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '기록 중...'; }
-
   try {
     var exec = {
       id: uuid(),
@@ -313,15 +314,14 @@ async function submitExec() {
       await DB.saveTask(Object.assign({}, task, { status: 'done', completed_at: new Date().toISOString() }));
     }
 
-    document.getElementById('exec-start').value = '';
-    document.getElementById('exec-end').value = '';
-    document.getElementById('exec-actual').value = '';
-    document.getElementById('exec-blocker').value = '';
+    if (document.getElementById('exec-start')) document.getElementById('exec-start').value = '';
+    if (document.getElementById('exec-end')) document.getElementById('exec-end').value = '';
+    if (minEl) minEl.value = '';
+    if (blockerEl) blockerEl.value = '';
     renderDo();
     renderTasks();
   } finally {
     S.pending.delete(taskId);
-    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '실행 완료 기록'; }
   }
 }
 
@@ -353,45 +353,53 @@ function closeModal(id) {
 function openPlanModal(id) {
   S.editPlanId = id || null;
   var titleEl = document.getElementById('modal-plan-title');
+  var prioEl = document.getElementById('plan-prio') || document.getElementById('plan-priority');
   if (id) {
     var p = S.plans.find(function(x) { return x.id === id; });
     if (!p) return;
     if (titleEl) titleEl.textContent = '계획 수정';
-    document.getElementById('plan-title').value = p.title || '';
-    document.getElementById('plan-start').value = fmtDate(p.period_start);
-    document.getElementById('plan-end').value = fmtDate(p.period_end);
-    document.getElementById('plan-priority').value = p.priority || 'medium';
-    document.getElementById('plan-criteria').value = p.success_criteria || '';
-    document.getElementById('plan-minutes').value = p.estimated_minutes || '';
-    document.getElementById('plan-notes').value = p.notes || '';
+    if (document.getElementById('plan-title')) document.getElementById('plan-title').value = p.title || '';
+    if (document.getElementById('plan-start')) document.getElementById('plan-start').value = fmtDate(p.period_start);
+    if (document.getElementById('plan-end')) document.getElementById('plan-end').value = fmtDate(p.period_end);
+    if (prioEl) prioEl.value = p.priority || 'medium';
+    if (document.getElementById('plan-criteria')) document.getElementById('plan-criteria').value = p.success_criteria || '';
+    if (document.getElementById('plan-minutes')) document.getElementById('plan-minutes').value = p.estimated_minutes || '';
+    if (document.getElementById('plan-notes')) document.getElementById('plan-notes').value = p.notes || '';
   } else {
     if (titleEl) titleEl.textContent = '새 계획 만들기';
-    document.getElementById('plan-title').value = '';
-    document.getElementById('plan-start').value = '';
-    document.getElementById('plan-end').value = '';
-    document.getElementById('plan-priority').value = 'medium';
-    document.getElementById('plan-criteria').value = '';
-    document.getElementById('plan-minutes').value = '';
-    document.getElementById('plan-notes').value = '';
+    if (document.getElementById('plan-title')) document.getElementById('plan-title').value = '';
+    if (document.getElementById('plan-start')) document.getElementById('plan-start').value = '';
+    if (document.getElementById('plan-end')) document.getElementById('plan-end').value = '';
+    if (prioEl) prioEl.value = 'medium';
+    if (document.getElementById('plan-criteria')) document.getElementById('plan-criteria').value = '';
+    if (document.getElementById('plan-minutes')) document.getElementById('plan-minutes').value = '';
+    if (document.getElementById('plan-notes')) document.getElementById('plan-notes').value = '';
   }
   openModal('modal-plan');
 }
 
 async function savePlan() {
-  var title = document.getElementById('plan-title').value.trim();
+  var titleEl = document.getElementById('plan-title');
+  var title = titleEl ? titleEl.value.trim() : '';
   if (!title) { alert('계획 제목을 입력하세요.'); return; }
-  var start = document.getElementById('plan-start').value || null;
-  var end = document.getElementById('plan-end').value || null;
+  var start = document.getElementById('plan-start') ? document.getElementById('plan-start').value : null;
+  var end = document.getElementById('plan-end') ? document.getElementById('plan-end').value : null;
   if (start && end && end < start) { alert('종료일은 시작일 이후여야 합니다.'); return; }
+
+  var prioEl = document.getElementById('plan-prio') || document.getElementById('plan-priority');
+  var prio = prioEl ? prioEl.value : 'medium';
+  var critEl = document.getElementById('plan-criteria');
+  var minEl = document.getElementById('plan-minutes');
+  var notesEl = document.getElementById('plan-notes');
 
   var data = {
     title: title,
-    period_start: start,
-    period_end: end,
-    priority: document.getElementById('plan-priority').value,
-    success_criteria: document.getElementById('plan-criteria').value.trim(),
-    estimated_minutes: parseInt(document.getElementById('plan-minutes').value) || 0,
-    notes: document.getElementById('plan-notes').value.trim(),
+    period_start: start || null,
+    period_end: end || null,
+    priority: prio,
+    success_criteria: critEl ? critEl.value.trim() : '',
+    estimated_minutes: minEl ? (parseInt(minEl.value) || 0) : 0,
+    notes: notesEl ? notesEl.value.trim() : '',
   };
 
   if (S.editPlanId) {
@@ -418,8 +426,10 @@ function openHistoryModal(planId) {
   if (!plan) return;
   var vers = S.planVers.filter(function(v) { return v.plan_id === planId; })
     .sort(function(a,b) { return b.version_num - a.version_num; });
-  document.getElementById('history-plan-title').textContent = '"' + plan.title + '" 수정 이력 (' + vers.length + '건)';
+  var titleEl = document.getElementById('history-plan-title');
+  if (titleEl) titleEl.textContent = '"' + plan.title + '" 수정 이력 (' + vers.length + '건)';
   var body = document.getElementById('history-list');
+  if (!body) return;
   if (vers.length === 0) {
     body.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px 0;">수정 이력이 없습니다.</div>';
   } else {
@@ -443,35 +453,42 @@ function openTaskModal(id) {
   S.editTaskId = id || null;
   populateTaskPlanSelect();
   var titleEl = document.getElementById('modal-task-title');
+  var prioEl = document.getElementById('task-prio') || document.getElementById('task-priority');
   if (id) {
     var t = S.tasks.find(function(x) { return x.id === id; });
     if (!t) return;
     if (titleEl) titleEl.textContent = '할 일 수정';
-    document.getElementById('task-plan-id').value = t.plan_id || '';
-    document.getElementById('task-title').value = t.title || '';
-    document.getElementById('task-due').value = fmtDate(t.due_date);
-    document.getElementById('task-priority').value = t.priority || 'medium';
-    document.getElementById('task-tags').value = t.tags || '';
-    document.getElementById('task-minutes').value = t.estimated_minutes || '';
-    document.getElementById('task-notes').value = t.notes || '';
+    if (document.getElementById('task-plan-id')) document.getElementById('task-plan-id').value = t.plan_id || '';
+    if (document.getElementById('task-title')) document.getElementById('task-title').value = t.title || '';
+    if (document.getElementById('task-due')) document.getElementById('task-due').value = fmtDate(t.due_date);
+    if (prioEl) prioEl.value = t.priority || 'medium';
+    if (document.getElementById('task-tags')) document.getElementById('task-tags').value = t.tags || '';
+    if (document.getElementById('task-minutes')) document.getElementById('task-minutes').value = t.estimated_minutes || '';
+    if (document.getElementById('task-notes')) document.getElementById('task-notes').value = t.notes || '';
   } else {
     if (titleEl) titleEl.textContent = '새 할 일 만들기';
-    document.getElementById('task-plan-id').value = S.tPlan || '';
-    document.getElementById('task-title').value = '';
-    document.getElementById('task-due').value = '';
-    document.getElementById('task-priority').value = 'medium';
-    document.getElementById('task-tags').value = '';
-    document.getElementById('task-minutes').value = '';
-    document.getElementById('task-notes').value = '';
+    if (document.getElementById('task-plan-id')) document.getElementById('task-plan-id').value = S.tPlan || '';
+    if (document.getElementById('task-title')) document.getElementById('task-title').value = '';
+    if (document.getElementById('task-due')) document.getElementById('task-due').value = '';
+    if (prioEl) prioEl.value = 'medium';
+    if (document.getElementById('task-tags')) document.getElementById('task-tags').value = '';
+    if (document.getElementById('task-minutes')) document.getElementById('task-minutes').value = '';
+    if (document.getElementById('task-notes')) document.getElementById('task-notes').value = '';
   }
   openModal('modal-task');
 }
 
 async function saveTask() {
-  var title = document.getElementById('task-title').value.trim();
+  var titleEl = document.getElementById('task-title');
+  var title = titleEl ? titleEl.value.trim() : '';
   if (!title) { alert('할 일 제목을 입력하세요.'); return; }
-  var planId = document.getElementById('task-plan-id').value || null;
-  var due = document.getElementById('task-due').value || null;
+  var planId = document.getElementById('task-plan-id') ? document.getElementById('task-plan-id').value || null : null;
+  var due = document.getElementById('task-due') ? document.getElementById('task-due').value || null : null;
+  var prioEl = document.getElementById('task-prio') || document.getElementById('task-priority');
+  var prio = prioEl ? prioEl.value : 'medium';
+  var tagsEl = document.getElementById('task-tags');
+  var minEl = document.getElementById('task-minutes');
+  var notesEl = document.getElementById('task-notes');
 
   var task;
   if (S.editTaskId) {
@@ -480,10 +497,10 @@ async function saveTask() {
       plan_id: planId,
       title: title,
       due_date: due,
-      priority: document.getElementById('task-priority').value,
-      tags: document.getElementById('task-tags').value.trim(),
-      estimated_minutes: parseInt(document.getElementById('task-minutes').value) || 0,
-      notes: document.getElementById('task-notes').value.trim(),
+      priority: prio,
+      tags: tagsEl ? tagsEl.value.trim() : '',
+      estimated_minutes: minEl ? (parseInt(minEl.value) || 0) : 0,
+      notes: notesEl ? notesEl.value.trim() : '',
     });
     await DB.saveTask(task);
   } else {
@@ -493,10 +510,10 @@ async function saveTask() {
       title: title,
       status: 'todo',
       due_date: due,
-      priority: document.getElementById('task-priority').value,
-      tags: document.getElementById('task-tags').value.trim(),
-      estimated_minutes: parseInt(document.getElementById('task-minutes').value) || 0,
-      notes: document.getElementById('task-notes').value.trim(),
+      priority: prio,
+      tags: tagsEl ? tagsEl.value.trim() : '',
+      estimated_minutes: minEl ? (parseInt(minEl.value) || 0) : 0,
+      notes: notesEl ? notesEl.value.trim() : '',
       completed_at: null,
       created_at: new Date().toISOString(),
     };
@@ -696,7 +713,7 @@ function renderTasks() {
 // ===== RENDER DO (EXECUTIONS) =====
 function renderDo() {
   populateExecTaskSelect();
-  var list = document.getElementById('exec-list');
+  var list = document.getElementById('exec-list') || document.getElementById('do-content');
   if (!list) return;
 
   var q = S.doBlocked;
@@ -770,7 +787,7 @@ function renderSee() {
     seeRating = S.see.rating || 0;
   }
 
-  var c = document.getElementById('see-container');
+  var c = document.getElementById('see-container') || document.getElementById('see-content');
   if (!c) return;
   c.innerHTML =
     '<div class="stat-grid">' +
@@ -785,7 +802,7 @@ function renderSee() {
       '<div class="form-group">' +
         '<label>만족도</label>' +
         '<div class="star-row" id="star-row">' +
-         .map(function(n) { return '<button type="button" class="star-btn' + (seeRating >= n ? ' active' : '') + '" onclick="setSeeRating(' + n + ')">' + n + '</button>'; }).join('') +
+          [1,2,3,4,5].map(function(n) { return '<button type="button" class="star-btn' + (seeRating >= n ? ' active' : '') + '" onclick="setSeeRating(' + n + ')">' + n + '</button>'; }).join('') +
         '</div>' +
       '</div>' +
       '<div class="form-group"><label>잘 된 것</label><textarea id="see-good" placeholder="오늘 잘 된 일을 적어보세요">' + esc(S.see ? S.see.good || '' : '') + '</textarea></div>' +
@@ -810,13 +827,18 @@ function setSeeRating(n) {
 }
 
 async function saveSee() {
+  var goodEl = document.getElementById('see-good');
+  var badEl = document.getElementById('see-bad');
+  var nextEl = document.getElementById('see-next');
+  var carryEl = document.getElementById('see-carry');
+
   var see = {
     id: S.see ? S.see.id : uuid(),
     date: kstToday(),
-    good: document.getElementById('see-good').value.trim(),
-    bad: document.getElementById('see-bad').value.trim(),
-    next_plan: document.getElementById('see-next').value.trim(),
-    carry_forward: document.getElementById('see-carry').value.trim(),
+    good: goodEl ? goodEl.value.trim() : '',
+    bad: badEl ? badEl.value.trim() : '',
+    next_plan: nextEl ? nextEl.value.trim() : '',
+    carry_forward: carryEl ? carryEl.value.trim() : '',
     rating: seeRating,
     updated_at: new Date().toISOString(),
   };
@@ -825,7 +847,8 @@ async function saveSee() {
 }
 
 async function nextPlanFromSee() {
-  var carry = document.getElementById('see-carry').value.trim();
+  var carryEl = document.getElementById('see-carry');
+  var carry = carryEl ? carryEl.value.trim() : '';
   if (!carry && !confirm('넘길 한 줄이 비어 있습니다. 그래도 계획을 만드시겠습니까?')) return;
   var plan = {
     id: uuid(),
@@ -858,8 +881,8 @@ function goTasksWithFilter(type) {
   } else if (type === 'delayed') {
     S.tDelayed = true;
     S.tStatus = '';
-    var sEl = document.getElementById('t-status');
-    if (sEl) sEl.value = '';
+    var sEl2 = document.getElementById('t-status');
+    if (sEl2) sEl2.value = '';
   }
   renderTasks();
 }
@@ -898,14 +921,15 @@ function renderAll() {
 }
 
 // ==============================================================================
-// ===== SUPABASE 듀얼 연결 & 철통 로그인 게이트 제어 =====
+// ===== SUPABASE DB 연결 및 AUTH (HTML onclick 함수명 및 모달/게이트 100% 호환) =====
 // ==============================================================================
 
+// 1. Supabase 클라이언트 초기화 함수
 async function initSupabaseClient() {
   if (SB) return true;
   if (typeof window === 'undefined' || !window.supabase) return false;
 
-  // 1. 브라우저 localStorage 우선 확인 (GitHub Pages 및 오프라인 호환)
+  // LocalStorage 확인
   try {
     var lsUrl = localStorage.getItem(LS.sbUrl);
     var lsKey = localStorage.getItem(LS.sbKey);
@@ -915,7 +939,7 @@ async function initSupabaseClient() {
     }
   } catch(e) {}
 
-  // 2. Vercel 서버리스 API (/api/config) 확인
+  // /api/config 확인
   try {
     var res = await fetch('/api/config');
     if (res.ok) {
@@ -932,17 +956,218 @@ async function initSupabaseClient() {
   return false;
 }
 
-function showGateMessage(msg, isError) {
-  var errEl = document.getElementById('gate-error-msg') || document.getElementById('auth-error-msg');
+// 2. 메시지 알림 헬퍼 (alert와 화면 표시 동시 지원)
+function notifyUser(msg, isError) {
+  var errEl = document.getElementById('auth-error-msg') || document.getElementById('gate-error-msg');
   if (errEl) {
     errEl.innerHTML = msg;
     errEl.style.display = 'block';
     errEl.style.color = isError ? 'var(--accent)' : 'var(--green)';
-    errEl.style.background = isError ? 'var(--accent-dim)' : 'var(--green-dim)';
-  } else {
-    alert(msg);
+  }
+  alert(msg.replace(/<br>/g, '\n').replace(/<\/?[^>]+(>|$)/g, ''));
+}
+
+// 3. DB 연결 모달 열기 (HTML: onclick="openDbModal()")
+function openDbModal() {
+  var urlEl = document.getElementById('sb-url') || document.getElementById('manual-sb-url');
+  var keyEl = document.getElementById('sb-key') || document.getElementById('manual-sb-key');
+  if (urlEl) urlEl.value = localStorage.getItem(LS.sbUrl) || '';
+  if (keyEl) keyEl.value = localStorage.getItem(LS.sbKey) || '';
+  openModal('modal-db');
+}
+
+// 4. DB 연결 실행 (HTML: onclick="connectSupabase()" 및 onclick="saveManualDbAndConnect()")
+async function connectSupabase() {
+  var urlEl = document.getElementById('sb-url') || document.getElementById('manual-sb-url');
+  var keyEl = document.getElementById('sb-key') || document.getElementById('manual-sb-key');
+  var url = urlEl ? urlEl.value.trim() : '';
+  var key = keyEl ? keyEl.value.trim() : '';
+
+  if (!url || !key) {
+    alert('Supabase Project URL과 Anon Key를 모두 입력해 주세요.');
+    return;
+  }
+
+  if (!window.supabase) {
+    alert('Supabase 라이브러리를 불러오지 못했습니다. 페이지를 새로고침 해주세요.');
+    return;
+  }
+
+  try {
+    var client = window.supabase.createClient(url, key);
+    // 연결 테스트
+    var testRes = await client.from('plans').select('id').limit(1);
+    if (testRes.error && testRes.error.code !== 'PGRST116') {
+      console.warn('DB 테스트 응답:', testRes.error);
+    }
+    SB = client;
+    localStorage.setItem(LS.sbUrl, url);
+    localStorage.setItem(LS.sbKey, key);
+
+    updateDbStatus();
+    closeModal('modal-db');
+    var manualArea = document.getElementById('gate-manual-db');
+    if (manualArea) manualArea.style.display = 'none';
+
+    await DB.loadAll();
+    renderAll();
+    alert('Supabase 데이터베이스에 성공적으로 연결되었습니다!\n이제 로그인 또는 회원가입을 진행할 수 있습니다.');
+  } catch(e) {
+    alert('데이터베이스 연결 실패: ' + e.message);
   }
 }
+const saveManualDbAndConnect = connectSupabase;
+
+// 5. DB 연결 해제
+function disconnectSupabase() {
+  if (!confirm('데이터베이스 연결을 해제하고 로컬 저장소 모드로 전환하시겠습니까?')) return;
+  SB = null;
+  localStorage.removeItem(LS.sbUrl);
+  localStorage.removeItem(LS.sbKey);
+  updateDbStatus();
+  closeModal('modal-db');
+  alert('데이터베이스 연결이 해제되었습니다. 로컬 저장소를 사용합니다.');
+}
+
+// 6. DB 상태바 갱신
+function updateDbStatus() {
+  var dot = document.getElementById('db-dot');
+  var txt = document.getElementById('db-status-text');
+  var url = localStorage.getItem(LS.sbUrl) || '';
+  if (SB || url) {
+    if (dot) dot.classList.add('connected');
+    var shortUrl = url.replace('https://', '').split('.')[0];
+    if (txt) txt.textContent = 'Supabase 연결됨: ' + (shortUrl || 'DB');
+  } else {
+    if (dot) dot.classList.remove('connected');
+    if (txt) txt.textContent = '로컬 저장소 사용 중';
+  }
+}
+
+// 7. 계정 모달 열기
+function openAuthModal() {
+  var errEl = document.getElementById('auth-error-msg') || document.getElementById('gate-error-msg');
+  if (errEl) errEl.style.display = 'none';
+  openModal('modal-auth');
+}
+
+// 8. 로그인 (HTML: onclick="handleSignIn()" 및 onclick="gateSignIn()")
+async function handleSignIn() {
+  var emailEl = document.getElementById('auth-email') || document.getElementById('gate-email');
+  var passEl = document.getElementById('auth-password') || document.getElementById('gate-password');
+  var email = emailEl ? emailEl.value.trim() : '';
+  var password = passEl ? passEl.value.trim() : '';
+
+  if (!email || !password) {
+    notifyUser('이메일과 비밀번호를 모두 입력해 주세요.', true);
+    return;
+  }
+
+  if (!SB) {
+    await initSupabaseClient();
+  }
+
+  if (!SB) {
+    notifyUser('데이터베이스(DB) 연결이 먼저 필요합니다.\n상단의 [DB 연결] 버튼을 눌러 Supabase URL과 Key를 설정해 주세요.', true);
+    openDbModal();
+    return;
+  }
+
+  try {
+    var res = await SB.auth.signInWithPassword({ email: email, password: password });
+    if (res.error) {
+      notifyUser('로그인 실패: ' + res.error.message, true);
+    } else {
+      notifyUser('로그인 성공! ' + (res.data.user ? res.data.user.email : '') + ' 님 환영합니다.', false);
+      closeModal('modal-auth');
+      var gate = document.getElementById('login-gate');
+      if (gate) gate.style.display = 'none';
+
+      await checkAuthSession();
+      await DB.loadAll();
+      renderAll();
+    }
+  } catch(e) {
+    notifyUser('로그인 처리 중 오류 발생: ' + e.message, true);
+  }
+}
+const gateSignIn = handleSignIn;
+
+// 9. 회원가입 (HTML: onclick="handleSignUp()" 및 onclick="gateSignUp()")
+async function handleSignUp() {
+  var emailEl = document.getElementById('auth-email') || document.getElementById('gate-email');
+  var passEl = document.getElementById('auth-password') || document.getElementById('gate-password');
+  var email = emailEl ? emailEl.value.trim() : '';
+  var password = passEl ? passEl.value.trim() : '';
+
+  if (!email || !password) {
+    notifyUser('이메일과 비밀번호를 모두 입력해 주세요.', true);
+    return;
+  }
+  if (password.length < 6) {
+    notifyUser('비밀번호는 최소 6자 이상이어야 합니다.', true);
+    return;
+  }
+
+  if (!SB) {
+    await initSupabaseClient();
+  }
+
+  if (!SB) {
+    notifyUser('데이터베이스(DB) 연결이 먼저 필요합니다.\n상단의 [DB 연결] 버튼을 눌러 Supabase URL과 Key를 설정해 주세요.', true);
+    openDbModal();
+    return;
+  }
+
+  try {
+    var res = await SB.auth.signUp({ email: email, password: password });
+    if (res.error) {
+      notifyUser('회원가입 실패: ' + res.error.message, true);
+    } else {
+      notifyUser('회원가입 요청 완료!\n가입한 이메일과 비밀번호로 [로그인] 버튼을 눌러주세요.', false);
+    }
+  } catch(e) {
+    notifyUser('회원가입 처리 중 오류 발생: ' + e.message, true);
+  }
+}
+const gateSignUp = handleSignUp;
+
+// 10. 로그아웃 (HTML: onclick="handleSignOut()" 및 onclick="gateSignOut()")
+async function handleSignOut() {
+  if (!confirm('로그아웃 하시겠습니까?')) return;
+  if (SB) {
+    await SB.auth.signOut();
+  }
+  location.reload();
+}
+const gateSignOut = handleSignOut;
+
+// 11. 인증 세션 및 UI 동기화
+async function checkAuthSession() {
+  var gate = document.getElementById('login-gate');
+  await initSupabaseClient();
+  updateDbStatus();
+
+  if (SB) {
+    var sessionRes = await SB.auth.getSession();
+    var session = sessionRes.data && sessionRes.data.session;
+    if (session && session.user) {
+      if (gate) gate.style.display = 'none';
+      var userEmailEl = document.getElementById('header-user-email') || document.getElementById('user-email-display');
+      var logoutBtnEl = document.getElementById('header-logout-btn') || document.getElementById('btn-sign-out');
+      var loginBtnEl = document.getElementById('btn-open-auth-modal');
+      if (userEmailEl) {
+        userEmailEl.textContent = '👤 ' + session.user.email;
+        userEmailEl.style.display = 'inline-block';
+      }
+      if (logoutBtnEl) logoutBtnEl.style.display = 'inline-block';
+      if (loginBtnEl) loginBtnEl.style.display = 'none';
+    } else {
+      if (gate) gate.style.display = 'flex';
+    }
+  }
+}
+const checkGateAuth = checkAuthSession;
 
 function toggleManualDb() {
   var area = document.getElementById('gate-manual-db');
@@ -951,159 +1176,13 @@ function toggleManualDb() {
   }
 }
 
-async function saveManualDbAndConnect() {
-  var urlEl = document.getElementById('manual-sb-url') || document.getElementById('sb-url');
-  var keyEl = document.getElementById('manual-sb-key') || document.getElementById('sb-key');
-  var url = urlEl ? urlEl.value.trim() : '';
-  var key = keyEl ? keyEl.value.trim() : '';
-
-  if (!url || !key) {
-    alert('Supabase Project URL과 anon 키를 모두 입력해 주세요.');
-    return;
-  }
-
-  try {
-    if (!window.supabase) {
-      alert('Supabase 라이브러리를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.');
-      return;
-    }
-    SB = window.supabase.createClient(url, key);
-    localStorage.setItem(LS.sbUrl, url);
-    localStorage.setItem(LS.sbKey, key);
-    alert('데이터베이스 연결 정보가 브라우저에 저장되었습니다!\n이제 이메일과 비밀번호를 입력하고 [로그인]을 누르세요.');
-    var manualArea = document.getElementById('gate-manual-db');
-    if (manualArea) manualArea.style.display = 'none';
-    showGateMessage('데이터베이스가 연결되었습니다. 로그인해 주세요.', false);
-  } catch(e) {
-    alert('DB 연결 실패: ' + e.message);
-  }
-}
-
-async function gateSignIn() {
-  var btn = document.getElementById('btn-gate-signin');
-  var origText = btn ? btn.textContent : '로그인';
-  if (btn) { btn.textContent = '로그인 중...'; btn.disabled = true; }
-
-  try {
-    var emailEl = document.getElementById('gate-email') || document.getElementById('auth-email');
-    var passEl = document.getElementById('gate-password') || document.getElementById('auth-password');
-    var email = emailEl ? emailEl.value.trim() : '';
-    var password = passEl ? passEl.value.trim() : '';
-
-    if (!email || !password) {
-      showGateMessage('이메일과 비밀번호를 모두 입력해 주세요.', true);
-      return;
-    }
-
-    if (!SB) {
-      await initSupabaseClient();
-    }
-
-    if (!SB) {
-      showGateMessage('데이터베이스에 연결되지 않았습니다.<br>아래 <strong>[⚙️ 데이터베이스 직접 연결 설정]</strong>에 Supabase URL과 키를 1회 입력해 주세요.', true);
-      var manualArea = document.getElementById('gate-manual-db');
-      if (manualArea) manualArea.style.display = 'block';
-      return;
-    }
-
-    var res = await SB.auth.signInWithPassword({ email: email, password: password });
-    if (res.error) {
-      showGateMessage('로그인 실패: ' + res.error.message, true);
-    } else {
-      showGateMessage('로그인 성공! 다이어리를 불러옵니다...', false);
-      var gate = document.getElementById('login-gate');
-      if (gate) gate.style.display = 'none';
-      await checkGateAuth();
-    }
-  } catch(err) {
-    alert('로그인 처리 중 오류 발생: ' + err.message);
-  } finally {
-    if (btn) { btn.textContent = origText; btn.disabled = false; }
-  }
-}
-
-async function gateSignUp() {
-  var btn = document.getElementById('btn-gate-signup');
-  var origText = btn ? btn.textContent : '회원가입';
-  if (btn) { btn.textContent = '가입 중...'; btn.disabled = true; }
-
-  try {
-    var emailEl = document.getElementById('gate-email') || document.getElementById('auth-email');
-    var passEl = document.getElementById('gate-password') || document.getElementById('auth-password');
-    var email = emailEl ? emailEl.value.trim() : '';
-    var password = passEl ? passEl.value.trim() : '';
-
-    if (!email || !password) {
-      showGateMessage('이메일과 비밀번호를 모두 입력해 주세요.', true);
-      return;
-    }
-    if (password.length < 6) {
-      showGateMessage('비밀번호는 최소 6자 이상이어야 합니다.', true);
-      return;
-    }
-
-    if (!SB) {
-      await initSupabaseClient();
-    }
-
-    if (!SB) {
-      showGateMessage('데이터베이스에 연결되지 않았습니다.<br>아래 <strong>[⚙️ 데이터베이스 직접 연결 설정]</strong>에 Supabase URL과 키를 1회 입력해 주세요.', true);
-      var manualArea = document.getElementById('gate-manual-db');
-      if (manualArea) manualArea.style.display = 'block';
-      return;
-    }
-
-    var res = await SB.auth.signUp({ email: email, password: password });
-    if (res.error) {
-      showGateMessage('회원가입 실패: ' + res.error.message, true);
-    } else {
-      alert('회원가입이 완료되었습니다!\n이제 이메일과 비밀번호를 그대로 두고 [로그인] 버튼을 눌러 접속하세요.');
-      showGateMessage('회원가입 성공! 이제 [로그인] 버튼을 눌러주세요.', false);
-    }
-  } catch(err) {
-    alert('회원가입 처리 중 오류 발생: ' + err.message);
-  } finally {
-    if (btn) { btn.textContent = origText; btn.disabled = false; }
-  }
-}
-
-async function gateSignOut() {
-  if (!confirm('로그아웃 하시겠습니까?')) return;
-  if (SB) await SB.auth.signOut();
-  location.reload();
-}
-
-async function checkGateAuth() {
-  var gate = document.getElementById('login-gate');
-
+// ===== DOMContentLoaded 바인딩 =====
+document.addEventListener('DOMContentLoaded', async function() {
   await initSupabaseClient();
-
-  if (SB) {
-    var sessionRes = await SB.auth.getSession();
-    var session = sessionRes.data && sessionRes.data.session;
-
-    if (session && session.user) {
-      if (gate) gate.style.display = 'none';
-      var userEmailEl = document.getElementById('header-user-email');
-      var logoutBtnEl = document.getElementById('header-logout-btn');
-      if (userEmailEl) {
-        userEmailEl.textContent = '👤 ' + session.user.email;
-        userEmailEl.style.display = 'inline-block';
-      }
-      if (logoutBtnEl) logoutBtnEl.style.display = 'inline-block';
-      await DB.loadAll();
-      renderAll();
-    } else {
-      if (gate) gate.style.display = 'flex';
-    }
-  } else {
-    if (gate) gate.style.display = 'flex';
-  }
-}
-
-// ===== EVENT LISTENERS ATTACHMENT =====
-document.addEventListener('DOMContentLoaded', function() {
-  checkGateAuth();
+  await DB.loadAll();
+  renderAll();
+  updateDbStatus();
+  await checkAuthSession();
 
   var exportBtn = document.getElementById('export-btn');
   if (exportBtn) exportBtn.addEventListener('click', exportData);
@@ -1126,7 +1205,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   var tSort = document.getElementById('t-sort');
   if (tSort) tSort.addEventListener('change', function(e) { S.tSort = e.target.value; renderTasks(); });
-  var tDir = document.getElementById('t-dir');
+  var tDir = document.getElementById('t-dir') || document.getElementById('sort-dir-btn');
   if (tDir) tDir.addEventListener('click', function() {
     S.tDir = S.tDir === 'asc' ? 'desc' : 'asc';
     tDir.textContent = S.tDir === 'asc' ? '오름차순' : '내림차순';
