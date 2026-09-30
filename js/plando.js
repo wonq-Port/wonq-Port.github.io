@@ -1,12 +1,34 @@
+// ===== CONSTANTS & STORAGE KEYS =====
+const LS = {
+  plans: 'pds2_plans',
+  planVers: 'pds2_plan_versions',
+  tasks: 'pds2_tasks',
+  execs: 'pds2_executions',
+  sees: 'pds2_sees',
+  sbUrl: 'pds2_sb_url',
+  sbKey: 'pds2_sb_key',
+};
+
 // ===== STATE =====
 const S = {
-  plans: [], planVers: [], tasks: [], execs: [], see: null,
-  tSearch: '', tPlan: '', tStatus: '', tPrio: '', tTag: '',
-  tDelayed: false, tSort: 'priority', tDir: 'asc',
+  plans: [],
+  planVers: [],
+  tasks: [],
+  execs: [],
+  see: null,
+  tSearch: '',
+  tPlan: '',
+  tStatus: '',
+  tPrio: '',
+  tTag: '',
+  tDelayed: false,
+  tSort: 'priority',
+  tDir: 'asc',
   seePlan: '',
   doBlocked: false,
   pending: new Set(),
-  editPlanId: null, editTaskId: null,
+  editPlanId: null,
+  editTaskId: null,
   activeTab: 'plan',
 };
 
@@ -57,131 +79,157 @@ function priorityLabel(p) {
   return p === 'high' ? '높음' : p === 'medium' ? '보통' : '낮음';
 }
 
+function priorityOrder(p) {
+  return p === 'high' ? 1 : p === 'medium' ? 2 : 3;
+}
+
 function statusLabel(s) {
   return s === 'todo' ? '할 일' : s === 'in_progress' ? '진행 중' : '완료';
 }
 
-// ===== LOCALSTORAGE =====
-var LS = {
-  plans: 'pds2_plans',
-  planVers: 'pds2_plan_versions',
-  tasks: 'pds2_tasks',
-  execs: 'pds2_executions',
-  sees: 'pds2_sees',
-  sbUrl: 'pds2_sb_url',
-  sbKey: 'pds2_sb_key',
-};
+function statusBadgeClass(s) {
+  return s === 'todo' ? 'badge-todo' : s === 'in_progress' ? 'badge-in_progress' : 'badge-done';
+}
+
+function prioBadgeClass(p) {
+  return p === 'high' ? 'badge-high' : p === 'medium' ? 'badge-medium' : 'badge-low';
+}
+
+function isDelayed(t) {
+  if (!t.due_date) return false;
+  if (t.status === 'done') return false;
+  return fmtDate(t.due_date) < kstToday();
+}
 
 function lsLoad(key) {
   try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { return []; }
 }
+
 function lsSave(key, data) {
   localStorage.setItem(key, JSON.stringify(data));
 }
 
-// ===== DB LAYER =====
-var DB = {
+// ===== DB OPERATIONS =====
+const DB = {
   loadAll: async function() {
     if (SB) {
-      var results = await Promise.all([
-        SB.from('plans').select('*').order('created_at'),
-        SB.from('plan_versions').select('*').order('saved_at'),
-        SB.from('tasks').select('*').order('created_at'),
-        SB.from('executions').select('*').order('created_at'),
-        SB.from('sees').select('*'),
-      ]);
-      S.plans = results[0].data || [];
-      S.planVers = results[1].data || [];
-      S.tasks = results[2].data || [];
-      S.execs = results[3].data || [];
-      S.see = (results[4].data || []).find(function(r) { return r.date === kstToday(); }) || null;
-    } else {
-      S.plans = lsLoad(LS.plans);
-      S.planVers = lsLoad(LS.planVers);
-      S.tasks = lsLoad(LS.tasks);
-      S.execs = lsLoad(LS.execs);
-      var sees = lsLoad(LS.sees);
-      S.see = sees.find(function(r) { return r.date === kstToday(); }) || null;
+      try {
+        var results = await Promise.all([
+          SB.from('plans').select('*').order('created_at'),
+          SB.from('plan_versions').select('*').order('saved_at'),
+          SB.from('tasks').select('*').order('created_at'),
+          SB.from('executions').select('*').order('created_at'),
+          SB.from('sees').select('*'),
+        ]);
+        S.plans = results[0].data || [];
+        S.planVers = results.data || [];
+        S.tasks = results.data || [];
+        S.execs = results[3].data || [];
+        S.see = (results[4].data || []).find(function(r) { return r.date === kstToday(); }) || null;
+        return;
+      } catch(e) {
+        console.warn('Supabase 로드 오류, 로컬스토리지 대체:', e);
+      }
     }
+    S.plans = lsLoad(LS.plans);
+    S.planVers = lsLoad(LS.planVers);
+    S.tasks = lsLoad(LS.tasks);
+    S.execs = lsLoad(LS.execs);
+    var sees = lsLoad(LS.sees);
+    S.see = sees.find(function(r) { return r.date === kstToday(); }) || null;
   },
+
   savePlan: async function(plan) {
-    if (SB) { await SB.from('plans').upsert(plan); }
-    else {
-      var arr = lsLoad(LS.plans);
-      var i = arr.findIndex(function(p) { return p.id === plan.id; });
-      if (i >= 0) arr[i] = plan; else arr.push(plan);
-      lsSave(LS.plans, arr);
+    if (SB) {
+      try { await SB.from('plans').upsert(plan); } catch(e) {}
     }
+    var arr = lsLoad(LS.plans);
+    var i = arr.findIndex(function(p) { return p.id === plan.id; });
+    if (i >= 0) arr[i] = plan; else arr.push(plan);
+    lsSave(LS.plans, arr);
+
     S.plans = S.plans.filter(function(p) { return p.id !== plan.id; });
     S.plans.push(plan);
   },
+
   deletePlan: async function(id) {
-    if (SB) { await SB.from('plans').delete().eq('id', id); }
-    else {
-      lsSave(LS.plans, lsLoad(LS.plans).filter(function(p) { return p.id !== id; }));
-      lsSave(LS.planVers, lsLoad(LS.planVers).filter(function(v) { return v.plan_id !== id; }));
-      lsSave(LS.tasks, lsLoad(LS.tasks).map(function(t) { return t.plan_id === id ? Object.assign({}, t, { plan_id: null }) : t; }));
+    if (SB) {
+      try { await SB.from('plans').delete().eq('id', id); } catch(e) {}
     }
+    lsSave(LS.plans, lsLoad(LS.plans).filter(function(p) { return p.id !== id; }));
+    lsSave(LS.planVers, lsLoad(LS.planVers).filter(function(v) { return v.plan_id !== id; }));
+    lsSave(LS.tasks, lsLoad(LS.tasks).map(function(t) { return t.plan_id === id ? Object.assign({}, t, { plan_id: null }) : t; }));
+
     S.plans = S.plans.filter(function(p) { return p.id !== id; });
     S.planVers = S.planVers.filter(function(v) { return v.plan_id !== id; });
     S.tasks = S.tasks.map(function(t) { return t.plan_id === id ? Object.assign({}, t, { plan_id: null }) : t; });
   },
+
   savePlanVer: async function(ver) {
-    if (SB) { await SB.from('plan_versions').insert(ver); }
-    else {
-      var arr = lsLoad(LS.planVers);
-      arr.push(ver);
-      lsSave(LS.planVers, arr);
+    if (SB) {
+      try { await SB.from('plan_versions').insert(ver); } catch(e) {}
     }
+    var arr = lsLoad(LS.planVers);
+    arr.push(ver);
+    lsSave(LS.planVers, arr);
     S.planVers.push(ver);
   },
+
   saveTask: async function(task) {
-    if (SB) { await SB.from('tasks').upsert(task); }
-    else {
-      var arr = lsLoad(LS.tasks);
-      var i = arr.findIndex(function(t) { return t.id === task.id; });
-      if (i >= 0) arr[i] = task; else arr.push(task);
-      lsSave(LS.tasks, arr);
+    if (SB) {
+      try { await SB.from('tasks').upsert(task); } catch(e) {}
     }
+    var arr = lsLoad(LS.tasks);
+    var i = arr.findIndex(function(t) { return t.id === task.id; });
+    if (i >= 0) arr[i] = task; else arr.push(task);
+    lsSave(LS.tasks, arr);
+
     S.tasks = S.tasks.filter(function(t) { return t.id !== task.id; });
     S.tasks.push(task);
   },
+
   deleteTask: async function(id) {
-    if (SB) { await SB.from('tasks').delete().eq('id', id); }
-    else {
-      lsSave(LS.tasks, lsLoad(LS.tasks).filter(function(t) { return t.id !== id; }));
-      lsSave(LS.execs, lsLoad(LS.execs).filter(function(e) { return e.task_id !== id; }));
+    if (SB) {
+      try { await SB.from('tasks').delete().eq('id', id); } catch(e) {}
     }
+    lsSave(LS.tasks, lsLoad(LS.tasks).filter(function(t) { return t.id !== id; }));
+    lsSave(LS.execs, lsLoad(LS.execs).filter(function(e) { return e.task_id !== id; }));
+
     S.tasks = S.tasks.filter(function(t) { return t.id !== id; });
     S.execs = S.execs.filter(function(e) { return e.task_id !== id; });
   },
+
   saveExec: async function(exec) {
-    if (SB) { await SB.from('executions').insert(exec); }
-    else {
-      var arr = lsLoad(LS.execs);
-      arr.push(exec);
-      lsSave(LS.execs, arr);
+    if (SB) {
+      try { await SB.from('executions').insert(exec); } catch(e) {}
     }
+    var arr = lsLoad(LS.execs);
+    arr.push(exec);
+    lsSave(LS.execs, arr);
     S.execs.push(exec);
   },
+
   deleteExec: async function(id) {
-    if (SB) { await SB.from('executions').delete().eq('id', id); }
-    else { lsSave(LS.execs, lsLoad(LS.execs).filter(function(e) { return e.id !== id; })); }
+    if (SB) {
+      try { await SB.from('executions').delete().eq('id', id); } catch(e) {}
+    }
+    lsSave(LS.execs, lsLoad(LS.execs).filter(function(e) { return e.id !== id; }));
     S.execs = S.execs.filter(function(e) { return e.id !== id; });
   },
+
   saveSee: async function(see) {
-    if (SB) { await SB.from('sees').upsert(see, { onConflict: 'date' }); }
-    else {
-      var arr = lsLoad(LS.sees);
-      var i = arr.findIndex(function(s) { return s.date === see.date; });
-      if (i >= 0) arr[i] = see; else arr.push(see);
-      lsSave(LS.sees, arr);
+    if (SB) {
+      try { await SB.from('sees').upsert(see, { onConflict: 'date' }); } catch(e) {}
     }
+    var arr = lsLoad(LS.sees);
+    var i = arr.findIndex(function(s) { return s.date === see.date; });
+    if (i >= 0) arr[i] = see; else arr.push(see);
+    lsSave(LS.sees, arr);
     S.see = see;
   },
 };
 
-// ===== PLAN EDIT WITH VERSION (T06-C08) =====
+// ===== PLAN EDIT WITH VERSION HISTORY =====
 async function savePlanEdit(id, updates) {
   var current = S.plans.find(function(p) { return p.id === id; });
   if (!current) return;
@@ -204,7 +252,7 @@ async function savePlanEdit(id, updates) {
   await DB.savePlan(updated);
 }
 
-// ===== TOGGLE TASK STATUS (T06-C11, C12) =====
+// ===== TOGGLE TASK STATUS =====
 async function toggleTaskStatus(id) {
   var task = S.tasks.find(function(t) { return t.id === id; });
   if (!task) return;
@@ -215,208 +263,113 @@ async function toggleTaskStatus(id) {
   renderTasks();
 }
 
-// ===== EXEC AUTO-CALC (T06-C25) =====
+// ===== EXECUTION AUTO-CALCULATION =====
 function autoCalcMinutes() {
-  var sv = document.getElementById('exec-start').value;
-  var ev = document.getElementById('exec-end').value;
-  if (sv && ev) {
-    var diff = (new Date(ev) - new Date(sv)) / 60000;
-    if (diff > 0) {
-      document.getElementById('exec-minutes').value = Math.round(diff);
-    }
+  var sv = document.getElementById('exec-start') ? document.getElementById('exec-start').value : '';
+  var ev = document.getElementById('exec-end') ? document.getElementById('exec-end').value : '';
+  if (!sv || !ev) return;
+  var s = new Date(sv);
+  var e = new Date(ev);
+  var diff = Math.round((e - s) / 60000);
+  if (diff >= 0 && document.getElementById('exec-actual')) {
+    document.getElementById('exec-actual').value = diff;
   }
 }
 
-// ===== SUBMIT EXEC (T06-C21) =====
+// ===== SUBMIT EXECUTION (DOUBLE-SUBMISSION PREVENTION) =====
 async function submitExec() {
   var taskId = document.getElementById('exec-task').value;
   if (!taskId) { alert('할 일을 선택하세요.'); return; }
   if (S.pending.has(taskId)) return;
+
+  var sv = document.getElementById('exec-start').value;
+  var ev = document.getElementById('exec-end').value;
+  var actual = parseInt(document.getElementById('exec-actual').value) || 0;
+  var blocker = document.getElementById('exec-blocker').value.trim();
+
+  if (sv && ev && new Date(ev) < new Date(sv)) {
+    alert('종료 시각은 시작 시각 이후여야 합니다.');
+    return;
+  }
+
   S.pending.add(taskId);
+  var submitBtn = document.getElementById('exec-submit-btn');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '기록 중...'; }
+
   try {
-    var startVal = document.getElementById('exec-start').value;
-    var endVal = document.getElementById('exec-end').value;
-    var actualMin = parseInt(document.getElementById('exec-minutes').value) || 0;
-    if (startVal && endVal) {
-      var diff = (new Date(endVal) - new Date(startVal)) / 60000;
-      if (diff > 0) actualMin = Math.round(diff);
-    }
-    var blocker = document.getElementById('exec-blocker').value.trim();
-    var bucket = startVal ? startVal.slice(0, 16) : null;
-    if (bucket && S.execs.some(function(e) { return e.task_id === taskId && e.start_at && e.start_at.slice(0, 16) === bucket; })) {
-      alert('이미 같은 시간에 기록이 있습니다.');
-      return;
-    }
     var exec = {
       id: uuid(),
       task_id: taskId,
-      start_at: startVal ? new Date(startVal).toISOString() : null,
-      end_at: endVal ? new Date(endVal).toISOString() : null,
-      actual_minutes: actualMin,
+      start_at: sv ? new Date(sv).toISOString() : null,
+      end_at: ev ? new Date(ev).toISOString() : null,
+      actual_minutes: actual,
       blocker_reason: blocker,
       created_at: new Date().toISOString(),
     };
     await DB.saveExec(exec);
-    document.getElementById('exec-task').value = '';
+
+    var task = S.tasks.find(function(t) { return t.id === taskId; });
+    if (task && task.status !== 'done') {
+      await DB.saveTask(Object.assign({}, task, { status: 'done', completed_at: new Date().toISOString() }));
+    }
+
     document.getElementById('exec-start').value = '';
     document.getElementById('exec-end').value = '';
-    document.getElementById('exec-minutes').value = '';
+    document.getElementById('exec-actual').value = '';
     document.getElementById('exec-blocker').value = '';
     renderDo();
+    renderTasks();
   } finally {
     S.pending.delete(taskId);
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '실행 완료 기록'; }
   }
 }
 
-// ===== SORT / FILTER (T06-C18, C19, C20) =====
-function sortedTasks(tasks) {
-  var priorityRank = { high: 0, medium: 1, low: 2 };
-  return tasks.slice().sort(function(a, b) {
-    var cmp = 0;
-    if (S.tSort === 'priority') {
-      cmp = (priorityRank[a.priority] != null ? priorityRank[a.priority] : 1) - (priorityRank[b.priority] != null ? priorityRank[b.priority] : 1);
-    } else if (S.tSort === 'due_date') {
-      var da = a.due_date || '9999', db = b.due_date || '9999';
-      cmp = da < db ? -1 : da > db ? 1 : 0;
-    } else if (S.tSort === 'title') {
-      cmp = a.title.localeCompare(b.title, 'ko');
-    } else if (S.tSort === 'created_at') {
-      cmp = (a.created_at || '') < (b.created_at || '') ? -1 : 1;
-    }
-    if (S.tDir === 'desc') cmp = -cmp;
-    if (cmp === 0) {
-      return (a.created_at || '') < (b.created_at || '') ? -1 : 1;
-    }
-    return cmp;
-  });
-}
-
-function filteredTasks() {
-  var today = kstToday();
-  return S.tasks.filter(function(t) {
-    if (S.tSearch && !t.title.toLowerCase().includes(S.tSearch.toLowerCase())) return false;
-    if (S.tPlan && t.plan_id !== S.tPlan) return false;
-    if (S.tStatus && t.status !== S.tStatus) return false;
-    if (S.tPrio && t.priority !== S.tPrio) return false;
-    if (S.tTag) {
-      var tags = (t.tags || '').split(',').map(function(x) { return x.trim(); });
-      if (!tags.some(function(tag) { return tag.toLowerCase().includes(S.tTag.toLowerCase()); })) return false;
-    }
-    if (S.tDelayed) {
-      if (t.status === 'done' || !t.due_date || t.due_date >= today) return false;
-    }
-    return true;
-  });
-}
-
-function getSortLabel() {
-  if (S.tSort === 'due_date') return '정렬: 마감일 ' + (S.tDir === 'asc' ? '빠른 순' : '늦은 순');
-  if (S.tSort === 'title') return '정렬: 제목 ' + (S.tDir === 'asc' ? '가나다 순' : '역순');
-  if (S.tSort === 'created_at') return '정렬: 생성일 ' + (S.tDir === 'asc' ? '오래된 순' : '최신 순');
-  if (S.tSort === 'priority') return '정렬: 우선순위 ' + (S.tDir === 'asc' ? '높은 순' : '낮은 순');
-  return '정렬: ' + S.tSort;
-}
-
-// ===== EXPORT (T06-C36) =====
-function exportData() {
-  var data = {
-    exported_at: new Date().toISOString(),
-    plans: S.plans,
-    plan_versions: S.planVers,
-    tasks: S.tasks,
-    executions: S.execs,
-    sees: lsLoad(LS.sees),
-  };
-  var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'plando-export-' + kstToday() + '.json';
-  a.click();
-}
-
-// ===== SEE NAV (T06-C83) =====
-function seeNavTasks(tPlan, tStatus, tDelayed) {
-  S.tPlan = tPlan || '';
-  S.tStatus = tStatus || '';
-  S.tPrio = '';
-  S.tTag = '';
-  S.tDelayed = !!tDelayed;
-  showTab('tasks');
-  syncTaskFilterUI();
-  renderTasks();
-}
-
-function seeNavDo(blocked) {
-  S.doBlocked = !!blocked;
-  showTab('do');
-  renderDo();
-}
-
-function syncTaskFilterUI() {
-  var tPlanEl = document.getElementById('t-plan');
-  var tStatusEl = document.getElementById('t-status');
-  var tSearchEl = document.getElementById('t-search');
-  var tPrioEl = document.getElementById('t-prio');
-  var tTagEl = document.getElementById('t-tag');
-  var tSortEl = document.getElementById('t-sort');
-  if (tPlanEl) tPlanEl.value = S.tPlan || '';
-  if (tStatusEl) tStatusEl.value = S.tStatus || '';
-  if (tSearchEl) tSearchEl.value = S.tSearch || '';
-  if (tPrioEl) tPrioEl.value = S.tPrio || '';
-  if (tTagEl) tTagEl.value = S.tTag || '';
-  if (tSortEl) tSortEl.value = S.tSort || 'priority';
-}
-
-// ===== TAB =====
+// ===== TABS & MODALS NAVIGATION =====
 function showTab(name) {
   S.activeTab = name;
-  document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
-  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
-  var panel = document.getElementById('tab-' + name);
-  if (panel) panel.classList.add('active');
-  var btn = document.querySelector('.tab-btn[data-tab="' + name + '"]');
-  if (btn) btn.classList.add('active');
-  if (name === 'plan') renderPlans();
-  if (name === 'tasks') { populatePlanSelects(); renderTasks(); }
+  document.querySelectorAll('.tab-btn').forEach(function(b) {
+    b.classList.toggle('active', b.getAttribute('data-tab') === name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(function(p) {
+    p.classList.toggle('active', p.id === 'tab-' + name);
+  });
+  if (name === 'tasks') renderTasks();
   if (name === 'do') renderDo();
-  if (name === 'see') { populatePlanSelects(); renderSee(); }
+  if (name === 'see') renderSee();
+  if (name === 'plan') renderPlans();
 }
 
-// ===== MODALS =====
 function openModal(id) {
-  document.getElementById(id).classList.add('open');
+  var el = document.getElementById(id);
+  if (el) el.classList.add('open');
 }
+
 function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
+  var el = document.getElementById(id);
+  if (el) el.classList.remove('open');
 }
 
-document.addEventListener('click', function(e) {
-  if (e.target.classList.contains('modal-overlay')) {
-    e.target.classList.remove('open');
-  }
-});
-
-// ===== PLAN MODAL =====
 function openPlanModal(id) {
   S.editPlanId = id || null;
   var titleEl = document.getElementById('modal-plan-title');
   if (id) {
     var p = S.plans.find(function(x) { return x.id === id; });
     if (!p) return;
-    titleEl.textContent = '계획 수정';
+    if (titleEl) titleEl.textContent = '계획 수정';
     document.getElementById('plan-title').value = p.title || '';
-    document.getElementById('plan-start').value = p.period_start || '';
-    document.getElementById('plan-end').value = p.period_end || '';
-    document.getElementById('plan-prio').value = p.priority || 'medium';
+    document.getElementById('plan-start').value = fmtDate(p.period_start);
+    document.getElementById('plan-end').value = fmtDate(p.period_end);
+    document.getElementById('plan-priority').value = p.priority || 'medium';
     document.getElementById('plan-criteria').value = p.success_criteria || '';
-    document.getElementById('plan-minutes').value = p.estimated_minutes || 0;
+    document.getElementById('plan-minutes').value = p.estimated_minutes || '';
     document.getElementById('plan-notes').value = p.notes || '';
   } else {
-    titleEl.textContent = '계획 추가';
+    if (titleEl) titleEl.textContent = '새 계획 만들기';
     document.getElementById('plan-title').value = '';
     document.getElementById('plan-start').value = '';
     document.getElementById('plan-end').value = '';
-    document.getElementById('plan-prio').value = 'medium';
+    document.getElementById('plan-priority').value = 'medium';
     document.getElementById('plan-criteria').value = '';
     document.getElementById('plan-minutes').value = '';
     document.getElementById('plan-notes').value = '';
@@ -426,21 +379,27 @@ function openPlanModal(id) {
 
 async function savePlan() {
   var title = document.getElementById('plan-title').value.trim();
-  if (!title) { alert('제목을 입력하세요.'); return; }
-  var updates = {
+  if (!title) { alert('계획 제목을 입력하세요.'); return; }
+  var start = document.getElementById('plan-start').value || null;
+  var end = document.getElementById('plan-end').value || null;
+  if (start && end && end < start) { alert('종료일은 시작일 이후여야 합니다.'); return; }
+
+  var data = {
     title: title,
-    period_start: document.getElementById('plan-start').value || null,
-    period_end: document.getElementById('plan-end').value || null,
-    priority: document.getElementById('plan-prio').value,
+    period_start: start,
+    period_end: end,
+    priority: document.getElementById('plan-priority').value,
     success_criteria: document.getElementById('plan-criteria').value.trim(),
     estimated_minutes: parseInt(document.getElementById('plan-minutes').value) || 0,
     notes: document.getElementById('plan-notes').value.trim(),
   };
+
   if (S.editPlanId) {
-    await savePlanEdit(S.editPlanId, updates);
+    await savePlanEdit(S.editPlanId, data);
   } else {
-    var plan = Object.assign({ id: uuid(), created_at: new Date().toISOString() }, updates);
-    await DB.savePlan(plan);
+    data.id = uuid();
+    data.created_at = new Date().toISOString();
+    await DB.savePlan(data);
   }
   closeModal('modal-plan');
   renderPlans();
@@ -448,60 +407,61 @@ async function savePlan() {
 }
 
 async function deletePlan(id) {
-  if (!confirm('계획을 삭제하시겠습니까? 연결된 할 일의 계획 연결이 해제됩니다.')) return;
+  if (!confirm('계획을 삭제하시겠습니까? 연결된 할 일은 계획 없음으로 유지됩니다.')) return;
   await DB.deletePlan(id);
   renderPlans();
   populatePlanSelects();
 }
 
-// ===== HISTORY MODAL =====
 function openHistoryModal(planId) {
-  var versions = S.planVers.filter(function(v) { return v.plan_id === planId; }).slice().sort(function(a, b) { return b.version_num - a.version_num; });
-  var container = document.getElementById('history-list');
-  if (versions.length === 0) {
-    container.innerHTML = '<div class="empty-state">수정 이력이 없습니다.</div>';
+  var plan = S.plans.find(function(p) { return p.id === planId; });
+  if (!plan) return;
+  var vers = S.planVers.filter(function(v) { return v.plan_id === planId; })
+    .sort(function(a,b) { return b.version_num - a.version_num; });
+  document.getElementById('history-plan-title').textContent = '"' + plan.title + '" 수정 이력 (' + vers.length + '건)';
+  var body = document.getElementById('history-list');
+  if (vers.length === 0) {
+    body.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px 0;">수정 이력이 없습니다.</div>';
   } else {
-    container.innerHTML = versions.map(function(v) {
-      return '<div class="version-item">' +
-        '<div class="version-num">v' + esc(String(v.version_num)) + ' &nbsp;<span style="font-size:11px;font-weight:400;color:var(--muted)">' + esc(fmtDatetime(v.saved_at)) + '</span></div>' +
-        '<div class="version-field"><strong>제목:</strong> ' + esc(v.title) + '</div>' +
-        (v.period_start ? '<div class="version-field"><strong>기간:</strong> ' + esc(v.period_start) + ' ~ ' + esc(v.period_end || '') + '</div>' : '') +
-        '<div class="version-field"><strong>우선순위:</strong> ' + esc(priorityLabel(v.priority)) + '</div>' +
-        (v.success_criteria ? '<div class="version-field"><strong>성공 기준:</strong> ' + esc(v.success_criteria) + '</div>' : '') +
-        '<div class="version-field"><strong>예상 시간:</strong> ' + esc(String(v.estimated_minutes || 0)) + '분</div>' +
-        (v.notes ? '<div class="version-field"><strong>메모:</strong> ' + esc(v.notes) + '</div>' : '') +
-        '</div>';
+    body.innerHTML = vers.map(function(v) {
+      return '<div class="history-item">' +
+        '<div class="history-ver">v' + v.version_num + ' &mdash; ' + fmtDatetime(v.saved_at) + ' 저장된 이전 값</div>' +
+        '<div style="font-weight:600;margin-bottom:3px;">' + esc(v.title) + '</div>' +
+        '<div style="font-size:12px;color:var(--secondary);">' +
+          (v.period_start || v.period_end ? (fmtDate(v.period_start) + ' ~ ' + fmtDate(v.period_end) + ' | ') : '') +
+          '우선순위: ' + priorityLabel(v.priority) +
+          (v.estimated_minutes ? ' | ' + v.estimated_minutes + '분' : '') +
+        '</div>' +
+        (v.success_criteria ? '<div style="font-size:12px;color:var(--muted);margin-top:2px;">기준: ' + esc(v.success_criteria) + '</div>' : '') +
+      '</div>';
     }).join('');
   }
   openModal('modal-history');
 }
 
-// ===== TASK MODAL =====
 function openTaskModal(id) {
   S.editTaskId = id || null;
-  var titleEl = document.getElementById('modal-task-title');
   populateTaskPlanSelect();
+  var titleEl = document.getElementById('modal-task-title');
   if (id) {
     var t = S.tasks.find(function(x) { return x.id === id; });
     if (!t) return;
-    titleEl.textContent = '할 일 수정';
-    document.getElementById('task-title').value = t.title || '';
+    if (titleEl) titleEl.textContent = '할 일 수정';
     document.getElementById('task-plan-id').value = t.plan_id || '';
-    document.getElementById('task-status').value = t.status || 'todo';
-    document.getElementById('task-prio').value = t.priority || 'medium';
-    document.getElementById('task-due').value = t.due_date || '';
-    document.getElementById('task-minutes').value = t.estimated_minutes || 0;
+    document.getElementById('task-title').value = t.title || '';
+    document.getElementById('task-due').value = fmtDate(t.due_date);
+    document.getElementById('task-priority').value = t.priority || 'medium';
     document.getElementById('task-tags').value = t.tags || '';
+    document.getElementById('task-minutes').value = t.estimated_minutes || '';
     document.getElementById('task-notes').value = t.notes || '';
   } else {
-    titleEl.textContent = '할 일 추가';
+    if (titleEl) titleEl.textContent = '새 할 일 만들기';
+    document.getElementById('task-plan-id').value = S.tPlan || '';
     document.getElementById('task-title').value = '';
-    document.getElementById('task-plan-id').value = '';
-    document.getElementById('task-status').value = 'todo';
-    document.getElementById('task-prio').value = 'medium';
     document.getElementById('task-due').value = '';
-    document.getElementById('task-minutes').value = '';
+    document.getElementById('task-priority').value = 'medium';
     document.getElementById('task-tags').value = '';
+    document.getElementById('task-minutes').value = '';
     document.getElementById('task-notes').value = '';
   }
   openModal('modal-task');
@@ -509,25 +469,37 @@ function openTaskModal(id) {
 
 async function saveTask() {
   var title = document.getElementById('task-title').value.trim();
-  if (!title) { alert('제목을 입력하세요.'); return; }
+  if (!title) { alert('할 일 제목을 입력하세요.'); return; }
   var planId = document.getElementById('task-plan-id').value || null;
-  var status = document.getElementById('task-status').value;
-  var updates = {
-    title: title,
-    plan_id: planId,
-    status: status,
-    priority: document.getElementById('task-prio').value,
-    due_date: document.getElementById('task-due').value || null,
-    estimated_minutes: parseInt(document.getElementById('task-minutes').value) || 0,
-    tags: document.getElementById('task-tags').value.trim(),
-    notes: document.getElementById('task-notes').value.trim(),
-  };
+  var due = document.getElementById('task-due').value || null;
+
+  var task;
   if (S.editTaskId) {
-    var existing = S.tasks.find(function(t) { return t.id === S.editTaskId; });
-    var completed_at = status === 'done' ? (existing && existing.completed_at ? existing.completed_at : new Date().toISOString()) : null;
-    await DB.saveTask(Object.assign({}, existing, updates, { completed_at: completed_at }));
+    var current = S.tasks.find(function(t) { return t.id === S.editTaskId; });
+    task = Object.assign({}, current, {
+      plan_id: planId,
+      title: title,
+      due_date: due,
+      priority: document.getElementById('task-priority').value,
+      tags: document.getElementById('task-tags').value.trim(),
+      estimated_minutes: parseInt(document.getElementById('task-minutes').value) || 0,
+      notes: document.getElementById('task-notes').value.trim(),
+    });
+    await DB.saveTask(task);
   } else {
-    var task = Object.assign({ id: uuid(), completed_at: status === 'done' ? new Date().toISOString() : null, created_at: new Date().toISOString() }, updates);
+    task = {
+      id: uuid(),
+      plan_id: planId,
+      title: title,
+      status: 'todo',
+      due_date: due,
+      priority: document.getElementById('task-priority').value,
+      tags: document.getElementById('task-tags').value.trim(),
+      estimated_minutes: parseInt(document.getElementById('task-minutes').value) || 0,
+      notes: document.getElementById('task-notes').value.trim(),
+      completed_at: null,
+      created_at: new Date().toISOString(),
+    };
     await DB.saveTask(task);
   }
   closeModal('modal-task');
@@ -545,65 +517,6 @@ async function deleteExec(id) {
   if (!confirm('실행 기록을 삭제하시겠습니까?')) return;
   await DB.deleteExec(id);
   renderDo();
-}
-
-// ===== DB CONFIG MODAL =====
-function openDbModal() {
-  var sbUrl = localStorage.getItem(LS.sbUrl) || '';
-  var sbKey = localStorage.getItem(LS.sbKey) || '';
-  document.getElementById('sb-url').value = sbUrl;
-  document.getElementById('sb-key').value = sbKey;
-  openModal('modal-db');
-}
-
-async function connectSupabase() {
-  var url = document.getElementById('sb-url').value.trim();
-  var key = document.getElementById('sb-key').value.trim();
-  if (!url || !key) { alert('URL과 키를 모두 입력하세요.'); return; }
-  try {
-    var client = window.supabase.createClient(url, key);
-    // Verify connection by testing query
-    var testRes = await client.from('plans').select('id').limit(1);
-    if (testRes.error) {
-      throw new Error(testRes.error.message || '데이터베이스 조회 실패');
-    }
-    SB = client;
-    localStorage.setItem(LS.sbUrl, url);
-    localStorage.setItem(LS.sbKey, key);
-    SB.auth.onAuthStateChange(function(event, session) {
-      checkAuthSession();
-    });
-    await checkAuthSession();
-    await DB.loadAll();
-    renderAll();
-    updateDbStatus();
-    closeModal('modal-db');
-    alert('Supabase에 성공적으로 연결되었습니다.');
-  } catch(e) {
-    alert('연결 실패: ' + e.message + ' (Supabase SQL Editor에서 5개 테이블이 정상 생성되었는지 확인하세요.)');
-  }
-}
-
-function disconnectSupabase() {
-  SB = null;
-  localStorage.removeItem(LS.sbUrl);
-  localStorage.removeItem(LS.sbKey);
-  updateDbStatus();
-  closeModal('modal-db');
-}
-
-function updateDbStatus() {
-  var dot = document.getElementById('db-dot');
-  var txt = document.getElementById('db-status-text');
-  if (SB) {
-    dot.classList.add('connected');
-    var url = localStorage.getItem(LS.sbUrl) || '';
-    var shortUrl = url.replace('https://', '').split('.')[0];
-    txt.textContent = 'Supabase 연결됨: ' + shortUrl;
-  } else {
-    dot.classList.remove('connected');
-    txt.textContent = '로컬 저장소 사용 중';
-  }
 }
 
 // ===== POPULATE SELECTS =====
@@ -646,11 +559,10 @@ function populateExecTaskSelect() {
   });
   var html = '<option value="">할 일을 선택하세요</option>';
   S.plans.forEach(function(p) {
-    var tasks = byPlan[p.id] || [];
-    if (tasks.length > 0) {
+    if (byPlan[p.id] && byPlan[p.id].length > 0) {
       html += '<optgroup label="' + esc(p.title) + '">';
-      tasks.forEach(function(t) {
-        html += '<option value="' + esc(t.id) + '">[' + esc(statusLabel(t.status)) + '] ' + esc(t.title) + '</option>';
+      byPlan[p.id].forEach(function(t) {
+        html += '<option value="' + esc(t.id) + '">' + esc(t.title) + ' (' + statusLabel(t.status) + ')</option>';
       });
       html += '</optgroup>';
     }
@@ -658,7 +570,7 @@ function populateExecTaskSelect() {
   if (noPlan.length > 0) {
     html += '<optgroup label="계획 없음">';
     noPlan.forEach(function(t) {
-      html += '<option value="' + esc(t.id) + '">[' + esc(statusLabel(t.status)) + '] ' + esc(t.title) + '</option>';
+      html += '<option value="' + esc(t.id) + '">' + esc(t.title) + ' (' + statusLabel(t.status) + ')</option>';
     });
     html += '</optgroup>';
   }
@@ -667,220 +579,205 @@ function populateExecTaskSelect() {
 
 // ===== RENDER PLANS =====
 function renderPlans() {
-  var container = document.getElementById('plan-list');
-  if (!container) return;
-  populatePlanSelects();
+  var list = document.getElementById('plan-list');
+  if (!list) return;
   if (S.plans.length === 0) {
-    container.innerHTML = '<div class="empty-state">아직 계획이 없습니다. 계획을 추가해보세요!</div>';
+    list.innerHTML = '<div class="empty-state">세워둔 계획이 없습니다. <strong>+ 새 계획</strong> 버튼을 눌러 첫 계획을 세워보세요.</div>';
     return;
   }
-  var sorted = S.plans.slice().sort(function(a, b) { return (a.created_at || '') > (b.created_at || '') ? -1 : 1; });
-  container.innerHTML = sorted.map(function(p) {
-    var taskCount = S.tasks.filter(function(t) { return t.plan_id === p.id; }).length;
-    var doneCount = S.tasks.filter(function(t) { return t.plan_id === p.id && t.status === 'done'; }).length;
-    var period = p.period_start ? esc(fmtDate(p.period_start)) + ' ~ ' + esc(fmtDate(p.period_end || '')) : '';
-    return '<div class="plan-card">' +
-      '<div class="plan-card-title">' + esc(p.title) + '</div>' +
-      '<div class="plan-card-meta">' +
-        (period ? '<span>' + period + '</span>' : '') +
-        '<span class="badge badge-' + esc(p.priority) + '">' + esc(priorityLabel(p.priority)) + '</span>' +
-        '<span style="font-size:11px;color:var(--muted)">할 일 ' + taskCount + '개 / 완료 ' + doneCount + '개</span>' +
+  list.innerHTML = S.plans.map(function(p) {
+    var vCount = S.planVers.filter(function(v) { return v.plan_id === p.id; }).length;
+    var planTasks = S.tasks.filter(function(t) { return t.plan_id === p.id; });
+    var doneTasks = planTasks.filter(function(t) { return t.status === 'done'; });
+    var progress = planTasks.length > 0 ? Math.round((doneTasks.length / planTasks.length) * 100) : 0;
+
+    return '<div class="card">' +
+      '<div class="card-header">' +
+        '<div style="flex:1;">' +
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">' +
+            '<span class="badge ' + prioBadgeClass(p.priority) + '">' + priorityLabel(p.priority) + '</span>' +
+            '<span class="card-title">' + esc(p.title) + '</span>' +
+          '</div>' +
+          '<div class="card-meta">' +
+            (p.period_start || p.period_end ? (fmtDate(p.period_start) + ' ~ ' + fmtDate(p.period_end) + ' | ') : '') +
+            (p.estimated_minutes ? '예상: ' + p.estimated_minutes + '분 | ' : '') +
+            '할 일 ' + doneTasks.length + '/' + planTasks.length + ' (' + progress + '%)' +
+          '</div>' +
+        '</div>' +
+        '<div class="card-actions">' +
+          (vCount > 0 ? '<button class="btn-icon" onclick="openHistoryModal(\'' + p.id + '\')">수정 이력 (' + vCount + ')</button>' : '') +
+          '<button class="btn-icon" onclick="openPlanModal(\'' + p.id + '\')">수정</button>' +
+          '<button class="btn-danger" onclick="deletePlan(\'' + p.id + '\')">삭제</button>' +
+        '</div>' +
       '</div>' +
-      (p.success_criteria ? '<div class="plan-card-criteria">' + esc(p.success_criteria) + '</div>' : '') +
-      '<div style="font-size:11px;color:var(--muted);">예상 ' + (p.estimated_minutes || 0) + '분 &nbsp;·&nbsp; ' + esc(fmtCreated(p.created_at)) + '</div>' +
-      '<div class="plan-card-actions">' +
-        '<button class="btn-icon" onclick="openPlanModal(\'' + esc(p.id) + '\')">수정</button>' +
-        '<button class="btn-icon" onclick="openHistoryModal(\'' + esc(p.id) + '\')">이력</button>' +
-        '<button class="btn-danger" onclick="deletePlan(\'' + esc(p.id) + '\')">삭제</button>' +
-      '</div>' +
-      '</div>';
+      (p.success_criteria ? '<div style="font-size:12px;color:var(--secondary);margin-top:8px;"><strong>성공 기준:</strong> ' + esc(p.success_criteria) + '</div>' : '') +
+      (p.notes ? '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' + esc(p.notes) + '</div>' : '') +
+    '</div>';
   }).join('');
 }
 
 // ===== RENDER TASKS =====
 function renderTasks() {
-  var container = document.getElementById('task-list');
-  var labelEl = document.getElementById('sort-label');
-  if (labelEl) labelEl.textContent = getSortLabel();
+  var list = document.getElementById('task-list');
+  if (!list) return;
 
-  var sortEl = document.getElementById('t-sort');
-  if (sortEl) sortEl.value = S.tSort;
+  var q = S.tSearch.toLowerCase();
+  var filtered = S.tasks.filter(function(t) {
+    if (q && t.title.toLowerCase().indexOf(q) === -1 && (!t.tags || t.tags.toLowerCase().indexOf(q) === -1)) return false;
+    if (S.tPlan && t.plan_id !== S.tPlan) return false;
+    if (S.tStatus && t.status !== S.tStatus) return false;
+    if (S.tPrio && t.priority !== S.tPrio) return false;
+    if (S.tTag && (!t.tags || t.tags.indexOf(S.tTag) === -1)) return false;
+    if (S.tDelayed && !isDelayed(t)) return false;
+    return true;
+  });
 
-  populatePlanSelects();
+  filtered.sort(function(a, b) {
+    var d = S.tDir === 'asc' ? 1 : -1;
+    if (S.tSort === 'priority') {
+      var pa = priorityOrder(a.priority);
+      var pb = priorityOrder(b.priority);
+      return (pa - pb) * d;
+    }
+    if (S.tSort === 'due_date') {
+      var da = a.due_date || '9999-99-99';
+      var db = b.due_date || '9999-99-99';
+      return da.localeCompare(db) * d;
+    }
+    if (S.tSort === 'created_at') {
+      return (new Date(a.created_at || 0) - new Date(b.created_at || 0)) * d;
+    }
+    return 0;
+  });
 
-  var today = kstToday();
-  var tasks = sortedTasks(filteredTasks());
+  var countEl = document.getElementById('task-count');
+  if (countEl) countEl.textContent = '총 ' + filtered.length + '개';
 
-  if (!container) return;
-  if (tasks.length === 0) {
-    container.innerHTML = '<div class="empty-state">조건에 맞는 할 일이 없습니다.</div>';
+  var delayedFilterBtn = document.getElementById('btn-filter-delayed');
+  if (delayedFilterBtn) delayedFilterBtn.classList.toggle('active', S.tDelayed);
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty-state">해당 조건에 맞는 할 일이 없습니다.</div>';
     return;
   }
-  var nextStatusLabel = { todo: '진행 중', in_progress: '완료', done: '할 일' };
-  container.innerHTML = tasks.map(function(t) {
+
+  list.innerHTML = filtered.map(function(t) {
     var plan = S.plans.find(function(p) { return p.id === t.plan_id; });
-    var isOverdue = t.status !== 'done' && t.due_date && t.due_date < today;
-    var dueStr = t.due_date ? '<span class="task-due' + (isOverdue ? ' overdue' : '') + '">' + (isOverdue ? '&#9888; ' : '') + esc(fmtDate(t.due_date)) + '</span>' : '';
-    var tags = (t.tags || '').split(',').map(function(x) { return x.trim(); }).filter(Boolean);
-    var tagHtml = tags.map(function(tag) { return '<span class="tag-chip">' + esc(tag) + '</span>'; }).join('');
-    return '<div class="task-item">' +
-      '<div class="task-item-main">' +
-        '<div class="task-item-title' + (t.status === 'done' ? ' done-title' : '') + '">' + esc(t.title) + '</div>' +
-        '<div class="task-item-meta">' +
-          '<span class="badge badge-' + esc(t.status) + '">' + esc(statusLabel(t.status)) + '</span>' +
-          '<span class="badge badge-' + esc(t.priority) + '">' + esc(priorityLabel(t.priority)) + '</span>' +
-          dueStr +
-          (plan ? '<span style="font-size:11px;color:var(--muted)">&#128203; ' + esc(plan.title) + '</span>' : '') +
-          (t.estimated_minutes ? '<span style="font-size:11px;color:var(--muted)">' + esc(String(t.estimated_minutes)) + '분</span>' : '') +
+    var delayed = isDelayed(t);
+    var tags = (t.tags || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+
+    return '<div class="card' + (t.status === 'done' ? ' done' : '') + '">' +
+      '<div class="card-header">' +
+        '<div style="flex:1;">' +
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">' +
+            '<span class="status-btn ' + statusBadgeClass(t.status) + '" onclick="toggleTaskStatus(\'' + t.id + '\')" title="클릭하여 상태 변경">' + statusLabel(t.status) + '</span>' +
+            '<span class="badge ' + prioBadgeClass(t.priority) + '">' + priorityLabel(t.priority) + '</span>' +
+            (delayed ? '<span class="badge badge-delayed">지연됨</span>' : '') +
+            '<span class="card-title">' + esc(t.title) + '</span>' +
+          '</div>' +
+          '<div class="card-meta">' +
+            (plan ? '계획: ' + esc(plan.title) + ' | ' : '') +
+            (t.due_date ? '마감: ' + fmtDate(t.due_date) + ' | ' : '') +
+            (t.estimated_minutes ? '예상: ' + t.estimated_minutes + '분 | ' : '') +
+            '등록: ' + fmtCreated(t.created_at) +
+          '</div>' +
+          (tags.length > 0 ? '<div style="margin-top:4px;">' + tags.map(function(tg) { return '<span class="badge" style="background:var(--surface-hi);color:var(--secondary);margin-right:4px;">#' + esc(tg) + '</span>'; }).join('') + '</div>' : '') +
+          (t.notes ? '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' + esc(t.notes) + '</div>' : '') +
         '</div>' +
-        (tagHtml ? '<div style="margin-top:4px;">' + tagHtml + '</div>' : '') +
+        '<div class="card-actions">' +
+          '<button class="btn-icon" onclick="openTaskModal(\'' + t.id + '\')">수정</button>' +
+          '<button class="btn-danger" onclick="deleteTask(\'' + t.id + '\')">삭제</button>' +
+        '</div>' +
       '</div>' +
-      '<div class="task-item-actions">' +
-        '<button class="btn-icon" onclick="toggleTaskStatus(\'' + esc(t.id) + '\')">&rarr; ' + esc(nextStatusLabel[t.status] || '할 일') + '</button>' +
-        '<button class="btn-icon" onclick="openTaskModal(\'' + esc(t.id) + '\')">수정</button>' +
-        '<button class="btn-danger" onclick="deleteTask(\'' + esc(t.id) + '\')">삭제</button>' +
-      '</div>' +
-      '</div>';
+    '</div>';
   }).join('');
 }
 
-// ===== RENDER DO =====
+// ===== RENDER DO (EXECUTIONS) =====
 function renderDo() {
   populateExecTaskSelect();
-  var container = document.getElementById('do-content');
-  if (!container) return;
+  var list = document.getElementById('exec-list');
+  if (!list) return;
 
-  var execs = S.execs;
-  if (S.doBlocked) {
-    execs = execs.filter(function(e) { return e.blocker_reason && e.blocker_reason.trim() !== ''; });
-  }
-
-  var byTask = {};
-  execs.forEach(function(e) {
-    if (!byTask[e.task_id]) byTask[e.task_id] = [];
-    byTask[e.task_id].push(e);
+  var q = S.doBlocked;
+  var filtered = S.execs.filter(function(e) {
+    if (q && !e.blocker_reason) return false;
+    return true;
+  });
+  filtered.sort(function(a, b) {
+    return new Date(b.created_at || 0) - new Date(a.created_at || 0);
   });
 
-  var taskIds = Object.keys(byTask);
-  if (taskIds.length === 0) {
-    container.innerHTML = S.doBlocked
-      ? '<div class="empty-state">막힌 실행 기록이 없습니다.</div>'
-      : '<div class="empty-state">실행 기록이 없습니다. 위 폼으로 추가해보세요.</div>';
+  var totalMin = S.execs.reduce(function(acc, e) { return acc + (e.actual_minutes || 0); }, 0);
+  var blockedCount = S.execs.filter(function(e) { return Boolean(e.blocker_reason); }).length;
+  var sumEl = document.getElementById('do-summary');
+  if (sumEl) sumEl.textContent = '총 실행 ' + S.execs.length + '회 | 누적 ' + totalMin + '분' + (blockedCount > 0 ? ' | 막힘 ' + blockedCount + '건' : '');
+
+  var blockedBtn = document.getElementById('btn-filter-blocked');
+  if (blockedBtn) blockedBtn.classList.toggle('active', S.doBlocked);
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty-state">실행 기록이 없습니다. 위 폼에서 실행 완료 기록을 남겨보세요.</div>';
     return;
   }
 
-  var html = '';
-  if (S.doBlocked) {
-    html += '<div style="background:var(--orange-dim);border:1px solid var(--orange);border-radius:7px;padding:10px 14px;margin-bottom:16px;font-size:13px;color:var(--orange);font-weight:500;">막힌 기록만 표시 중 &nbsp;<button class="btn-sm" onclick="S.doBlocked=false;renderDo()">전체 보기</button></div>';
-  }
-
-  taskIds.forEach(function(taskId) {
-    var task = S.tasks.find(function(t) { return t.id === taskId; });
+  list.innerHTML = filtered.map(function(e) {
+    var task = S.tasks.find(function(t) { return t.id === e.task_id; });
     var taskTitle = task ? task.title : '(삭제된 할 일)';
     var plan = task && task.plan_id ? S.plans.find(function(p) { return p.id === task.plan_id; }) : null;
-    var taskExecs = byTask[taskId].slice().sort(function(a, b) { return (a.start_at || '') > (b.start_at || '') ? -1 : 1; });
 
-    html += '<div class="exec-group-title">' + esc(taskTitle) + (plan ? ' <span style="font-size:12px;font-weight:400;color:var(--muted)">· ' + esc(plan.title) + '</span>' : '') + '</div>';
-    taskExecs.forEach(function(e) {
-      var hasBlocker = e.blocker_reason && e.blocker_reason.trim();
-      html += '<div class="exec-item">' +
-        '<div class="exec-item-info">' +
-          '<div class="exec-item-time">' +
-            (e.start_at ? esc(fmtDatetime(e.start_at)) : '시작 미입력') +
-            (e.end_at ? ' ~ ' + esc(fmtDatetime(e.end_at)) : '') +
-            ' &nbsp;·&nbsp; ' + esc(String(e.actual_minutes || 0)) + '분' +
+    return '<div class="card">' +
+      '<div class="card-header">' +
+        '<div style="flex:1;">' +
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">' +
+            '<span class="card-title">' + esc(taskTitle) + '</span>' +
+            (e.actual_minutes ? '<span class="badge badge-done">' + e.actual_minutes + '분 수행</span>' : '') +
           '</div>' +
-          (hasBlocker ? '<div class="exec-item-blocker">&#9888; ' + esc(e.blocker_reason) + '</div>' : '') +
+          '<div class="card-meta">' +
+            (plan ? '계획: ' + esc(plan.title) + ' | ' : '') +
+            (e.start_at ? fmtDatetime(e.start_at) : '') +
+            (e.start_at && e.end_at ? ' ~ ' + fmtDatetime(e.end_at) : '') +
+          '</div>' +
+          (e.blocker_reason ? '<div style="margin-top:6px;font-size:12px;color:var(--accent);background:var(--accent-dim);padding:4px 8px;border-radius:4px;"><strong>막혔던 점:</strong> ' + esc(e.blocker_reason) + '</div>' : '') +
         '</div>' +
-        '<button class="btn-danger" onclick="deleteExec(\'' + esc(e.id) + '\')">삭제</button>' +
-        '</div>';
-    });
-  });
-
-  container.innerHTML = html;
+        '<div class="card-actions">' +
+          '<button class="btn-danger" onclick="deleteExec(\'' + e.id + '\')">삭제</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
 }
 
-// ===== RENDER SEE =====
-function setSeeRating(n) {
-  seeRating = n;
-  document.querySelectorAll('.star-btn').forEach(function(btn, i) {
-    if (i < n) btn.classList.add('active');
-    else btn.classList.remove('active');
-  });
-}
-
+// ===== RENDER SEE (REFLECTION) =====
 function renderSee() {
   populatePlanSelects();
-  var container = document.getElementById('see-content');
-  if (!container) return;
-
-  var today = kstToday();
-  var planId = S.seePlan;
-
-  var tasks = S.tasks;
-  if (planId) tasks = tasks.filter(function(t) { return t.plan_id === planId; });
-
-  var totalTasks = tasks.length;
-  var doneTasks = tasks.filter(function(t) { return t.status === 'done'; }).length;
-  var delayedTasks = tasks.filter(function(t) { return t.status !== 'done' && t.due_date && t.due_date < today; }).length;
-  var taskIdSet = {};
-  tasks.forEach(function(t) { taskIdSet[t.id] = true; });
-
-  var blockedTaskIds = {};
-  S.execs.forEach(function(e) {
-    if (taskIdSet[e.task_id] && e.blocker_reason && e.blocker_reason.trim()) {
-      blockedTaskIds[e.task_id] = true;
-    }
+  var planTasks = S.tasks.filter(function(t) {
+    return !S.seePlan || t.plan_id === S.seePlan;
   });
-  var blockedCount = Object.keys(blockedTaskIds).length;
+  var totalTasks = planTasks.length;
+  var doneTasks = planTasks.filter(function(t) { return t.status === 'done'; }).length;
+  var delayedTasks = planTasks.filter(function(t) { return isDelayed(t); }).length;
+  var blockedExecs = S.execs.filter(function(e) {
+    if (!e.blocker_reason) return false;
+    if (!S.seePlan) return true;
+    var task = S.tasks.find(function(t) { return t.id === e.task_id; });
+    return task && task.plan_id === S.seePlan;
+  }).length;
 
-  var expectedMin = tasks.reduce(function(s, t) { return s + (t.estimated_minutes || 0); }, 0);
-  var planExecs = S.execs.filter(function(e) { return taskIdSet[e.task_id]; });
-  var actualMin = planExecs.reduce(function(s, e) { return s + (e.actual_minutes || 0); }, 0);
-  var diffMin = actualMin - expectedMin;
+  var planCount = S.seePlan ? 1 : S.plans.length;
+  var today = kstToday();
+  if (S.see && S.see.date === today) {
+    seeRating = S.see.rating || 0;
+  }
 
-  var doneRate = totalTasks > 0 ? Math.round(doneTasks / totalTasks * 100) : 0;
-  var timeAccuracy = expectedMin > 0 ? Math.min(Math.round(actualMin / expectedMin * 100), 100) : 0;
-
-  seeRating = S.see ? (S.see.rating || 0) : 0;
-
-  var planArg = planId ? "'" + esc(planId) + "'" : "''";
-
-  container.innerHTML =
+  var c = document.getElementById('see-container');
+  if (!c) return;
+  c.innerHTML =
     '<div class="stat-grid">' +
-      '<div class="stat-cell" onclick="seeNavTasks(' + planArg + ", '', false)\">" +
-        '<div class="stat-cell-num" style="color:var(--blue)">' + totalTasks + '</div>' +
-        '<div class="stat-cell-label">계획 수 (할 일 전체)</div>' +
-      '</div>' +
-      '<div class="stat-cell" onclick="seeNavTasks(' + planArg + ", 'done', false)\">" +
-        '<div class="stat-cell-num" style="color:var(--green)">' + doneTasks + '</div>' +
-        '<div class="stat-cell-label">완료 수</div>' +
-      '</div>' +
-      '<div class="stat-cell" onclick="seeNavTasks(' + planArg + ", '', true)\">" +
-        '<div class="stat-cell-num" style="color:var(--accent)">' + delayedTasks + '</div>' +
-        '<div class="stat-cell-label">지연 수</div>' +
-      '</div>' +
-      '<div class="stat-cell" onclick="seeNavDo(true)">' +
-        '<div class="stat-cell-num" style="color:var(--orange)">' + blockedCount + '</div>' +
-        '<div class="stat-cell-label">막힘 수</div>' +
-      '</div>' +
-    '</div>' +
-
-    '<div class="time-stats">' +
-      '<div class="time-stat-box"><div class="time-stat-label">예상 합계</div><div class="time-stat-val">' + expectedMin + '분</div></div>' +
-      '<div class="time-stat-box"><div class="time-stat-label">실제 합계</div><div class="time-stat-val">' + actualMin + '분</div></div>' +
-      '<div class="time-stat-box"><div class="time-stat-label">차이 (실제 - 예상)</div><div class="time-stat-val" style="color:' + (diffMin > 0 ? 'var(--accent)' : diffMin < 0 ? 'var(--green)' : 'var(--primary)') + '">' + (diffMin > 0 ? '+' : '') + diffMin + '분</div></div>' +
-    '</div>' +
-
-    '<div class="progress-section">' +
-      '<div class="progress-item">' +
-        '<div class="progress-header"><span>달성률</span><span>' + doneRate + '%</span></div>' +
-        '<div class="progress-bar-bg"><div class="progress-bar-fill" style="width:' + doneRate + '%;background:var(--green);"></div></div>' +
-      '</div>' +
-      '<div class="progress-item">' +
-        '<div class="progress-header"><span>시간 정확도</span><span>' + timeAccuracy + '%</span></div>' +
-        '<div class="progress-bar-bg"><div class="progress-bar-fill" style="width:' + timeAccuracy + '%;background:var(--blue);"></div></div>' +
-      '</div>' +
+      '<div class="stat-card" onclick="goPlans()"><div class="stat-num">' + planCount + '</div><div class="stat-label">계획 수</div></div>' +
+      '<div class="stat-card" onclick="goTasksWithFilter(\'done\')"><div class="stat-num" style="color:var(--green)">' + doneTasks + '</div><div class="stat-label">완료한 할 일</div></div>' +
+      '<div class="stat-card" onclick="goTasksWithFilter(\'delayed\')"><div class="stat-num" style="color:var(--accent)">' + delayedTasks + '</div><div class="stat-label">지연된 할 일</div></div>' +
+      '<div class="stat-card" onclick="goDoBlocked()"><div class="stat-num" style="color:var(--orange)">' + blockedExecs + '</div><div class="stat-label">막힘 발생</div></div>' +
     '</div>' +
 
     '<div class="reflection-form">' +
@@ -888,7 +785,7 @@ function renderSee() {
       '<div class="form-group">' +
         '<label>만족도</label>' +
         '<div class="star-row" id="star-row">' +
-          [1,2,3,4,5].map(function(n) { return '<button class="star-btn' + (seeRating >= n ? ' active' : '') + '" onclick="setSeeRating(' + n + ')">' + n + '</button>'; }).join('') +
+         .map(function(n) { return '<button type="button" class="star-btn' + (seeRating >= n ? ' active' : '') + '" onclick="setSeeRating(' + n + ')">' + n + '</button>'; }).join('') +
         '</div>' +
       '</div>' +
       '<div class="form-group"><label>잘 된 것</label><textarea id="see-good" placeholder="오늘 잘 된 일을 적어보세요">' + esc(S.see ? S.see.good || '' : '') + '</textarea></div>' +
@@ -896,10 +793,20 @@ function renderSee() {
       '<div class="form-group"><label>다음 계획에 반영할 것</label><textarea id="see-next" placeholder="다음 계획에 어떻게 반영할지 적어보세요">' + esc(S.see ? S.see.next_plan || '' : '') + '</textarea></div>' +
       '<div class="form-group"><label>이전 돌아보기에서 넘길 한 줄</label><textarea id="see-carry" placeholder="다음 계획으로 넘길 한 줄 메모">' + esc(S.see ? S.see.carry_forward || '' : '') + '</textarea></div>' +
       '<div class="see-actions">' +
-        '<button class="btn-primary" onclick="saveSee()">저장</button>' +
-        '<button class="btn-sm" onclick="nextPlanFromSee()">다음 계획으로 &rarr;</button>' +
+        '<button type="button" class="btn-primary" onclick="saveSee()">저장</button>' +
+        '<button type="button" class="btn-sm" onclick="nextPlanFromSee()">다음 계획으로 &rarr;</button>' +
       '</div>' +
     '</div>';
+}
+
+function setSeeRating(n) {
+  seeRating = n;
+  var row = document.getElementById('star-row');
+  if (row) {
+    row.querySelectorAll('.star-btn').forEach(function(b, idx) {
+      b.classList.toggle('active', idx < n);
+    });
+  }
 }
 
 async function saveSee() {
@@ -937,6 +844,50 @@ async function nextPlanFromSee() {
   populatePlanSelects();
 }
 
+function goPlans() {
+  showTab('plan');
+}
+
+function goTasksWithFilter(type) {
+  showTab('tasks');
+  if (type === 'done') {
+    S.tStatus = 'done';
+    S.tDelayed = false;
+    var sEl = document.getElementById('t-status');
+    if (sEl) sEl.value = 'done';
+  } else if (type === 'delayed') {
+    S.tDelayed = true;
+    S.tStatus = '';
+    var sEl = document.getElementById('t-status');
+    if (sEl) sEl.value = '';
+  }
+  renderTasks();
+}
+
+function goDoBlocked() {
+  showTab('do');
+  S.doBlocked = true;
+  renderDo();
+}
+
+// ===== EXPORT JSON =====
+function exportData() {
+  var data = {
+    version: '2.0',
+    exported_at: new Date().toISOString(),
+    plans: S.plans,
+    plan_versions: S.planVers,
+    tasks: S.tasks,
+    executions: S.execs,
+    see: S.see,
+  };
+  var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'plandosee_backup_' + kstToday() + '.json';
+  a.click();
+}
+
 // ===== RENDER ALL =====
 function renderAll() {
   populatePlanSelects();
@@ -946,61 +897,257 @@ function renderAll() {
   renderSee();
 }
 
-// ===== INIT =====
-// ===== VERCEL 환경 변수 연동 & 로그인 게이트 제어 =====
+// ==============================================================================
+// ===== SUPABASE 듀얼 연결 & 철통 로그인 게이트 제어 =====
+// ==============================================================================
 
-// Vercel 서버리스 API(/api/config)로부터 환경변수 자동 로드
-async function initSupabaseFromVercel() {
-  if (!SB && window.supabase) {
-    try {
-      var res = await fetch('/api/config');
+async function initSupabaseClient() {
+  if (SB) return true;
+  if (typeof window === 'undefined' || !window.supabase) return false;
+
+  // 1. 브라우저 localStorage 우선 확인 (GitHub Pages 및 오프라인 호환)
+  try {
+    var lsUrl = localStorage.getItem(LS.sbUrl);
+    var lsKey = localStorage.getItem(LS.sbKey);
+    if (lsUrl && lsKey) {
+      SB = window.supabase.createClient(lsUrl, lsKey);
+      return true;
+    }
+  } catch(e) {}
+
+  // 2. Vercel 서버리스 API (/api/config) 확인
+  try {
+    var res = await fetch('/api/config');
+    if (res.ok) {
       var cfg = await res.json();
       if (cfg.supabaseUrl && cfg.supabaseAnonKey) {
         SB = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+        localStorage.setItem(LS.sbUrl, cfg.supabaseUrl);
+        localStorage.setItem(LS.sbKey, cfg.supabaseAnonKey);
+        return true;
       }
-    } catch(e) {
-      console.warn('Vercel 환경변수 로드 대기 중:', e);
     }
+  } catch(e) {}
+
+  return false;
+}
+
+function showGateMessage(msg, isError) {
+  var errEl = document.getElementById('gate-error-msg') || document.getElementById('auth-error-msg');
+  if (errEl) {
+    errEl.innerHTML = msg;
+    errEl.style.display = 'block';
+    errEl.style.color = isError ? 'var(--accent)' : 'var(--green)';
+    errEl.style.background = isError ? 'var(--accent-dim)' : 'var(--green-dim)';
+  } else {
+    alert(msg);
   }
 }
 
-<!-- plando.html의 <body> 바로 아래 교체 -->
-<div id="login-gate" class="login-gate-overlay">
-  <div class="login-gate-card">
-    <div class="login-gate-logo">플랜<span>두씨</span></div>
-    <p class="login-gate-desc">계획 → 실행 → 돌아보기 다이어리<br>로그인 후 이용할 수 있습니다.</p>
-    
-    <div class="form-group" style="margin-bottom:12px;">
-      <label for="gate-email">이메일 주소</label>
-      <input type="email" id="gate-email" placeholder="example@email.com" autocomplete="email">
-    </div>
-    
-    <div class="form-group" style="margin-bottom:14px;">
-      <label for="gate-password">비밀번호 (6자 이상)</label>
-      <input type="password" id="gate-password" placeholder="비밀번호 입력" autocomplete="current-password">
-    </div>
+function toggleManualDb() {
+  var area = document.getElementById('gate-manual-db');
+  if (area) {
+    area.style.display = (area.style.display === 'none' || area.style.display === '') ? 'block' : 'none';
+  }
+}
 
-    <div id="gate-error-msg" class="gate-error" style="display:none;"></div>
+async function saveManualDbAndConnect() {
+  var urlEl = document.getElementById('manual-sb-url') || document.getElementById('sb-url');
+  var keyEl = document.getElementById('manual-sb-key') || document.getElementById('sb-key');
+  var url = urlEl ? urlEl.value.trim() : '';
+  var key = keyEl ? keyEl.value.trim() : '';
 
-    <div style="display:flex; gap:8px; margin-top:14px;">
-      <button type="button" class="btn-primary" style="flex:1; padding:10px; font-size:13px;" onclick="gateSignIn()">로그인</button>
-      <button type="button" class="btn-sm" style="padding:10px; font-size:13px;" onclick="gateSignUp()">회원가입</button>
-    </div>
+  if (!url || !key) {
+    alert('Supabase Project URL과 anon 키를 모두 입력해 주세요.');
+    return;
+  }
 
-    <!-- DB 연결 실패 시 수동 입력할 수 있는 접기/펼치기 영역 -->
-    <div id="gate-manual-db" style="display:none; margin-top:16px; padding-top:14px; border-top:1px dashed var(--border); text-align:left;">
-      <div style="font-size:11px; font-weight:700; color:var(--accent); margin-bottom:8px;">⚠️ DB 자동 연결 대기 중 (수동 1회 설정)</div>
-      <div class="form-group" style="margin-bottom:8px;">
-        <label style="font-size:11px;">Supabase Project URL</label>
-        <input type="text" id="manual-sb-url" placeholder="https://xxxx.supabase.co" style="font-size:12px; padding:6px 8px;">
-      </div>
-      <div class="form-group" style="margin-bottom:10px;">
-        <label style="font-size:11px;">Supabase Anon Key</label>
-        <input type="password" id="manual-sb-key" placeholder="eyJhbGciOi..." style="font-size:12px; padding:6px 8px;">
-      </div>
-      <button type="button" class="btn-sm" style="width:100%; padding:6px;" onclick="saveManualDbAndConnect()">DB 연결 저장</button>
-    </div>
+  try {
+    if (!window.supabase) {
+      alert('Supabase 라이브러리를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.');
+      return;
+    }
+    SB = window.supabase.createClient(url, key);
+    localStorage.setItem(LS.sbUrl, url);
+    localStorage.setItem(LS.sbKey, key);
+    alert('데이터베이스 연결 정보가 브라우저에 저장되었습니다!\n이제 이메일과 비밀번호를 입력하고 [로그인]을 누르세요.');
+    var manualArea = document.getElementById('gate-manual-db');
+    if (manualArea) manualArea.style.display = 'none';
+    showGateMessage('데이터베이스가 연결되었습니다. 로그인해 주세요.', false);
+  } catch(e) {
+    alert('DB 연결 실패: ' + e.message);
+  }
+}
 
-    <button type="button" class="gate-db-toggle" onclick="toggleManualDb()">⚙️ 데이터베이스 직접 연결 설정</button>
-  </div>
-</div>
+async function gateSignIn() {
+  var btn = document.getElementById('btn-gate-signin');
+  var origText = btn ? btn.textContent : '로그인';
+  if (btn) { btn.textContent = '로그인 중...'; btn.disabled = true; }
+
+  try {
+    var emailEl = document.getElementById('gate-email') || document.getElementById('auth-email');
+    var passEl = document.getElementById('gate-password') || document.getElementById('auth-password');
+    var email = emailEl ? emailEl.value.trim() : '';
+    var password = passEl ? passEl.value.trim() : '';
+
+    if (!email || !password) {
+      showGateMessage('이메일과 비밀번호를 모두 입력해 주세요.', true);
+      return;
+    }
+
+    if (!SB) {
+      await initSupabaseClient();
+    }
+
+    if (!SB) {
+      showGateMessage('데이터베이스에 연결되지 않았습니다.<br>아래 <strong>[⚙️ 데이터베이스 직접 연결 설정]</strong>에 Supabase URL과 키를 1회 입력해 주세요.', true);
+      var manualArea = document.getElementById('gate-manual-db');
+      if (manualArea) manualArea.style.display = 'block';
+      return;
+    }
+
+    var res = await SB.auth.signInWithPassword({ email: email, password: password });
+    if (res.error) {
+      showGateMessage('로그인 실패: ' + res.error.message, true);
+    } else {
+      showGateMessage('로그인 성공! 다이어리를 불러옵니다...', false);
+      var gate = document.getElementById('login-gate');
+      if (gate) gate.style.display = 'none';
+      await checkGateAuth();
+    }
+  } catch(err) {
+    alert('로그인 처리 중 오류 발생: ' + err.message);
+  } finally {
+    if (btn) { btn.textContent = origText; btn.disabled = false; }
+  }
+}
+
+async function gateSignUp() {
+  var btn = document.getElementById('btn-gate-signup');
+  var origText = btn ? btn.textContent : '회원가입';
+  if (btn) { btn.textContent = '가입 중...'; btn.disabled = true; }
+
+  try {
+    var emailEl = document.getElementById('gate-email') || document.getElementById('auth-email');
+    var passEl = document.getElementById('gate-password') || document.getElementById('auth-password');
+    var email = emailEl ? emailEl.value.trim() : '';
+    var password = passEl ? passEl.value.trim() : '';
+
+    if (!email || !password) {
+      showGateMessage('이메일과 비밀번호를 모두 입력해 주세요.', true);
+      return;
+    }
+    if (password.length < 6) {
+      showGateMessage('비밀번호는 최소 6자 이상이어야 합니다.', true);
+      return;
+    }
+
+    if (!SB) {
+      await initSupabaseClient();
+    }
+
+    if (!SB) {
+      showGateMessage('데이터베이스에 연결되지 않았습니다.<br>아래 <strong>[⚙️ 데이터베이스 직접 연결 설정]</strong>에 Supabase URL과 키를 1회 입력해 주세요.', true);
+      var manualArea = document.getElementById('gate-manual-db');
+      if (manualArea) manualArea.style.display = 'block';
+      return;
+    }
+
+    var res = await SB.auth.signUp({ email: email, password: password });
+    if (res.error) {
+      showGateMessage('회원가입 실패: ' + res.error.message, true);
+    } else {
+      alert('회원가입이 완료되었습니다!\n이제 이메일과 비밀번호를 그대로 두고 [로그인] 버튼을 눌러 접속하세요.');
+      showGateMessage('회원가입 성공! 이제 [로그인] 버튼을 눌러주세요.', false);
+    }
+  } catch(err) {
+    alert('회원가입 처리 중 오류 발생: ' + err.message);
+  } finally {
+    if (btn) { btn.textContent = origText; btn.disabled = false; }
+  }
+}
+
+async function gateSignOut() {
+  if (!confirm('로그아웃 하시겠습니까?')) return;
+  if (SB) await SB.auth.signOut();
+  location.reload();
+}
+
+async function checkGateAuth() {
+  var gate = document.getElementById('login-gate');
+
+  await initSupabaseClient();
+
+  if (SB) {
+    var sessionRes = await SB.auth.getSession();
+    var session = sessionRes.data && sessionRes.data.session;
+
+    if (session && session.user) {
+      if (gate) gate.style.display = 'none';
+      var userEmailEl = document.getElementById('header-user-email');
+      var logoutBtnEl = document.getElementById('header-logout-btn');
+      if (userEmailEl) {
+        userEmailEl.textContent = '👤 ' + session.user.email;
+        userEmailEl.style.display = 'inline-block';
+      }
+      if (logoutBtnEl) logoutBtnEl.style.display = 'inline-block';
+      await DB.loadAll();
+      renderAll();
+    } else {
+      if (gate) gate.style.display = 'flex';
+    }
+  } else {
+    if (gate) gate.style.display = 'flex';
+  }
+}
+
+// ===== EVENT LISTENERS ATTACHMENT =====
+document.addEventListener('DOMContentLoaded', function() {
+  checkGateAuth();
+
+  var exportBtn = document.getElementById('export-btn');
+  if (exportBtn) exportBtn.addEventListener('click', exportData);
+
+  var execStart = document.getElementById('exec-start');
+  if (execStart) execStart.addEventListener('change', autoCalcMinutes);
+  var execEnd = document.getElementById('exec-end');
+  if (execEnd) execEnd.addEventListener('change', autoCalcMinutes);
+
+  var tSearch = document.getElementById('t-search');
+  if (tSearch) tSearch.addEventListener('input', function(e) { S.tSearch = e.target.value; renderTasks(); });
+  var tPlan = document.getElementById('t-plan');
+  if (tPlan) tPlan.addEventListener('change', function(e) { S.tPlan = e.target.value; renderTasks(); });
+  var tStatus = document.getElementById('t-status');
+  if (tStatus) tStatus.addEventListener('change', function(e) { S.tStatus = e.target.value; renderTasks(); });
+  var tPrio = document.getElementById('t-prio');
+  if (tPrio) tPrio.addEventListener('change', function(e) { S.tPrio = e.target.value; renderTasks(); });
+  var tTag = document.getElementById('t-tag');
+  if (tTag) tTag.addEventListener('input', function(e) { S.tTag = e.target.value.trim(); renderTasks(); });
+
+  var tSort = document.getElementById('t-sort');
+  if (tSort) tSort.addEventListener('change', function(e) { S.tSort = e.target.value; renderTasks(); });
+  var tDir = document.getElementById('t-dir');
+  if (tDir) tDir.addEventListener('click', function() {
+    S.tDir = S.tDir === 'asc' ? 'desc' : 'asc';
+    tDir.textContent = S.tDir === 'asc' ? '오름차순' : '내림차순';
+    renderTasks();
+  });
+
+  var filterDelayed = document.getElementById('btn-filter-delayed');
+  if (filterDelayed) filterDelayed.addEventListener('click', function() {
+    S.tDelayed = !S.tDelayed;
+    renderTasks();
+  });
+
+  var filterBlocked = document.getElementById('btn-filter-blocked');
+  if (filterBlocked) filterBlocked.addEventListener('click', function() {
+    S.doBlocked = !S.doBlocked;
+    renderDo();
+  });
+
+  var seePlan = document.getElementById('see-plan');
+  if (seePlan) seePlan.addEventListener('change', function(e) {
+    S.seePlan = e.target.value;
+    renderSee();
+  });
+});
