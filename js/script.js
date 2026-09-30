@@ -443,3 +443,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+// Navigation Projects Dropdown
+const navDropdown = document.getElementById('nav-dropdown');
+const navDropdownBtn = document.getElementById('nav-dropdown-btn');
+
+if (navDropdown && navDropdownBtn) {
+  navDropdownBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    navDropdown.classList.toggle('open');
+    navDropdownBtn.setAttribute('aria-expanded', navDropdown.classList.contains('open'));
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!navDropdown.contains(e.target)) {
+      navDropdown.classList.remove('open');
+      navDropdownBtn.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
