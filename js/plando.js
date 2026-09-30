@@ -1069,6 +1069,109 @@ async function checkAuthSession() {
     if (logoutBtn) logoutBtn.style.display = 'none';
   }
 }
+// ===== SUPABASE AUTH & LOGIN =====
+function openAuthModal() {
+  var errEl = document.getElementById('auth-error-msg');
+  if (errEl) errEl.style.display = 'none';
+  openModal('modal-auth');
+}
 
+function showAuthError(msg) {
+  var errEl = document.getElementById('auth-error-msg');
+  if (errEl) {
+    errEl.textContent = msg;
+    errEl.style.display = 'block';
+  } else {
+    alert(msg);
+  }
+}
+
+async function handleSignUp() {
+  var email = document.getElementById('auth-email').value.trim();
+  var password = document.getElementById('auth-password').value.trim();
+  if (!email || !password) { showAuthError('이메일과 비밀번호를 모두 입력하세요.'); return; }
+  if (password.length < 6) { showAuthError('비밀번호는 최소 6자 이상이어야 합니다.'); return; }
+  if (!SB) { showAuthError('먼저 [DB 연결] 버튼을 눌러 Supabase URL과 키를 연결하세요.'); return; }
+
+  try {
+    var res = await SB.auth.signUp({ email: email, password: password });
+    if (res.error) {
+      showAuthError('회원가입 오류: ' + res.error.message);
+    } else {
+      alert('회원가입이 완료되었습니다!');
+      closeModal('modal-auth');
+      await checkAuthSession();
+    }
+  } catch(e) {
+    showAuthError('회원가입 예외: ' + e.message);
+  }
+}
+
+async function handleSignIn() {
+  var email = document.getElementById('auth-email').value.trim();
+  var password = document.getElementById('auth-password').value.trim();
+  if (!email || !password) { showAuthError('이메일과 비밀번호를 모두 입력하세요.'); return; }
+  if (!SB) { showAuthError('먼저 [DB 연결] 버튼을 눌러 Supabase URL과 키를 연결하세요.'); return; }
+
+  try {
+    var res = await SB.auth.signInWithPassword({ email: email, password: password });
+    if (res.error) {
+      showAuthError('로그인 실패: ' + res.error.message);
+    } else {
+      closeModal('modal-auth');
+      await checkAuthSession();
+      await DB.loadAll();
+      renderAll();
+      alert('로그인되었습니다: ' + res.data.user.email);
+    }
+  } catch(e) {
+    showAuthError('로그인 예외: ' + e.message);
+  }
+}
+
+async function handleSignOut() {
+  if (!confirm('로그아웃 하시겠습니까?')) return;
+  if (SB) {
+    await SB.auth.signOut();
+  }
+  await checkAuthSession();
+  await DB.loadAll();
+  renderAll();
+  alert('로그아웃되었습니다.');
+}
+
+async function checkAuthSession() {
+  var emailDisplay = document.getElementById('user-email-display');
+  var loginBtn = document.getElementById('btn-open-auth-modal');
+  var logoutBtn = document.getElementById('btn-sign-out');
+
+  if (!SB) {
+    if (emailDisplay) emailDisplay.style.display = 'none';
+    if (loginBtn) loginBtn.style.display = 'inline-block';
+    if (logoutBtn) logoutBtn.style.display = 'none';
+    return;
+  }
+
+  try {
+    var sessionRes = await SB.auth.getSession();
+    var session = sessionRes.data && sessionRes.data.session;
+    if (session && session.user) {
+      if (emailDisplay) {
+        emailDisplay.textContent = '👤 ' + session.user.email;
+        emailDisplay.style.display = 'inline-block';
+      }
+      if (loginBtn) loginBtn.style.display = 'none';
+      if (logoutBtn) logoutBtn.style.display = 'inline-block';
+    } else {
+      if (emailDisplay) emailDisplay.style.display = 'none';
+      if (loginBtn) loginBtn.style.display = 'inline-block';
+      if (logoutBtn) logoutBtn.style.display = 'none';
+    }
+  } catch(e) {
+    if (emailDisplay) emailDisplay.style.display = 'none';
+    if (loginBtn) loginBtn.style.display = 'inline-block';
+    if (logoutBtn) logoutBtn.style.display = 'none';
+  }
+}
 
 document.addEventListener('DOMContentLoaded', init);
