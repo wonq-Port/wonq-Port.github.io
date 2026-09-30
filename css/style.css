@@ -1116,3 +1116,111 @@ button {
   border-color: var(--color-accent-red);
   background-color: rgba(185, 28, 28, 0.04);
 }
+
+/* ==========================================================================
+   Navigation Dropdown Menu
+   ========================================================================== */
+.nav-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.nav-dropdown-btn {
+  font-family: var(--font-inter);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #ffffff;
+  background: var(--color-accent-red);
+  padding: 6px 12px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s ease;
+}
+
+.nav-dropdown-btn:hover {
+  background: #991b1b;
+}
+
+.dropdown-caret {
+  font-size: 10px;
+  transition: transform 0.2s ease;
+}
+
+.nav-dropdown.open .dropdown-caret {
+  transform: rotate(180deg);
+}
+
+.nav-dropdown-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 250px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 4px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  padding: 6px;
+  z-index: 100;
+}
+
+.nav-dropdown.open .nav-dropdown-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 3px;
+  text-decoration: none;
+  transition: background 0.15s ease;
+  color: #111111;
+}
+
+.dropdown-item:hover {
+  background: #f8f9fa;
+}
+
+.item-badge {
+  font-family: var(--font-barlow);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 2px 5px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.08);
+  color: #555555;
+  margin-top: 2px;
+}
+
+.item-badge.new {
+  background: rgba(220, 38, 38, 0.12);
+  color: var(--color-accent-red);
+}
+
+.item-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.item-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #111111;
+}
+
+.item-desc {
+  font-size: 11px;
+  color: #666666;
+  margin-top: 1px;
+}
