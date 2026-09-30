@@ -1065,81 +1065,92 @@ function openAuthModal() {
 
 // 8. 로그인 (HTML: onclick="handleSignIn()" 및 onclick="gateSignIn()")
 async function handleSignIn() {
-  var email = getVal(['gate-email', 'auth-email']);
-  var password = getVal(['gate-password', 'auth-password']);
+  var username = (document.getElementById('auth-username') || {}).value;
+  var password = (document.getElementById('auth-password') || {}).value;
 
-  if (!email || !password) {
-    notifyUser('이메일과 비밀번호를 모두 입력해 주세요.', true);
+  username = (username || '').trim();
+  password = (password || '').trim();
+
+  if (!username || !password) {
+    notifyUser('아이디와 비밀번호를 모두 입력해 주세요.', true);
     return;
   }
 
+  await initSupabaseClient(true);
   if (!SB) {
-    await initSupabaseClient();
-  }
-
-  if (!SB) {
-    notifyUser('데이터베이스(DB) 연결이 먼저 필요합니다.\n하단의 [데이터베이스 직접 연결 설정] 또는 상단 [DB 연결]에서 Supabase URL과 Key를 설정해 주세요.', true);
-    var manualArea = document.getElementById('gate-manual-db');
-    if (manualArea) manualArea.style.display = 'block';
-    openDbModal();
+    notifyUser('데이터베이스 연결이 필요합니다.', true);
     return;
   }
 
   try {
-    var res = await SB.auth.signInWithPassword({ email: email, password: password });
-    if (res.error) {
-      notifyUser('로그인 실패: ' + res.error.message, true);
-    } else {
-      notifyUser('로그인 성공! ' + (res.data.user ? res.data.user.email : '') + ' 님 환영합니다.', false);
-      closeModal('modal-auth');
-      var gate = document.getElementById('login-gate');
-      if (gate) gate.style.display = 'none';
+    var pwHash = await hashPassword(password);
+    var res = await SB.from('app_users')
+      .select('id, username')
+      .eq('username', username)
+      .eq('password_hash', pwHash)
+      .maybeSingle();
 
-      await checkAuthSession();
-      await DB.loadAll();
-      renderAll();
+    if (res.error || !res.data) {
+      notifyUser('아이디 또는 비밀번호가 일치하지 않습니다.', true);
+      return;
     }
+
+    // 세션 정보 로컬 저장 (로그인 유지)
+    localStorage.setItem('pds_user', JSON.stringify(res.data));
+    notifyUser(res.data.username + '님 환영합니다!', false);
+    closeModal('modal-auth');
+
+    await checkAuthSession();
+    await DB.loadAll();
+    renderAll();
   } catch(e) {
-    notifyUser('로그인 처리 중 오류 발생: ' + e.message, true);
+    notifyUser('로그인 처리 중 오류: ' + e.message, true);
   }
 }
 const gateSignIn = handleSignIn;
 
 // 9. 회원가입 (HTML: onclick="handleSignUp()" 및 onclick="gateSignUp()")
 async function handleSignUp() {
-  var email = getVal(['gate-email', 'auth-email']);
-  var password = getVal(['gate-password', 'auth-password']);
+  var username = (document.getElementById('auth-username') || {}).value;
+  var password = (document.getElementById('auth-password') || {}).value;
 
-  if (!email || !password) {
-    notifyUser('이메일과 비밀번호를 모두 입력해 주세요.', true);
+  username = (username || '').trim();
+  password = (password || '').trim();
+
+  if (!username || !password) {
+    notifyUser('아이디와 비밀번호를 모두 입력해 주세요.', true);
     return;
   }
-  if (password.length < 6) {
-    notifyUser('비밀번호는 최소 6자 이상이어야 합니다.', true);
+  if (password.length < 4) {
+    notifyUser('비밀번호는 최소 4자 이상이어야 합니다.', true);
     return;
   }
 
+  await initSupabaseClient(true);
   if (!SB) {
-    await initSupabaseClient();
-  }
-
-  if (!SB) {
-    notifyUser('데이터베이스(DB) 연결이 먼저 필요합니다.\n하단의 [데이터베이스 직접 연결 설정] 또는 상단 [DB 연결]에서 Supabase URL과 Key를 설정해 주세요.', true);
-    var manualArea = document.getElementById('gate-manual-db');
-    if (manualArea) manualArea.style.display = 'block';
-    openDbModal();
+    notifyUser('데이터베이스 연결이 필요합니다.', true);
     return;
   }
 
   try {
-    var res = await SB.auth.signUp({ email: email, password: password });
-    if (res.error) {
-      notifyUser('회원가입 실패: ' + res.error.message, true);
+    // 1. 아이디 중복 검사
+    var checkRes = await SB.from('app_users').select('id').eq('username', username);
+    if (checkRes.data && checkRes.data.length > 0) {
+      notifyUser('이미 존재하는 아이디입니다.', true);
+      return;
+    }
+
+    // 2. 비밀번호 암호화 후 등록
+    var pwHash = await hashPassword(password);
+    var insertRes = await SB.from('app_users').insert([{ username: username, password_hash: pwHash }]);
+
+    if (insertRes.error) {
+      notifyUser('회원가입 실패: ' + insertRes.error.message, true);
     } else {
-      notifyUser('회원가입 요청 완료!\n가입한 이메일과 비밀번호로 [로그인] 버튼을 눌러주세요.', false);
+      notifyUser('회원가입 완료! 생성한 계정으로 로그인해 주세요.', false);
     }
   } catch(e) {
-    notifyUser('회원가입 처리 중 오류 발생: ' + e.message, true);
+    notifyUser('회원가입 처리 중 오류: ' + e.message, true);
   }
 }
 const gateSignUp = handleSignUp;
@@ -1147,9 +1158,7 @@ const gateSignUp = handleSignUp;
 // 10. 로그아웃 (HTML: onclick="handleSignOut()" 및 onclick="gateSignOut()")
 async function handleSignOut() {
   if (!confirm('로그아웃 하시겠습니까?')) return;
-  if (SB) {
-    await SB.auth.signOut();
-  }
+  localStorage.removeItem('pds_user');
   location.reload();
 }
 const gateSignOut = handleSignOut;
@@ -1160,23 +1169,25 @@ async function checkAuthSession() {
   await initSupabaseClient();
   updateDbStatus();
 
-  if (SB) {
-    var sessionRes = await SB.auth.getSession();
-    var session = sessionRes.data && sessionRes.data.session;
-    if (session && session.user) {
-      if (gate) gate.style.display = 'none';
-      var userEmailEl = document.getElementById('header-user-email') || document.getElementById('user-email-display');
-      var logoutBtnEl = document.getElementById('header-logout-btn') || document.getElementById('btn-sign-out');
-      var loginBtnEl = document.getElementById('btn-open-auth-modal');
-      if (userEmailEl) {
-        userEmailEl.textContent = '👤 ' + session.user.email;
-        userEmailEl.style.display = 'inline-block';
-      }
-      if (logoutBtnEl) logoutBtnEl.style.display = 'inline-block';
-      if (loginBtnEl) loginBtnEl.style.display = 'none';
-    } else {
-      if (gate) gate.style.display = 'flex';
+  var savedUser = null;
+  try {
+    savedUser = JSON.parse(localStorage.getItem('pds_user'));
+  } catch(e) {}
+
+  if (savedUser && savedUser.username) {
+    if (gate) gate.style.display = 'none';
+    var userEmailEl = document.getElementById('header-user-email') || document.getElementById('user-email-display');
+    var logoutBtnEl = document.getElementById('header-logout-btn') || document.getElementById('btn-sign-out');
+    var loginBtnEl = document.getElementById('btn-open-auth-modal');
+
+    if (userEmailEl) {
+      userEmailEl.textContent = '👤 ' + savedUser.username;
+      userEmailEl.style.display = 'inline-block';
     }
+    if (logoutBtnEl) logoutBtnEl.style.display = 'inline-block';
+    if (loginBtnEl) loginBtnEl.style.display = 'none';
+  } else {
+    if (gate) gate.style.display = 'flex';
   }
 }
 const checkGateAuth = checkAuthSession;
@@ -1250,3 +1261,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
   });
 });
+
+async function hashPassword(plainText) {
+  var encoder = new TextEncoder();
+  var data = encoder.encode(plainText);
+  var hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  var hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
