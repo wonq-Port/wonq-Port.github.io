@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>플랜두씨</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <link rel="stylesheet" href="css/plando.css">
+</head>
+<body>
+
+<!-- Notice bar (T06-C82) -->
+<div id="notice-bar" style="background:#fef2f2;border-bottom:1px solid #fecaca;padding:10px 16px;display:flex;align-items:center;gap:8px;font-family:'Inter',sans-serif;font-size:13px;color:#dc2626;">
+  <span style="width:8px;height:8px;border-radius:50%;background:#dc2626;animation:pulse 1.5s infinite;flex-shrink:0;display:inline-block;"></span>
+  지금은 로그인이 없어 링크를 아는 사람은 누구나 볼 수 있습니다. 남이 봐도 괜찮은 내용만 넣으세요.
+</div>
+
+<!-- DB Status bar -->
+<div id="db-status-bar">
+  <div id="db-dot"></div>
+  <span id="db-status-text">로컬 저장소 사용 중</span>
+  <button class="btn-sm" onclick="openDbModal()">DB 연결</button>
+</div>
+
+<!-- Header -->
+<div id="header">
+  <div id="logo">플랜두<span>씨</span></div>
+  <div class="header-spacer"></div>
+  <button id="export-btn" onclick="exportData()">&#8595; 내보내기</button>
+</div>
+
+<!-- Tab bar -->
+<div id="tab-bar">
+  <button class="tab-btn active" data-tab="plan" onclick="showTab('plan')">01 PLAN</button>
+  <button class="tab-btn" data-tab="tasks" onclick="showTab('tasks')">02 TASKS</button>
+  <button class="tab-btn" data-tab="do" onclick="showTab('do')">03 DO</button>
+  <button class="tab-btn" data-tab="see" onclick="showTab('see')">04 SEE</button>
+</div>
+
+<!-- PLAN Tab -->
+<div class="tab-panel active" id="tab-plan">
+  <div class="section-header">
+    <h2>계획</h2>
+    <button class="btn-primary" onclick="openPlanModal()">+ 계획 추가</button>
+  </div>
+  <div id="plan-list"></div>
+</div>
+
+<!-- TASKS Tab -->
+<div class="tab-panel" id="tab-tasks">
+  <div class="section-header">
+    <h2>할 일</h2>
+    <button class="btn-primary" onclick="openTaskModal()">+ 할 일 추가</button>
+  </div>
+  <div class="controls-row">
+    <input type="text" id="t-search" placeholder="제목 검색..." style="min-width:130px;" oninput="S.tSearch=this.value;renderTasks()">
+    <select id="t-plan" onchange="S.tPlan=this.value;S.tDelayed=false;renderTasks()">
+      <option value="">모든 계획</option>
+    </select>
+    <select id="t-status" onchange="S.tStatus=this.value;renderTasks()">
+      <option value="">모든 상태</option>
+      <option value="todo">할 일</option>
+      <option value="in_progress">진행 중</option>
+      <option value="done">완료</option>
+    </select>
+    <select id="t-prio" onchange="S.tPrio=this.value;renderTasks()">
+      <option value="">모든 우선순위</option>
+      <option value="high">높음</option>
+      <option value="medium">보통</option>
+      <option value="low">낮음</option>
+    </select>
+    <input type="text" id="t-tag" placeholder="태그 필터..." style="min-width:90px;" oninput="S.tTag=this.value;renderTasks()">
+    <select id="t-sort" onchange="S.tSort=this.value;renderTasks()">
+      <option value="priority">우선순위</option>
+      <option value="due_date">마감일</option>
+      <option value="created_at">생성일</option>
+      <option value="title">제목</option>
+    </select>
+    <button class="btn-sm" id="sort-dir-btn" onclick="S.tDir=S.tDir==='asc'?'desc':'asc';renderTasks()">&#8597;</button>
+  </div>
+  <div id="sort-label"></div>
+  <div id="task-list"></div>
+</div>
+
+<!-- DO Tab -->
+<div class="tab-panel" id="tab-do">
+  <div class="section-header">
+    <h2>실행 기록</h2>
+  </div>
+  <div class="exec-form">
+    <div style="font-family:var(--font-d);font-weight:700;font-size:17px;margin-bottom:12px;color:var(--primary);">+ 실행 추가</div>
+    <div class="form-group">
+      <label>할 일 선택</label>
+      <select id="exec-task">
+        <option value="">할 일을 선택하세요</option>
+      </select>
+    </div>
+    <div class="exec-form-grid">
+      <div class="form-group">
+        <label>시작 시각</label>
+        <input type="datetime-local" id="exec-start" oninput="autoCalcMinutes()">
+      </div>
+      <div class="form-group">
+        <label>종료 시각</label>
+        <input type="datetime-local" id="exec-end" oninput="autoCalcMinutes()">
+      </div>
+      <div class="form-group">
+        <label>실제 소요 분</label>
+        <input type="number" id="exec-minutes" min="0" placeholder="분 단위">
+      </div>
+      <div class="form-group">
+        <label>막힌 이유 (선택)</label>
+        <input type="text" id="exec-blocker" placeholder="막혔던 이유를 적어주세요">
+      </div>
+    </div>
+    <button class="btn-primary" onclick="submitExec()">기록 추가</button>
+  </div>
+  <div id="do-content"></div>
+</div>
+
+<!-- SEE Tab -->
+<div class="tab-panel" id="tab-see">
+  <div class="section-header">
+    <h2>돌아보기</h2>
+  </div>
+  <div class="see-plan-select">
+    <label>계획 선택</label>
+    <select id="see-plan" onchange="S.seePlan=this.value;renderSee()" style="width:auto;min-width:200px;">
+      <option value="">모든 계획</option>
+    </select>
+  </div>
+  <div id="see-content"></div>
+</div>
+
+<!-- ===== MODALS ===== -->
+
+<!-- Plan Modal -->
+<div class="modal-overlay" id="modal-plan">
+  <div class="modal-card">
+    <button class="modal-close" onclick="closeModal('modal-plan')">&#10005;</button>
+    <div class="modal-title" id="modal-plan-title">계획 추가</div>
+    <div class="form-group">
+      <label>제목 *</label>
+      <input type="text" id="plan-title" placeholder="계획 제목">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>시작일</label>
+        <input type="date" id="plan-start">
+      </div>
+      <div class="form-group">
+        <label>종료일</label>
+        <input type="date" id="plan-end">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>우선순위</label>
+      <select id="plan-prio">
+        <option value="high">높음</option>
+        <option value="medium" selected>보통</option>
+        <option value="low">낮음</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>성공 기준</label>
+      <textarea id="plan-criteria" placeholder="성공 기준을 적어주세요"></textarea>
+    </div>
+    <div class="form-group">
+      <label>예상 소요 시간 (분)</label>
+      <input type="number" id="plan-minutes" min="0" placeholder="0">
+    </div>
+    <div class="form-group">
+      <label>메모</label>
+      <textarea id="plan-notes" placeholder="메모"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="closeModal('modal-plan')">취소</button>
+      <button class="btn-primary" onclick="savePlan()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- Task Modal -->
+<div class="modal-overlay" id="modal-task">
+  <div class="modal-card">
+    <button class="modal-close" onclick="closeModal('modal-task')">&#10005;</button>
+    <div class="modal-title" id="modal-task-title">할 일 추가</div>
+    <div class="form-group">
+      <label>제목 *</label>
+      <input type="text" id="task-title" placeholder="할 일 제목">
+    </div>
+    <div class="form-group">
+      <label>계획 연결</label>
+      <select id="task-plan-id">
+        <option value="">계획 없음</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>상태</label>
+        <select id="task-status">
+          <option value="todo">할 일</option>
+          <option value="in_progress">진행 중</option>
+          <option value="done">완료</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>우선순위</label>
+        <select id="task-prio">
+          <option value="high">높음</option>
+          <option value="medium" selected>보통</option>
+          <option value="low">낮음</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>마감일</label>
+        <input type="date" id="task-due">
+      </div>
+      <div class="form-group">
+        <label>예상 소요 시간 (분)</label>
+        <input type="number" id="task-minutes" min="0" placeholder="0">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>태그 (쉼표 구분)</label>
+      <input type="text" id="task-tags" placeholder="예: 코딩, 알고리즘">
+    </div>
+    <div class="form-group">
+      <label>메모</label>
+      <textarea id="task-notes" placeholder="메모"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="closeModal('modal-task')">취소</button>
+      <button class="btn-primary" onclick="saveTask()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- History Modal -->
+<div class="modal-overlay" id="modal-history">
+  <div class="modal-card wide">
+    <button class="modal-close" onclick="closeModal('modal-history')">&#10005;</button>
+    <div class="modal-title">수정 이력</div>
+    <div id="history-list"></div>
+  </div>
+</div>
+
+<!-- DB Config Modal -->
+<div class="modal-overlay" id="modal-db">
+  <div class="modal-card wide">
+    <button class="modal-close" onclick="closeModal('modal-db')">&#10005;</button>
+    <div class="modal-title">Supabase DB 연결</div>
+    <div class="form-group">
+      <label>Supabase Project URL</label>
+      <input type="text" id="sb-url" placeholder="https://xxxx.supabase.co">
+    </div>
+    <div class="form-group">
+      <label>Supabase Anon Key</label>
+      <input type="text" id="sb-key" placeholder="eyJ...">
+    </div>
+    <div class="modal-footer" style="justify-content:flex-start;margin-bottom:12px;">
+      <button class="btn-primary" onclick="connectSupabase()">연결하기</button>
+      <button class="btn-sm" style="color:var(--accent);border-color:rgba(220,38,38,0.3);" onclick="disconnectSupabase()">연결 해제</button>
+    </div>
+    <hr class="divider">
+    <div style="font-family:var(--font-d);font-weight:700;font-size:16px;margin-bottom:8px;">DB 초기화 SQL</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Supabase SQL Editor에서 아래 SQL을 실행하세요.</div>
+    <div class="sql-block">-- Enable UUID extension
+create extension if not exists "pgcrypto";
+
+-- plans
+create table if not exists plans (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  period_start date,
+  period_end date,
+  priority text default 'medium',
+  success_criteria text,
+  estimated_minutes integer default 0,
+  notes text,
+  created_at timestamptz default now()
+);
+alter table plans enable row level security;
+create policy "public read plans" on plans for select using (true);
+create policy "public insert plans" on plans for insert with check (true);
+create policy "public update plans" on plans for update using (true);
+create policy "public delete plans" on plans for delete using (true);
+
+-- plan_versions
+create table if not exists plan_versions (
+  id uuid primary key default gen_random_uuid(),
+  plan_id uuid references plans(id) on delete cascade,
+  version_num integer,
+  title text,
+  period_start date,
+  period_end date,
+  priority text,
+  success_criteria text,
+  estimated_minutes integer default 0,
+  notes text,
+  saved_at timestamptz default now()
+);
+alter table plan_versions enable row level security;
+create policy "public read plan_versions" on plan_versions for select using (true);
+create policy "public insert plan_versions" on plan_versions for insert with check (true);
+create policy "public update plan_versions" on plan_versions for update using (true);
+create policy "public delete plan_versions" on plan_versions for delete using (true);
+
+-- tasks
+create table if not exists tasks (
+  id uuid primary key default gen_random_uuid(),
+  plan_id uuid references plans(id) on delete set null,
+  title text not null,
+  status text default 'todo',
+  due_date date,
+  priority text default 'medium',
+  tags text,
+  estimated_minutes integer default 0,
+  notes text,
+  completed_at timestamptz,
+  created_at timestamptz default now()
+);
+alter table tasks enable row level security;
+create policy "public read tasks" on tasks for select using (true);
+create policy "public insert tasks" on tasks for insert with check (true);
+create policy "public update tasks" on tasks for update using (true);
+create policy "public delete tasks" on tasks for delete using (true);
+
+-- executions
+create table if not exists executions (
+  id uuid primary key default gen_random_uuid(),
+  task_id uuid references tasks(id) on delete cascade,
+  start_at timestamptz,
+  end_at timestamptz,
+  actual_minutes integer default 0,
+  blocker_reason text default '',
+  created_at timestamptz default now()
+);
+alter table executions enable row level security;
+create policy "public read executions" on executions for select using (true);
+create policy "public insert executions" on executions for insert with check (true);
+create policy "public update executions" on executions for update using (true);
+create policy "public delete executions" on executions for delete using (true);
+
+-- sees
+create table if not exists sees (
+  id uuid primary key default gen_random_uuid(),
+  date date not null unique,
+  good text,
+  bad text,
+  next_plan text,
+  carry_forward text,
+  rating integer default 0,
+  updated_at timestamptz default now()
+);
+alter table sees enable row level security;
+create policy "public read sees" on sees for select using (true);
+create policy "public insert sees" on sees for insert with check (true);
+create policy "public update sees" on sees for update using (true);
+create policy "public delete sees" on sees for delete using (true);</div>
+  </div>
+</div>
+
+<script src="js/plando.js"></script>
+</body>
+</html>
