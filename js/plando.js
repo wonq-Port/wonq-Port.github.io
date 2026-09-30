@@ -964,106 +964,43 @@ async function initSupabaseFromVercel() {
   }
 }
 
-// 로그인 버튼 클릭 시 실행
-async function gateSignIn() {
-  var email = document.getElementById('gate-email').value.trim();
-  var password = document.getElementById('gate-password').value.trim();
-  var errEl = document.getElementById('gate-error-msg');
-  if (!email || !password) {
-    errEl.textContent = '이메일과 비밀번호를 모두 입력하세요.';
-    errEl.style.display = 'block';
-    return;
-  }
-  if (!SB) {
-    errEl.textContent = '데이터베이스에 연결되지 않았습니다. 잠시 후 다시 시도하세요.';
-    errEl.style.display = 'block';
-    return;
-  }
+<!-- plando.html의 <body> 바로 아래 교체 -->
+<div id="login-gate" class="login-gate-overlay">
+  <div class="login-gate-card">
+    <div class="login-gate-logo">플랜<span>두씨</span></div>
+    <p class="login-gate-desc">계획 → 실행 → 돌아보기 다이어리<br>로그인 후 이용할 수 있습니다.</p>
+    
+    <div class="form-group" style="margin-bottom:12px;">
+      <label for="gate-email">이메일 주소</label>
+      <input type="email" id="gate-email" placeholder="example@email.com" autocomplete="email">
+    </div>
+    
+    <div class="form-group" style="margin-bottom:14px;">
+      <label for="gate-password">비밀번호 (6자 이상)</label>
+      <input type="password" id="gate-password" placeholder="비밀번호 입력" autocomplete="current-password">
+    </div>
 
-  var res = await SB.auth.signInWithPassword({ email: email, password: password });
-  if (res.error) {
-    errEl.textContent = '로그인 실패: ' + res.error.message;
-    errEl.style.display = 'block';
-  } else {
-    errEl.style.display = 'none';
-    document.getElementById('login-gate').style.display = 'none';
-    await checkGateAuth();
-  }
-}
+    <div id="gate-error-msg" class="gate-error" style="display:none;"></div>
 
-// 회원가입 버튼 클릭 시 실행
-async function gateSignUp() {
-  var email = document.getElementById('gate-email').value.trim();
-  var password = document.getElementById('gate-password').value.trim();
-  var errEl = document.getElementById('gate-error-msg');
-  if (!email || !password) {
-    errEl.textContent = '이메일과 비밀번호를 모두 입력하세요.';
-    errEl.style.display = 'block';
-    return;
-  }
-  if (password.length < 6) {
-    errEl.textContent = '비밀번호는 최소 6자 이상이어야 합니다.';
-    errEl.style.display = 'block';
-    return;
-  }
-  if (!SB) {
-    errEl.textContent = '데이터베이스에 연결되지 않았습니다.';
-    errEl.style.display = 'block';
-    return;
-  }
+    <div style="display:flex; gap:8px; margin-top:14px;">
+      <button type="button" class="btn-primary" style="flex:1; padding:10px; font-size:13px;" onclick="gateSignIn()">로그인</button>
+      <button type="button" class="btn-sm" style="padding:10px; font-size:13px;" onclick="gateSignUp()">회원가입</button>
+    </div>
 
-  var res = await SB.auth.signUp({ email: email, password: password });
-  if (res.error) {
-    errEl.textContent = '회원가입 실패: ' + res.error.message;
-    errEl.style.display = 'block';
-  } else {
-    alert('회원가입이 완료되었습니다! 로그인 버튼을 눌러주세요.');
-  }
-}
+    <!-- DB 연결 실패 시 수동 입력할 수 있는 접기/펼치기 영역 -->
+    <div id="gate-manual-db" style="display:none; margin-top:16px; padding-top:14px; border-top:1px dashed var(--border); text-align:left;">
+      <div style="font-size:11px; font-weight:700; color:var(--accent); margin-bottom:8px;">⚠️ DB 자동 연결 대기 중 (수동 1회 설정)</div>
+      <div class="form-group" style="margin-bottom:8px;">
+        <label style="font-size:11px;">Supabase Project URL</label>
+        <input type="text" id="manual-sb-url" placeholder="https://xxxx.supabase.co" style="font-size:12px; padding:6px 8px;">
+      </div>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label style="font-size:11px;">Supabase Anon Key</label>
+        <input type="password" id="manual-sb-key" placeholder="eyJhbGciOi..." style="font-size:12px; padding:6px 8px;">
+      </div>
+      <button type="button" class="btn-sm" style="width:100%; padding:6px;" onclick="saveManualDbAndConnect()">DB 연결 저장</button>
+    </div>
 
-// 로그아웃 버튼 클릭 시 실행
-async function gateSignOut() {
-  if (!confirm('로그아웃 하시겠습니까?')) return;
-  if (SB) await SB.auth.signOut();
-  location.reload();
-}
-
-// 페이지 접속 시 세션 확인 및 화면 제어
-async function checkGateAuth() {
-  var gate = document.getElementById('login-gate');
-
-  // Supabase 클라이언트가 없으면 Vercel 환경변수에서 연결
-  if (!SB) {
-    await initSupabaseFromVercel();
-  }
-
-  if (SB) {
-    var sessionRes = await SB.auth.getSession();
-    var session = sessionRes.data && sessionRes.data.session;
-
-    if (session && session.user) {
-      // 1. 이미 로그인된 상태: 로그인창 숨기고 다이어리 메인 표시
-      if (gate) gate.style.display = 'none';
-      var userEmailEl = document.getElementById('header-user-email');
-      var logoutBtnEl = document.getElementById('header-logout-btn');
-      if (userEmailEl) {
-        userEmailEl.textContent = '👤 ' + session.user.email;
-        userEmailEl.style.display = 'inline-block';
-      }
-      if (logoutBtnEl) {
-        logoutBtnEl.style.display = 'inline-block';
-      }
-      await DB.loadAll();
-      renderAll();
-    } else {
-      // 2. 로그인 안 된 상태: 전체화면 로그인 게이트 표시
-      if (gate) gate.style.display = 'flex';
-    }
-  } else {
-    // Supabase 연결 전: 로그인 게이트 표시
-    if (gate) gate.style.display = 'flex';
-  }
-}
-
-// 페이지가 열리면 자동으로 실행
-document.addEventListener('DOMContentLoaded', checkGateAuth);
+    <button type="button" class="gate-db-toggle" onclick="toggleManualDb()">⚙️ 데이터베이스 직접 연결 설정</button>
+  </div>
+</div>
