@@ -27,13 +27,49 @@
       <!-- Desktop Nav Menu -->
       <div class="nav-extra">
         <nav class="nav-menu" aria-label="주요 내비게이션">
+          <!-- 기존 기본 메뉴 유지 -->
           <a href="#about" class="nav-link" data-section="about">About</a>
           <a href="#skills" class="nav-link" data-section="skills">Skills</a>
           <a href="#work" class="nav-link" data-section="work">Work</a>
           <a href="#contact" class="nav-link" data-section="contact">Contact</a>
-          <a href="studio.html" class="nav-link">Studio</a>
-          <a href="board.html" class="nav-link">Info Board</a>
-          <a href="plando.html" class="nav-link active">PlanDoSee</a>
+        
+          <!-- 우측 끝: 서브 앱/프로젝트 드롭다운 메뉴 버튼 -->
+          <div class="nav-dropdown" id="nav-dropdown">
+            <button type="button" class="nav-dropdown-btn" id="nav-dropdown-btn" aria-haspopup="true" aria-expanded="false" aria-label="프로젝트 메뉴 열기">
+              <span>Projects</span>
+              <span class="dropdown-caret" aria-hidden="true">▾</span>
+            </button>
+            <div class="nav-dropdown-menu" id="nav-dropdown-menu" role="menu">
+              <a href="plando.html" class="dropdown-item" role="menuitem">
+                <span class="item-badge new">PDS</span>
+                <div class="item-text">
+                  <span class="item-title">플랜두씨 다이어리</span>
+                  <span class="item-desc">Plan → Do → See 라이프 다이어리</span>
+                </div>
+              </a>
+              <a href="studio.html" class="dropdown-item" role="menuitem">
+                <span class="item-badge">APP</span>
+                <div class="item-text">
+                  <span class="item-title">짤·카드 스튜디오</span>
+                  <span class="item-desc">카드뉴스 &amp; 밈 생성기</span>
+                </div>
+              </a>
+              <a href="board.html" class="dropdown-item" role="menuitem">
+                <span class="item-badge">LIVE</span>
+                <div class="item-text">
+                  <span class="item-title">오늘의 진짜 정보판</span>
+                  <span class="item-desc">실시간 환율 &amp; 장애 복원 보드</span>
+                </div>
+              </a>
+              <a href="game.html" class="dropdown-item" role="menuitem">
+                <span class="item-badge">GAME</span>
+                <div class="item-text">
+                  <span class="item-title">미니 게임</span>
+                  <span class="item-desc">보안 관제 디펜스 게임</span>
+                </div>
+              </a>
+            </div>
+          </div>
         </nav>
         <button type="button" id="motion-toggle-btn" class="motion-btn" aria-pressed="false" aria-label="화면 모션 애니메이션 줄이기 토글">
           모션 줄이기: OFF
