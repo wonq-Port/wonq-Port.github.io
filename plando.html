@@ -23,6 +23,13 @@
   <div id="db-dot"></div>
   <span id="db-status-text">로컬 저장소 사용 중</span>
   <button class="btn-sm" onclick="openDbModal()">DB 연결</button>
+
+  <div class="header-spacer"></div>
+  <div id="auth-status-area" style="display:flex;align-items:center;gap:8px;">
+    <span id="user-email-display" style="font-size:12px;font-weight:600;color:var(--secondary);display:none;"></span>
+    <button class="btn-sm" id="btn-open-auth-modal" onclick="openAuthModal()">로그인 / 회원가입</button>
+    <button class="btn-sm" id="btn-sign-out" style="display:none;color:var(--accent);" onclick="handleSignOut()">로그아웃</button>
+  </div>
 </div>
 
 <!-- Header -->
