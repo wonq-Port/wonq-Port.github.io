@@ -626,3 +626,104 @@
   margin-top: 10px;
   text-align: left;
 }
+
+/* ==========================================================================
+   Login Gate & Input Design Alignment
+   ========================================================================== */
+.login-gate-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.login-gate-card {
+  width: 100%;
+  max-width: 380px;
+  background: #ffffff;
+  border: 1px solid var(--border-md);
+  border-radius: 8px;
+  padding: 32px 26px;
+  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.login-gate-logo {
+  font-family: var(--font-d);
+  font-weight: 800;
+  font-size: 34px;
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+  color: var(--primary);
+}
+
+.login-gate-logo span { color: var(--accent); }
+
+.login-gate-desc {
+  font-family: var(--font-b);
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 22px;
+  line-height: 1.5;
+}
+
+/* 이메일 및 비밀번호 입력창 디자인 통일 */
+.login-gate-card input[type="email"],
+.login-gate-card input[type="password"],
+.login-gate-card input[type="text"] {
+  font-family: var(--font-b);
+  font-size: 13.5px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-md);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--primary);
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 4px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.login-gate-card input[type="email"]:focus,
+.login-gate-card input[type="password"]:focus,
+.login-gate-card input[type="text"]:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.06);
+}
+
+.login-gate-card label {
+  font-family: var(--font-b);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--secondary);
+  display: block;
+  text-align: left;
+}
+
+.gate-error {
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: 5px;
+  padding: 8px 12px;
+  font-size: 12px;
+  margin-top: 12px;
+  text-align: left;
+  line-height: 1.4;
+}
+
+.gate-db-toggle {
+  font-size: 11.5px;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-top: 16px;
+  text-decoration: underline;
+}
