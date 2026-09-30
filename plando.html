@@ -13,27 +13,44 @@
 </head>
 <body>
 
+<!-- plando.html의 <body> 바로 아래 교체 -->
 <div id="login-gate" class="login-gate-overlay">
   <div class="login-gate-card">
     <div class="login-gate-logo">플랜<span>두씨</span></div>
     <p class="login-gate-desc">계획 → 실행 → 돌아보기 다이어리<br>로그인 후 이용할 수 있습니다.</p>
     
-    <div class="form-group" style="text-align:left;">
+    <div class="form-group" style="margin-bottom:12px;">
       <label for="gate-email">이메일 주소</label>
       <input type="email" id="gate-email" placeholder="example@email.com" autocomplete="email">
     </div>
     
-    <div class="form-group" style="text-align:left;">
+    <div class="form-group" style="margin-bottom:14px;">
       <label for="gate-password">비밀번호 (6자 이상)</label>
       <input type="password" id="gate-password" placeholder="비밀번호 입력" autocomplete="current-password">
     </div>
 
     <div id="gate-error-msg" class="gate-error" style="display:none;"></div>
 
-    <div style="display:flex; gap:8px; margin-top:16px;">
-      <button type="button" class="btn-primary" style="flex:1; padding:10px;" onclick="gateSignIn()">로그인</button>
-      <button type="button" class="btn-sm" style="padding:10px;" onclick="gateSignUp()">회원가입</button>
+    <div style="display:flex; gap:8px; margin-top:14px;">
+      <button type="button" class="btn-primary" style="flex:1; padding:10px; font-size:13px;" onclick="gateSignIn()">로그인</button>
+      <button type="button" class="btn-sm" style="padding:10px; font-size:13px;" onclick="gateSignUp()">회원가입</button>
     </div>
+
+    <!-- DB 연결 실패 시 수동 입력할 수 있는 접기/펼치기 영역 -->
+    <div id="gate-manual-db" style="display:none; margin-top:16px; padding-top:14px; border-top:1px dashed var(--border); text-align:left;">
+      <div style="font-size:11px; font-weight:700; color:var(--accent); margin-bottom:8px;">⚠️ DB 자동 연결 대기 중 (수동 1회 설정)</div>
+      <div class="form-group" style="margin-bottom:8px;">
+        <label style="font-size:11px;">Supabase Project URL</label>
+        <input type="text" id="manual-sb-url" placeholder="https://xxxx.supabase.co" style="font-size:12px; padding:6px 8px;">
+      </div>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label style="font-size:11px;">Supabase Anon Key</label>
+        <input type="password" id="manual-sb-key" placeholder="eyJhbGciOi..." style="font-size:12px; padding:6px 8px;">
+      </div>
+      <button type="button" class="btn-sm" style="width:100%; padding:6px;" onclick="saveManualDbAndConnect()">DB 연결 저장</button>
+    </div>
+
+    <button type="button" class="gate-db-toggle" onclick="toggleManualDb()">⚙️ 데이터베이스 직접 연결 설정</button>
   </div>
 </div>
 
