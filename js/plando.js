@@ -947,231 +947,123 @@ function renderAll() {
 }
 
 // ===== INIT =====
-async function init() {
-  var sbUrl = localStorage.getItem(LS.sbUrl);
-  var sbKey = localStorage.getItem(LS.sbKey);
-  if (sbUrl && sbKey && window.supabase) {
+// ===== VERCEL 환경 변수 연동 & 로그인 게이트 제어 =====
+
+// Vercel 서버리스 API(/api/config)로부터 환경변수 자동 로드
+async function initSupabaseFromVercel() {
+  if (!SB && window.supabase) {
     try {
-      SB = window.supabase.createClient(sbUrl, sbKey);
-      SB.auth.onAuthStateChange(function(event, session) {
-        checkAuthSession();
-      });
-    } catch(e) { SB = null; }
+      var res = await fetch('/api/config');
+      var cfg = await res.json();
+      if (cfg.supabaseUrl && cfg.supabaseAnonKey) {
+        SB = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+      }
+    } catch(e) {
+      console.warn('Vercel 환경변수 로드 대기 중:', e);
+    }
   }
-  await DB.loadAll();
-  renderAll();
-  updateDbStatus();
-  await checkAuthSession();
 }
 
-
-// ===== SUPABASE AUTH & LOGIN (T07) =====
-function openAuthModal() {
-  var errEl = document.getElementById('auth-error-msg');
-  if (errEl) errEl.style.display = 'none';
-  openModal('modal-auth');
-}
-
-function showAuthError(msg) {
-  var errEl = document.getElementById('auth-error-msg');
-  if (errEl) {
-    errEl.textContent = msg;
+// 로그인 버튼 클릭 시 실행
+async function gateSignIn() {
+  var email = document.getElementById('gate-email').value.trim();
+  var password = document.getElementById('gate-password').value.trim();
+  var errEl = document.getElementById('gate-error-msg');
+  if (!email || !password) {
+    errEl.textContent = '이메일과 비밀번호를 모두 입력하세요.';
     errEl.style.display = 'block';
-  } else {
-    alert(msg);
+    return;
   }
-}
-
-async function handleSignUp() {
-  var email = document.getElementById('auth-email').value.trim();
-  var password = document.getElementById('auth-password').value.trim();
-  if (!email || !password) { showAuthError('이메일과 비밀번호를 모두 입력하세요.'); return; }
-  if (password.length < 6) { showAuthError('비밀번호는 최소 6자 이상이어야 합니다.'); return; }
-  if (!SB) { showAuthError('먼저 [DB 연결]에서 Supabase URL과 키를 설정하세요.'); return; }
-
-  try {
-    var res = await SB.auth.signUp({ email: email, password: password });
-    if (res.error) {
-      showAuthError('회원가입 오류: ' + res.error.message);
-    } else {
-      alert('회원가입이 완료되었습니다! ' + (res.data.user && res.data.user.identities && res.data.user.identities.length === 0 ? '이미 등록된 이메일일 수 있습니다.' : '로그인되었습니다.'));
-      closeModal('modal-auth');
-      await checkAuthSession();
-    }
-  } catch(e) {
-    showAuthError('회원가입 예외: ' + e.message);
-  }
-}
-
-async function handleSignIn() {
-  var email = document.getElementById('auth-email').value.trim();
-  var password = document.getElementById('auth-password').value.trim();
-  if (!email || !password) { showAuthError('이메일과 비밀번호를 모두 입력하세요.'); return; }
-  if (!SB) { showAuthError('먼저 [DB 연결]에서 Supabase URL과 키를 설정하세요.'); return; }
-
-  try {
-    var res = await SB.auth.signInWithPassword({ email: email, password: password });
-    if (res.error) {
-      showAuthError('로그인 실패: ' + res.error.message);
-    } else {
-      closeModal('modal-auth');
-      await checkAuthSession();
-      await DB.loadAll();
-      renderAll();
-      alert('로그인되었습니다: ' + res.data.user.email);
-    }
-  } catch(e) {
-    showAuthError('로그인 예외: ' + e.message);
-  }
-}
-
-async function handleSignOut() {
-  if (!confirm('로그아웃 하시겠습니까?')) return;
-  if (SB) {
-    await SB.auth.signOut();
-  }
-  await checkAuthSession();
-  await DB.loadAll();
-  renderAll();
-  alert('로그아웃되었습니다.');
-}
-
-async function checkAuthSession() {
-  var emailDisplay = document.getElementById('user-email-display');
-  var loginBtn = document.getElementById('btn-open-auth-modal');
-  var logoutBtn = document.getElementById('btn-sign-out');
-
   if (!SB) {
-    if (emailDisplay) emailDisplay.style.display = 'none';
-    if (loginBtn) loginBtn.style.display = 'inline-block';
-    if (logoutBtn) logoutBtn.style.display = 'none';
+    errEl.textContent = '데이터베이스에 연결되지 않았습니다. 잠시 후 다시 시도하세요.';
+    errEl.style.display = 'block';
     return;
   }
 
-  try {
-    var sessionRes = await SB.auth.getSession();
-    var session = sessionRes.data && sessionRes.data.session;
-    if (session && session.user) {
-      if (emailDisplay) {
-        emailDisplay.textContent = '👤 ' + session.user.email;
-        emailDisplay.style.display = 'inline-block';
-      }
-      if (loginBtn) loginBtn.style.display = 'none';
-      if (logoutBtn) logoutBtn.style.display = 'inline-block';
-    } else {
-      if (emailDisplay) emailDisplay.style.display = 'none';
-      if (loginBtn) loginBtn.style.display = 'inline-block';
-      if (logoutBtn) logoutBtn.style.display = 'none';
-    }
-  } catch(e) {
-    if (emailDisplay) emailDisplay.style.display = 'none';
-    if (loginBtn) loginBtn.style.display = 'inline-block';
-    if (logoutBtn) logoutBtn.style.display = 'none';
-  }
-}
-// ===== SUPABASE AUTH & LOGIN =====
-function openAuthModal() {
-  var errEl = document.getElementById('auth-error-msg');
-  if (errEl) errEl.style.display = 'none';
-  openModal('modal-auth');
-}
-
-function showAuthError(msg) {
-  var errEl = document.getElementById('auth-error-msg');
-  if (errEl) {
-    errEl.textContent = msg;
+  var res = await SB.auth.signInWithPassword({ email: email, password: password });
+  if (res.error) {
+    errEl.textContent = '로그인 실패: ' + res.error.message;
     errEl.style.display = 'block';
   } else {
-    alert(msg);
+    errEl.style.display = 'none';
+    document.getElementById('login-gate').style.display = 'none';
+    await checkGateAuth();
   }
 }
 
-async function handleSignUp() {
-  var email = document.getElementById('auth-email').value.trim();
-  var password = document.getElementById('auth-password').value.trim();
-  if (!email || !password) { showAuthError('이메일과 비밀번호를 모두 입력하세요.'); return; }
-  if (password.length < 6) { showAuthError('비밀번호는 최소 6자 이상이어야 합니다.'); return; }
-  if (!SB) { showAuthError('먼저 [DB 연결] 버튼을 눌러 Supabase URL과 키를 연결하세요.'); return; }
-
-  try {
-    var res = await SB.auth.signUp({ email: email, password: password });
-    if (res.error) {
-      showAuthError('회원가입 오류: ' + res.error.message);
-    } else {
-      alert('회원가입이 완료되었습니다!');
-      closeModal('modal-auth');
-      await checkAuthSession();
-    }
-  } catch(e) {
-    showAuthError('회원가입 예외: ' + e.message);
+// 회원가입 버튼 클릭 시 실행
+async function gateSignUp() {
+  var email = document.getElementById('gate-email').value.trim();
+  var password = document.getElementById('gate-password').value.trim();
+  var errEl = document.getElementById('gate-error-msg');
+  if (!email || !password) {
+    errEl.textContent = '이메일과 비밀번호를 모두 입력하세요.';
+    errEl.style.display = 'block';
+    return;
   }
-}
-
-async function handleSignIn() {
-  var email = document.getElementById('auth-email').value.trim();
-  var password = document.getElementById('auth-password').value.trim();
-  if (!email || !password) { showAuthError('이메일과 비밀번호를 모두 입력하세요.'); return; }
-  if (!SB) { showAuthError('먼저 [DB 연결] 버튼을 눌러 Supabase URL과 키를 연결하세요.'); return; }
-
-  try {
-    var res = await SB.auth.signInWithPassword({ email: email, password: password });
-    if (res.error) {
-      showAuthError('로그인 실패: ' + res.error.message);
-    } else {
-      closeModal('modal-auth');
-      await checkAuthSession();
-      await DB.loadAll();
-      renderAll();
-      alert('로그인되었습니다: ' + res.data.user.email);
-    }
-  } catch(e) {
-    showAuthError('로그인 예외: ' + e.message);
+  if (password.length < 6) {
+    errEl.textContent = '비밀번호는 최소 6자 이상이어야 합니다.';
+    errEl.style.display = 'block';
+    return;
   }
-}
-
-async function handleSignOut() {
-  if (!confirm('로그아웃 하시겠습니까?')) return;
-  if (SB) {
-    await SB.auth.signOut();
-  }
-  await checkAuthSession();
-  await DB.loadAll();
-  renderAll();
-  alert('로그아웃되었습니다.');
-}
-
-async function checkAuthSession() {
-  var emailDisplay = document.getElementById('user-email-display');
-  var loginBtn = document.getElementById('btn-open-auth-modal');
-  var logoutBtn = document.getElementById('btn-sign-out');
-
   if (!SB) {
-    if (emailDisplay) emailDisplay.style.display = 'none';
-    if (loginBtn) loginBtn.style.display = 'inline-block';
-    if (logoutBtn) logoutBtn.style.display = 'none';
+    errEl.textContent = '데이터베이스에 연결되지 않았습니다.';
+    errEl.style.display = 'block';
     return;
   }
 
-  try {
-    var sessionRes = await SB.auth.getSession();
-    var session = sessionRes.data && sessionRes.data.session;
-    if (session && session.user) {
-      if (emailDisplay) {
-        emailDisplay.textContent = '👤 ' + session.user.email;
-        emailDisplay.style.display = 'inline-block';
-      }
-      if (loginBtn) loginBtn.style.display = 'none';
-      if (logoutBtn) logoutBtn.style.display = 'inline-block';
-    } else {
-      if (emailDisplay) emailDisplay.style.display = 'none';
-      if (loginBtn) loginBtn.style.display = 'inline-block';
-      if (logoutBtn) logoutBtn.style.display = 'none';
-    }
-  } catch(e) {
-    if (emailDisplay) emailDisplay.style.display = 'none';
-    if (loginBtn) loginBtn.style.display = 'inline-block';
-    if (logoutBtn) logoutBtn.style.display = 'none';
+  var res = await SB.auth.signUp({ email: email, password: password });
+  if (res.error) {
+    errEl.textContent = '회원가입 실패: ' + res.error.message;
+    errEl.style.display = 'block';
+  } else {
+    alert('회원가입이 완료되었습니다! 로그인 버튼을 눌러주세요.');
   }
 }
 
-document.addEventListener('DOMContentLoaded', init);
+// 로그아웃 버튼 클릭 시 실행
+async function gateSignOut() {
+  if (!confirm('로그아웃 하시겠습니까?')) return;
+  if (SB) await SB.auth.signOut();
+  location.reload();
+}
+
+// 페이지 접속 시 세션 확인 및 화면 제어
+async function checkGateAuth() {
+  var gate = document.getElementById('login-gate');
+
+  // Supabase 클라이언트가 없으면 Vercel 환경변수에서 연결
+  if (!SB) {
+    await initSupabaseFromVercel();
+  }
+
+  if (SB) {
+    var sessionRes = await SB.auth.getSession();
+    var session = sessionRes.data && sessionRes.data.session;
+
+    if (session && session.user) {
+      // 1. 이미 로그인된 상태: 로그인창 숨기고 다이어리 메인 표시
+      if (gate) gate.style.display = 'none';
+      var userEmailEl = document.getElementById('header-user-email');
+      var logoutBtnEl = document.getElementById('header-logout-btn');
+      if (userEmailEl) {
+        userEmailEl.textContent = '👤 ' + session.user.email;
+        userEmailEl.style.display = 'inline-block';
+      }
+      if (logoutBtnEl) {
+        logoutBtnEl.style.display = 'inline-block';
+      }
+      await DB.loadAll();
+      renderAll();
+    } else {
+      // 2. 로그인 안 된 상태: 전체화면 로그인 게이트 표시
+      if (gate) gate.style.display = 'flex';
+    }
+  } else {
+    // Supabase 연결 전: 로그인 게이트 표시
+    if (gate) gate.style.display = 'flex';
+  }
+}
+
+// 페이지가 열리면 자동으로 실행
+document.addEventListener('DOMContentLoaded', checkGateAuth);
