@@ -397,7 +397,29 @@ create policy "public delete sees" on sees for delete using (true);</div>
     </div>
   </div>
 </div>
-
+<!-- 로그인 / 회원가입 팝업 모달 -->
+<div id="modal-auth" class="modal-overlay">
+  <div class="modal-card">
+    <button class="modal-close" onclick="closeModal('modal-auth')">&#10005;</button>
+    <div class="modal-title">계정 로그인 / 회원가입</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5;">
+      Supabase Auth 계정으로 로그인하여 나의 계획과 다이어리를 안전하게 보관하세요.
+    </p>
+    <div class="form-group">
+      <label for="auth-email">이메일 주소</label>
+      <input type="email" id="auth-email" placeholder="example@email.com" autocomplete="email" />
+    </div>
+    <div class="form-group">
+      <label for="auth-password">비밀번호</label>
+      <input type="password" id="auth-password" placeholder="6자리 이상 비밀번호" autocomplete="current-password" />
+    </div>
+    <div id="auth-error-msg" style="display:none;font-size:12px;color:var(--accent);margin-bottom:10px;"></div>
+    <div class="modal-footer" style="justify-content:flex-end;gap:8px;">
+      <button type="button" class="btn-sm" onclick="handleSignUp()">회원가입</button>
+      <button type="button" class="btn-primary" onclick="handleSignIn()">로그인</button>
+    </div>
+  </div>
+</div>
 <script src="js/plando.js"></script>
 </body>
 </html>
