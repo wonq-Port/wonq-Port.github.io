@@ -882,19 +882,30 @@ document.addEventListener('DOMContentLoaded', () => {
   const privateContent = document.getElementById('private-content-area');
 
   // [헬퍼 함수] Base64URL을 ArrayBuffer로 안전하게 변환 (에러 방지 강화)
-  const base64URLToBuffer = (base64URL) => {
-    if (!base64URL) return new ArrayBuffer(0);
-    let base64 = base64URL.replace(/-/g, '+').replace(/_/g, '/');
-    while (base64.length % 4) {
-      base64 += '=';
+  // [만능 버퍼 변환 헬퍼 함수] 문자열, Buffer 객체, 배열 무엇이든 ArrayBuffer로 안전하게 변환
+  const coerceToArrayBuffer = (input) => {
+    if (!input) return new ArrayBuffer(0);
+    if (input instanceof ArrayBuffer) return input;
+    if (ArrayBuffer.isView(input)) return input.buffer;
+    // Node.js Buffer가 JSON으로 직렬화되어 { type: 'Buffer', data: [...] } 형태로 올 때 대응
+    if (typeof input === 'object' && input.type === 'Buffer' && Array.isArray(input.data)) {
+      return new Uint8Array(input.data).buffer;
     }
-    const binaryString = window.atob(base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
+    if (Array.isArray(input)) {
+      return new Uint8Array(input).buffer;
     }
-    return bytes.buffer;
+    if (typeof input === 'string') {
+      let base64 = input.replace(/-/g, '+').replace(/_/g, '/');
+      while (base64.length % 4) base64 += '=';
+      const binaryString = window.atob(base64);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      return bytes.buffer;
+    }
+    return new ArrayBuffer(0);
   };
 
   const bufferToBase64URL = (buffer) => {
@@ -913,7 +924,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnRegister) {
     btnRegister.addEventListener('click', async () => {
       try {
-        // 1. 서버에 등록용 질문(Challenge) 요청
         const res = await fetch('/api/passkey-register-start', { method: 'POST' });
         if (!res.ok) {
           const errData = await res.json();
@@ -921,21 +931,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const options = await res.json();
 
-        // 2. 서버에서 받은 challenge와 user.id를 안전한 버퍼로 변환
-        options.challenge = base64URLToBuffer(options.challenge);
+        // 만능 변환기를 통해 challenge와 user.id를 안전하게 ArrayBuffer로 세팅
+        options.challenge = coerceToArrayBuffer(options.challenge);
         if (options.user && options.user.id) {
-          // 서버가 이미 배열 형태나 문자열로 보낸 경우를 모두 대응
-          if (Array.isArray(options.user.id)) {
-            options.user.id = new Uint8Array(options.user.id).buffer;
-          } else if (typeof options.user.id === 'string') {
-            options.user.id = base64URLToBuffer(options.user.id);
-          }
+          options.user.id = coerceToArrayBuffer(options.user.id);
         }
 
-        // 3. 기기에서 패스키(열쇠 쌍) 생성 (지문/얼굴 인식 창 호출)
+        // 기기에서 패스키 생성 (지문/얼굴 인식 창 호출)
         const credential = await navigator.credentials.create({ publicKey: options });
 
-        // 4. 만들어진 공개키와 서명을 서버로 전송
         const verifyRes = await fetch('/api/passkey-register-finish', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
