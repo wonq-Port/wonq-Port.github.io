@@ -1112,7 +1112,7 @@ const gateSignIn = handleSignIn;
 // 9. 회원가입 (HTML: onclick="handleSignUp()" 및 onclick="gateSignUp()")
 async function handleSignUp() {
   var username = (document.getElementById('auth-username') || {}).value;
-  var password = (document.getElementById('auth-password') || {}).value;
+  var password = (document.getElementById('gate-password') || {}).value;
 
   username = (username || '').trim();
   password = (password || '').trim();
