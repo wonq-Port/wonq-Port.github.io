@@ -4,7 +4,8 @@ import { serialize } from 'cookie';
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 const rpID = process.env.RP_ID || 'localhost';
-const origin = process.env.ORIGIN || `http://${rpID}:3000`;
+const rawOrigin = process.env.ORIGIN || `https://${rpID}`;
+const expectedOrigins = [rawOrigin, rawOrigin.replace(/\/$/, ''), rawOrigin + '/'];
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
@@ -24,11 +25,10 @@ export default async function handler(req, res) {
 
   let verification;
   try {
-    // 3. 서버에 저장된 공개키로 기기의 서명이 맞는지 암호학적 검증
     verification = await verifyAuthenticationResponse({
       response: body,
       expectedChallenge: challengeData.challenge,
-      expectedOrigin: origin,
+      expectedOrigin: expectedOrigins, // 배열 형태로 여러 형태 허용
       expectedRPID: rpID,
       authenticator: {
         credentialID: passkey.credential_id,
