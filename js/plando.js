@@ -9,6 +9,48 @@ const LS = {
   sbKey: 'pds2_sb_key',
 };
 
+let testMode = sessionStorage.getItem('pds_test_session') === 'active';
+const TEST_STORAGE_KEYS = ['plans', 'planVers', 'tasks', 'execs', 'sees'];
+if (testMode) TEST_STORAGE_KEYS.forEach(function(key) { LS[key] += '_test'; });
+
+function readSessionUser() {
+  if (testMode) return { username: 'admin', test_mode: true };
+  try { return JSON.parse(localStorage.getItem('pds_user')); } catch(e) { return null; }
+}
+
+function seedTestData() {
+  if (localStorage.getItem('pds_test_seeded_v1')) return;
+  if (TEST_STORAGE_KEYS.some(function(key) { return lsLoad(LS[key]).length > 0; })) return;
+  var today = kstToday();
+  var dateOffset = function(days) {
+    var date = new Date(today + 'T12:00:00Z');
+    date.setUTCDate(date.getUTCDate() + days);
+    return date.toISOString().slice(0, 10);
+  };
+  var created = new Date().toISOString();
+  var plans = [
+    { id: uuid(), title: '흐트러진 일상을 정돈하는 한 주', priority: 'high', period_start: today, period_end: dateOffset(6), estimated_minutes: 180, success_criteria: '매일 가장 중요한 할 일 3개를 정하고 실행하기', notes: '완벽한 하루보다, 꾸준한 작은 실천에 집중해요.', created_at: created },
+    { id: uuid(), title: '새 프로젝트, 첫 번째 마일스톤', priority: 'medium', period_start: today, period_end: dateOffset(13), estimated_minutes: 360, success_criteria: '기획 초안과 참고 자료를 정리하고 피드백 받기', notes: '생각을 구체적인 결과물로 만드는 시간.', created_at: created },
+    { id: uuid(), title: '매일 20분, 나를 위한 독서', priority: 'low', period_start: today, period_end: dateOffset(20), estimated_minutes: 420, success_criteria: '한 권을 읽고 인상 깊은 문장 5개 기록하기', notes: '하루의 끝에 짧은 여유를 만들어보세요.', created_at: created },
+  ];
+  var tasks = [
+    { id: uuid(), plan_id: plans[0].id, title: '이번 주 일정과 우선순위 정리하기', status: 'done', priority: 'high', due_date: today, estimated_minutes: 30, tags: '루틴,주간계획', notes: '', completed_at: created, created_at: created },
+    { id: uuid(), plan_id: plans[0].id, title: '오늘의 가장 중요한 할 일 3개 정하기', status: 'in_progress', priority: 'high', due_date: today, estimated_minutes: 15, tags: '루틴', notes: '급한 일보다 중요한 일부터 시작해요.', completed_at: null, created_at: created },
+    { id: uuid(), plan_id: plans[1].id, title: '프로젝트 기획 초안 작성하기', status: 'todo', priority: 'high', due_date: dateOffset(3), estimated_minutes: 90, tags: '프로젝트,기획', notes: '', completed_at: null, created_at: created },
+    { id: uuid(), plan_id: plans[1].id, title: '참고 자료 수집하고 핵심 내용 정리하기', status: 'todo', priority: 'medium', due_date: dateOffset(1), estimated_minutes: 45, tags: '프로젝트,리서치', notes: '', completed_at: null, created_at: created },
+    { id: uuid(), plan_id: plans[2].id, title: '책 20분 읽고 한 문장 기록하기', status: 'todo', priority: 'low', due_date: today, estimated_minutes: 20, tags: '독서,루틴', notes: '', completed_at: null, created_at: created },
+  ];
+  lsSave(LS.plans, plans);
+  lsSave(LS.tasks, tasks);
+  localStorage.setItem('pds_test_seeded_v1', 'true');
+}
+
+async function startTestLogin() {
+  document.getElementById('auth-username').value = 'admin';
+  document.getElementById('gate-password').value = 'admin1234';
+  await handleSignIn();
+}
+
 // ===== STATE =====
 const S = {
   plans: [],
@@ -617,17 +659,17 @@ function renderPlans() {
     var doneTasks = planTasks.filter(function(t) { return t.status === 'done'; });
     var progress = planTasks.length > 0 ? Math.round((doneTasks.length / planTasks.length) * 100) : 0;
 
-    return '<div class="card">' +
+    return '<div class="card plan-card">' +
       '<div class="card-header">' +
-        '<div style="flex:1;">' +
-          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">' +
+        '<div class="card-content">' +
+          '<div class="card-heading">' +
             '<span class="badge ' + prioBadgeClass(p.priority) + '">' + priorityLabel(p.priority) + '</span>' +
             '<span class="card-title">' + esc(p.title) + '</span>' +
           '</div>' +
           '<div class="card-meta">' +
-            (p.period_start || p.period_end ? (fmtDate(p.period_start) + ' ~ ' + fmtDate(p.period_end) + ' | ') : '') +
-            (p.estimated_minutes ? '예상: ' + p.estimated_minutes + '분 | ' : '') +
-            '할 일 ' + doneTasks.length + '/' + planTasks.length + ' (' + progress + '%)' +
+            (p.period_start || p.period_end ? '<span class="meta-item meta-date"><span class="meta-label">기간</span>' + fmtDate(p.period_start) + ' — ' + fmtDate(p.period_end) + '</span>' : '') +
+            (p.estimated_minutes ? '<span class="meta-item"><span class="meta-label">예상</span>' + p.estimated_minutes + '분</span>' : '') +
+            '<span class="meta-item meta-progress"><span class="meta-label">할 일</span>' + doneTasks.length + '/' + planTasks.length + ' · ' + progress + '%</span>' +
           '</div>' +
         '</div>' +
         '<div class="card-actions">' +
@@ -636,8 +678,8 @@ function renderPlans() {
           '<button class="btn-danger" onclick="deletePlan(\'' + p.id + '\')">삭제</button>' +
         '</div>' +
       '</div>' +
-      (p.success_criteria ? '<div style="font-size:12px;color:var(--secondary);margin-top:8px;"><strong>성공 기준:</strong> ' + esc(p.success_criteria) + '</div>' : '') +
-      (p.notes ? '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' + esc(p.notes) + '</div>' : '') +
+      (p.success_criteria ? '<div class="card-description"><strong>성공 기준</strong>' + esc(p.success_criteria) + '</div>' : '') +
+      (p.notes ? '<div class="card-note">' + esc(p.notes) + '</div>' : '') +
     '</div>';
   }).join('');
 }
@@ -694,18 +736,18 @@ function renderTasks() {
 
     return '<div class="card' + (t.status === 'done' ? ' done' : '') + '">' +
       '<div class="card-header">' +
-        '<div style="flex:1;">' +
-          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">' +
-            '<span class="status-btn ' + statusBadgeClass(t.status) + '" onclick="toggleTaskStatus(\'' + t.id + '\')" title="클릭하여 상태 변경">' + statusLabel(t.status) + '</span>' +
+        '<div class="card-content">' +
+          '<div class="card-heading">' +
+            '<button type="button" class="status-btn ' + statusBadgeClass(t.status) + '" onclick="toggleTaskStatus(\'' + t.id + '\')" title="클릭하여 상태 변경" aria-label="' + esc(t.title) + ' 상태 변경: ' + statusLabel(t.status) + '">' + statusLabel(t.status) + '</button>' +
             '<span class="badge ' + prioBadgeClass(t.priority) + '">' + priorityLabel(t.priority) + '</span>' +
             (delayed ? '<span class="badge badge-delayed">지연됨</span>' : '') +
             '<span class="card-title">' + esc(t.title) + '</span>' +
           '</div>' +
           '<div class="card-meta">' +
-            (plan ? '계획: ' + esc(plan.title) + ' | ' : '') +
-            (t.due_date ? '마감: ' + fmtDate(t.due_date) + ' | ' : '') +
-            (t.estimated_minutes ? '예상: ' + t.estimated_minutes + '분 | ' : '') +
-            '등록: ' + fmtCreated(t.created_at) +
+            (plan ? '<span class="meta-item"><span class="meta-label">계획</span>' + esc(plan.title) + '</span>' : '') +
+            (t.due_date ? '<span class="meta-item meta-date"><span class="meta-label">마감</span>' + fmtDate(t.due_date) + '</span>' : '') +
+            (t.estimated_minutes ? '<span class="meta-item"><span class="meta-label">예상</span>' + t.estimated_minutes + '분</span>' : '') +
+            '<span class="meta-item"><span class="meta-label">등록</span>' + fmtCreated(t.created_at) + '</span>' +
           '</div>' +
           (tags.length > 0 ? '<div style="margin-top:4px;">' + tags.map(function(tg) { return '<span class="badge" style="background:var(--surface-hi);color:var(--secondary);margin-right:4px;">#' + esc(tg) + '</span>'; }).join('') + '</div>' : '') +
           (t.notes ? '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' + esc(t.notes) + '</div>' : '') +
@@ -935,6 +977,7 @@ function renderAll() {
 
 // 1. Supabase 클라이언트 초기화 함수
 async function initSupabaseClient() {
+  if (testMode) { SB = null; return false; }
   if (SB) return true;
   if (typeof window === 'undefined' || !window.supabase) return false;
 
@@ -993,6 +1036,7 @@ function openDbModal() {
 
 // 4. DB 연결 실행 (HTML: onclick="connectSupabase()" 및 onclick="saveManualDbAndConnect()")
 async function connectSupabase() {
+  if (testMode) { notifyUser('테스트 모드에서는 DB에 연결하지 않습니다. 로그아웃 후 실제 계정으로 연결해 주세요.', true); return; }
   var url = getVal(['manual-sb-url', 'sb-url']);
   var key = getVal(['manual-sb-key', 'sb-key']);
 
@@ -1046,6 +1090,11 @@ function updateDbStatus() {
   var dot = document.getElementById('db-dot');
   var txt = document.getElementById('db-status-text');
   var url = localStorage.getItem(LS.sbUrl) || '';
+  if (testMode) {
+    if (dot) dot.classList.remove('connected');
+    if (txt) txt.textContent = '테스트 모드 · 브라우저 로컬 저장';
+    return;
+  }
   if (SB || url) {
     if (dot) dot.classList.add('connected');
     var shortUrl = url.replace('https://', '').split('.')[0];
@@ -1073,6 +1122,24 @@ async function handleSignIn() {
 
   if (!username || !password) {
     notifyUser('아이디와 비밀번호를 모두 입력해 주세요.', true);
+    return;
+  }
+
+  if (username === 'admin') {
+    if (password !== 'admin1234') {
+      var error = document.getElementById('gate-error-msg');
+      error.textContent = '테스트 계정의 비밀번호는 admin1234입니다.';
+      error.style.display = 'block';
+      return;
+    }
+    if (!testMode) TEST_STORAGE_KEYS.forEach(function(key) { LS[key] += '_test'; });
+    testMode = true;
+    SB = null;
+    sessionStorage.setItem('pds_test_session', 'active');
+    seedTestData();
+    await DB.loadAll();
+    renderAll();
+    await checkAuthSession();
     return;
   }
 
@@ -1158,7 +1225,8 @@ const gateSignUp = handleSignUp;
 // 10. 로그아웃 (HTML: onclick="handleSignOut()" 및 onclick="gateSignOut()")
 async function handleSignOut() {
   if (!confirm('로그아웃 하시겠습니까?')) return;
-  localStorage.removeItem('pds_user');
+  if (testMode) sessionStorage.removeItem('pds_test_session');
+  else localStorage.removeItem('pds_user');
   location.reload();
 }
 const gateSignOut = handleSignOut;
@@ -1169,10 +1237,9 @@ async function checkAuthSession() {
   await initSupabaseClient();
   updateDbStatus();
 
-  var savedUser = null;
-  try {
-    savedUser = JSON.parse(localStorage.getItem('pds_user'));
-  } catch(e) {}
+  var savedUser = readSessionUser();
+  var testBanner = document.getElementById('test-mode-banner');
+  if (testBanner) testBanner.hidden = !testMode;
 
   if (savedUser && savedUser.username) {
     if (gate) gate.style.display = 'none';
@@ -1181,7 +1248,7 @@ async function checkAuthSession() {
     var loginBtnEl = document.getElementById('btn-open-auth-modal');
 
     if (userEmailEl) {
-      userEmailEl.textContent = '👤 ' + savedUser.username;
+      userEmailEl.textContent = savedUser.username + (testMode ? ' · 테스트 계정' : '');
       userEmailEl.style.display = 'inline-block';
     }
     if (logoutBtnEl) logoutBtnEl.style.display = 'inline-block';
@@ -1231,7 +1298,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   var tDir = document.getElementById('t-dir') || document.getElementById('sort-dir-btn');
   if (tDir) tDir.addEventListener('click', function() {
     S.tDir = S.tDir === 'asc' ? 'desc' : 'asc';
-    tDir.textContent = S.tDir === 'asc' ? '오름차순' : '내림차순';
+    tDir.textContent = S.tDir === 'asc' ? '↑ 오름차순' : '↓ 내림차순';
     renderTasks();
   });
 
