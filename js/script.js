@@ -442,6 +442,140 @@ document.addEventListener('DOMContentLoaded', () => {
       closeGameModal();
     }
   });
+
+  // ==========================================================================
+  // 8. Passkey Authentication (WebAuthn) - 등록 및 로그인 로직
+  // ==========================================================================
+  
+  const btnRegister = document.getElementById('btn-register-passkey');
+  const btnLogin = document.getElementById('btn-login-passkey');
+  const btnLogout = document.getElementById('btn-logout');
+  const authGate = document.getElementById('auth-gate');
+  const privateContent = document.getElementById('private-content-area');
+
+  // [헬퍼 함수] 서버와 데이터를 주고받기 위한 Base64URL <-> ArrayBuffer 변환기
+  const bufferToBase64url = (buffer) => {
+    const bytes = new Uint8Array(buffer);
+    let str = '';
+    for (let charCode of bytes) str += String.fromCharCode(charCode);
+    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  };
+
+  const base64urlToBuffer = (base64url) => {
+    const padding = '='.repeat((4 - base64url.length % 4) % 4);
+    const base64 = (base64url + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+    return outputArray.buffer;
+  };
+
+  // --- [카드 2] 패스키 등록 ---
+  if (btnRegister) {
+    btnRegister.addEventListener('click', async () => {
+      try {
+        // 1. 서버에 등록용 질문(Challenge) 요청
+        const res = await fetch('/api/passkey-register-start', { method: 'POST' });
+        if (!res.ok) throw new Error('등록 질문을 가져오지 못했습니다.');
+        const options = await res.json();
+
+        // 서버에서 온 문자열 데이터를 브라우저가 읽을 수 있는 버퍼로 변환
+        options.challenge = base64urlToBuffer(options.challenge);
+        options.user.id = base64urlToBuffer(options.user.id);
+
+        // 2. 기기에서 패스키(열쇠 쌍) 생성 (지문/얼굴 인식 창 뜸)
+        const credential = await navigator.credentials.create({ publicKey: options });
+
+        // 3. 만들어진 공개키와 서명을 서버로 전송
+        const verifyRes = await fetch('/api/passkey-register-finish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: credential.id,
+            rawId: bufferToBase64url(credential.rawId),
+            type: credential.type,
+            response: {
+              attestationObject: bufferToBase64url(credential.response.attestationObject),
+              clientDataJSON: bufferToBase64url(credential.response.clientDataJSON),
+            },
+          }),
+        });
+
+        if (verifyRes.ok) {
+          alert('패스키가 성공적으로 등록되었습니다!');
+        } else {
+          alert('패스키 등록에 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('등록 에러:', error);
+        alert('등록을 취소했거나 오류가 발생했습니다.');
+      }
+    });
+  }
+
+  // --- [카드 3] 패스키 로그인 ---
+  if (btnLogin) {
+    btnLogin.addEventListener('click', async () => {
+      try {
+        // 1. 서버에 로그인용 질문(Challenge) 요청
+        const res = await fetch('/api/passkey-login-start', { method: 'POST' });
+        if (!res.ok) throw new Error('로그인 질문을 가져오지 못했습니다.');
+        const options = await res.json();
+
+        options.challenge = base64urlToBuffer(options.challenge);
+        if (options.allowCredentials) {
+          options.allowCredentials.forEach(cred => {
+            cred.id = base64urlToBuffer(cred.id);
+          });
+        }
+
+        // 2. 기기에서 개인키로 서명 (지문/얼굴 인식 창 뜸)
+        const credential = await navigator.credentials.get({ publicKey: options });
+
+        // 3. 서명된 데이터를 서버로 보내 검증
+        const verifyRes = await fetch('/api/passkey-login-finish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: credential.id,
+            rawId: bufferToBase64url(credential.rawId),
+            type: credential.type,
+            response: {
+              authenticatorData: bufferToBase64url(credential.response.authenticatorData),
+              clientDataJSON: bufferToBase64url(credential.response.clientDataJSON),
+              signature: bufferToBase64url(credential.response.signature),
+              userHandle: credential.response.userHandle ? bufferToBase64url(credential.response.userHandle) : null,
+            },
+          }),
+        });
+
+        if (verifyRes.ok) {
+          // 검증 통과 시 화면 전환 (자물쇠 열림)
+          if (authGate) authGate.style.display = 'none';
+          if (privateContent) privateContent.style.display = 'block';
+          alert('인증 성공! 나만의 공간이 열렸습니다.');
+          
+          // TODO: 서버에서 실제 비공개 데이터 가져와서 화면에 채우기
+        } else {
+          alert('인증에 실패했습니다. 등록된 기기인지 확인해주세요.');
+        }
+      } catch (error) {
+        console.error('로그인 에러:', error);
+        alert('로그인을 취소했거나 오류가 발생했습니다.');
+      }
+    });
+  }
+
+  // --- 로그아웃 ---
+  if (btnLogout) {
+    btnLogout.addEventListener('click', async () => {
+      await fetch('/api/passkey-logout', { method: 'POST' });
+      // 화면 다시 잠금
+      if (authGate) authGate.style.display = 'flex';
+      if (privateContent) privateContent.style.display = 'none';
+      alert('로그아웃 되었습니다. 화면이 다시 잠깁니다.');
+    });
+  }
 });
 
 // Navigation Projects Dropdown
