@@ -1066,7 +1066,7 @@ function openAuthModal() {
 // 8. 로그인 (HTML: onclick="handleSignIn()" 및 onclick="gateSignIn()")
 async function handleSignIn() {
   var username = (document.getElementById('auth-username') || {}).value;
-  var password = (document.getElementById('auth-password') || {}).value;
+  var password = (document.getElementById('gate-password') || {}).value;
 
   username = (username || '').trim();
   password = (password || '').trim();
