@@ -12,8 +12,10 @@ export default async function handler(req, res) {
   
   const body = req.body;
   
-  // 1. 응답한 기기(credential_id)를 DB에서 찾기
-  const { data: passkey } = await supabase.from('passkeys').select('*').eq('credential_id', body.id).single();
+  // 1. 응답한 기기(credential_id)를 DB에서 찾기 (다양한 포맷 대응)
+  const { data: passkeys } = await supabase.from('passkeys').select('*');
+  const passkey = passkeys?.find(p => p.credential_id === body.id || Buffer.from(p.credential_id).toString('base64') === body.id);
+
   if (!passkey) return res.status(400).json({ error: '등록되지 않은 기기입니다.' });
 
   // 2. 가장 최근 발행된 로그인 질문 가져오기
