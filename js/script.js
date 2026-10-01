@@ -444,7 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================================================
-  // 8. Passkey Authentication (WebAuthn) - 등록 및 로그인 로직
+  // 8. Passkey Authentication (WebAuthn) - 수정된 등록 및 로그인 로직
   // ==========================================================================
   
   const btnRegister = document.getElementById('btn-register-passkey');
@@ -453,21 +453,32 @@ document.addEventListener('DOMContentLoaded', () => {
   const authGate = document.getElementById('auth-gate');
   const privateContent = document.getElementById('private-content-area');
 
-  // [헬퍼 함수] 서버와 데이터를 주고받기 위한 Base64URL <-> ArrayBuffer 변환기
-  const bufferToBase64url = (buffer) => {
-    const bytes = new Uint8Array(buffer);
-    let str = '';
-    for (let charCode of bytes) str += String.fromCharCode(charCode);
-    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  // [헬퍼 함수] Base64URL을 ArrayBuffer로 안전하게 변환 (에러 방지 강화)
+  const base64URLToBuffer = (base64URL) => {
+    if (!base64URL) return new ArrayBuffer(0);
+    let base64 = base64URL.replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4) {
+      base64 += '=';
+    }
+    const binaryString = window.atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
   };
 
-  const base64urlToBuffer = (base64url) => {
-    const padding = '='.repeat((4 - base64url.length % 4) % 4);
-    const base64 = (base64url + padding).replace(/-/g, '+').replace(/_/g, '/');
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
-    return outputArray.buffer;
+  const bufferToBase64URL = (buffer) => {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary)
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
   };
 
   // --- [카드 2] 패스키 등록 ---
@@ -478,28 +489,35 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await fetch('/api/passkey-register-start', { method: 'POST' });
         if (!res.ok) {
           const errData = await res.json();
-          throw new Error('서버 에러: ' + (errData.error || '알 수 없는 오류'));
+          throw new Error(errData.error || '등록 질문을 가져오지 못했습니다.');
         }
         const options = await res.json();
 
-        // 서버에서 온 문자열 데이터를 브라우저가 읽을 수 있는 버퍼로 변환
-        options.challenge = base64urlToBuffer(options.challenge);
-        options.user.id = base64urlToBuffer(options.user.id);
+        // 2. 서버에서 받은 challenge와 user.id를 안전한 버퍼로 변환
+        options.challenge = base64URLToBuffer(options.challenge);
+        if (options.user && options.user.id) {
+          // 서버가 이미 배열 형태나 문자열로 보낸 경우를 모두 대응
+          if (Array.isArray(options.user.id)) {
+            options.user.id = new Uint8Array(options.user.id).buffer;
+          } else if (typeof options.user.id === 'string') {
+            options.user.id = base64URLToBuffer(options.user.id);
+          }
+        }
 
-        // 2. 기기에서 패스키(열쇠 쌍) 생성 (지문/얼굴 인식 창 뜸)
+        // 3. 기기에서 패스키(열쇠 쌍) 생성 (지문/얼굴 인식 창 호출)
         const credential = await navigator.credentials.create({ publicKey: options });
 
-        // 3. 만들어진 공개키와 서명을 서버로 전송
+        // 4. 만들어진 공개키와 서명을 서버로 전송
         const verifyRes = await fetch('/api/passkey-register-finish', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             id: credential.id,
-            rawId: bufferToBase64url(credential.rawId),
+            rawId: bufferToBase64URL(credential.rawId),
             type: credential.type,
             response: {
-              attestationObject: bufferToBase64url(credential.response.attestationObject),
-              clientDataJSON: bufferToBase64url(credential.response.clientDataJSON),
+              attestationObject: bufferToBase64URL(credential.response.attestationObject),
+              clientDataJSON: bufferToBase64URL(credential.response.clientDataJSON),
             },
           }),
         });
@@ -507,11 +525,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (verifyRes.ok) {
           alert('패스키가 성공적으로 등록되었습니다!');
         } else {
-          alert('패스키 등록에 실패했습니다.');
+          const errData = await verifyRes.json();
+          alert('패스키 등록 실패: ' + (errData.error || '알 수 없는 오류'));
         }
       } catch (error) {
         console.error('등록 에러:', error);
-        alert('등록을 취소했거나 오류가 발생했습니다.');
+        alert('등록 에러: ' + error.message);
       }
     });
   }
@@ -525,14 +544,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!res.ok) throw new Error('로그인 질문을 가져오지 못했습니다.');
         const options = await res.json();
 
-        options.challenge = base64urlToBuffer(options.challenge);
+        options.challenge = base64URLToBuffer(options.challenge);
         if (options.allowCredentials) {
           options.allowCredentials.forEach(cred => {
-            cred.id = base64urlToBuffer(cred.id);
+            cred.id = base64URLToBuffer(cred.id);
           });
         }
 
-        // 2. 기기에서 개인키로 서명 (지문/얼굴 인식 창 뜸)
+        // 2. 기기에서 개인키로 서명 (지문/얼굴 인식 창 호출)
         const credential = await navigator.credentials.get({ publicKey: options });
 
         // 3. 서명된 데이터를 서버로 보내 검증
@@ -541,24 +560,21 @@ document.addEventListener('DOMContentLoaded', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             id: credential.id,
-            rawId: bufferToBase64url(credential.rawId),
+            rawId: bufferToBase64URL(credential.rawId),
             type: credential.type,
             response: {
-              authenticatorData: bufferToBase64url(credential.response.authenticatorData),
-              clientDataJSON: bufferToBase64url(credential.response.clientDataJSON),
-              signature: bufferToBase64url(credential.response.signature),
-              userHandle: credential.response.userHandle ? bufferToBase64url(credential.response.userHandle) : null,
+              authenticatorData: bufferToBase64URL(credential.response.authenticatorData),
+              clientDataJSON: bufferToBase64URL(credential.response.clientDataJSON),
+              signature: bufferToBase64URL(credential.response.signature),
+              userHandle: credential.response.userHandle ? bufferToBase64URL(credential.response.userHandle) : null,
             },
           }),
         });
 
         if (verifyRes.ok) {
-          // 검증 통과 시 화면 전환 (자물쇠 열림)
           if (authGate) authGate.style.display = 'none';
           if (privateContent) privateContent.style.display = 'block';
           alert('인증 성공! 나만의 공간이 열렸습니다.');
-          
-          // TODO: 서버에서 실제 비공개 데이터 가져와서 화면에 채우기
         } else {
           alert('인증에 실패했습니다. 등록된 기기인지 확인해주세요.');
         }
@@ -573,29 +589,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnLogout) {
     btnLogout.addEventListener('click', async () => {
       await fetch('/api/passkey-logout', { method: 'POST' });
-      // 화면 다시 잠금
       if (authGate) authGate.style.display = 'flex';
       if (privateContent) privateContent.style.display = 'none';
       alert('로그아웃 되었습니다. 화면이 다시 잠깁니다.');
     });
   }
-});
-
-// Navigation Projects Dropdown
-const navDropdown = document.getElementById('nav-dropdown');
-const navDropdownBtn = document.getElementById('nav-dropdown-btn');
-
-if (navDropdown && navDropdownBtn) {
-  navDropdownBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    navDropdown.classList.toggle('open');
-    navDropdownBtn.setAttribute('aria-expanded', navDropdown.classList.contains('open'));
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!navDropdown.contains(e.target)) {
-      navDropdown.classList.remove('open');
-      navDropdownBtn.setAttribute('aria-expanded', 'false');
-    }
-  });
-}
