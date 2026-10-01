@@ -1,62 +1,66 @@
 import { verifyAuthenticationResponse } from '@simplewebauthn/server';
 import { createClient } from '@supabase/supabase-js';
-import { serialize } from 'cookie';
-
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
-const rpID = process.env.RP_ID || 'localhost';
-const rawOrigin = process.env.ORIGIN || `https://${rpID}`;
-const expectedOrigins = [rawOrigin, rawOrigin.replace(/\/$/, ''), rawOrigin + '/'];
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
   
-  const body = req.body;
-  
-  // 1. 응답한 기기(credential_id)를 DB에서 찾기 (다양한 포맷 대응)
-  const { data: passkeys } = await supabase.from('passkeys').select('*');
-  const passkey = passkeys?.find(p => p.credential_id === body.id || Buffer.from(p.credential_id).toString('base64') === body.id);
-
-  if (!passkey) return res.status(400).json({ error: '등록되지 않은 기기입니다.' });
-
-  // 2. 가장 최근 발행된 로그인 질문 가져오기
-  const { data: challengeData } = await supabase.from('auth_challenges')
-    .select('*').eq('type', 'authentication')
-    .order('created_at', { ascending: false }).limit(1).single();
-
-  if (!challengeData) return res.status(400).json({ error: 'Challenge missing' });
-
-  let verification;
   try {
-    verification = await verifyAuthenticationResponse({
+    const sbUrl = process.env.SUPABASE_URL;
+    const sbKey = process.env.SUPABASE_ANON_KEY;
+    const rpID = process.env.RP_ID || 'localhost';
+    const rawOrigin = process.env.ORIGIN || `https://${rpID}`;
+    const expectedOrigins = [rawOrigin, rawOrigin.replace(/\/$/, ''), rawOrigin + '/'];
+
+    const supabase = createClient(sbUrl, sbKey);
+    const body = req.body;
+    
+    // 1. DB에 저장된 모든 패스키 중 일치하는 것 찾기
+    const { data: passkeys } = await supabase.from('passkeys').select('*');
+    const passkey = passkeys?.find(p => p.credential_id === body.id || p.credential_id === body.rawId);
+
+    if (!passkey) {
+      return res.status(400).json({ error: '등록되지 않은 기기입니다.' });
+    }
+
+    // 2. 최신 로그인 질문 가져오기
+    const { data: challengeData } = await supabase.from('auth_challenges')
+      .select('*').eq('type', 'authentication')
+      .order('created_at', { ascending: false }).limit(1).single();
+
+    if (!challengeData) return res.status(400).json({ error: 'Challenge missing' });
+
+    // 3. 서명 검증
+    let credentialPublicKeyBuffer;
+    try {
+      credentialPublicKeyBuffer = Buffer.from(passkey.public_key, 'base64');
+    } catch (e) {
+      credentialPublicKeyBuffer = Buffer.from(passkey.public_key, 'utf8');
+    }
+
+    const verification = await verifyAuthenticationResponse({
       response: body,
       expectedChallenge: challengeData.challenge,
-      expectedOrigin: expectedOrigins, // 배열 형태로 여러 형태 허용
+      expectedOrigin: expectedOrigins,
       expectedRPID: rpID,
       authenticator: {
-        credentialID: passkey.credential_id,
-        credentialPublicKey: Buffer.from(passkey.public_key, 'base64'),
+        credentialID: Buffer.from(body.id, 'base64'),
+        credentialPublicKey: credentialPublicKeyBuffer,
         counter: passkey.sign_count
       }
     });
+
+    if (verification.verified) {
+      // 카운터 업데이트 및 질문 삭제
+      await supabase.from('passkeys').update({ sign_count: verification.authenticationInfo.newCounter }).eq('id', passkey.id);
+      await supabase.from('auth_challenges').delete().eq('id', challengeData.id);
+
+      return res.status(200).json({ success: true });
+    }
+
+    return res.status(400).json({ error: 'Verification failed' });
+
   } catch (error) {
-    return res.status(400).json({ error: error.message });
+    console.error('Login Finish 에러:', error.message);
+    return res.status(500).json({ error: error.message });
   }
-
-  if (verification.verified) {
-    // 4. 서명 카운터 업데이트 및 사용된 질문 삭제
-    await supabase.from('passkeys').update({ sign_count: verification.authenticationInfo.newCounter }).eq('id', passkey.id);
-    await supabase.from('auth_challenges').delete().eq('id', challengeData.id);
-
-    // 5. 로그인 성공 증표(쿠키) 발급 - Card 3 대응
-    res.setHeader('Set-Cookie', serialize('auth_session', 'passkey_verified_user', {
-      httpOnly: true, // 브라우저 JS에서 탈취 불가
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      maxAge: 60 * 60 * 2 // 2시간 유지
-    }));
-
-    return res.status(200).json({ success: true });
-  }
-
-  res.status(400).json({ error: 'Verification failed' });
 }
