@@ -1,4 +1,7 @@
 {
+  "name": "portfolio-passkey",
+  "version": "1.0.0",
+  "type": "module",
   "dependencies": {
     "@simplewebauthn/server": "^9.0.0",
     "@supabase/supabase-js": "^2.39.0",
