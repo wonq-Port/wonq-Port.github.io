@@ -4,7 +4,9 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 const rpID = process.env.RP_ID || 'localhost';
-const origin = process.env.ORIGIN || `http://${rpID}:3000`;
+// 슬래시가 붙어 있든 아니든 둘 다 허용하도록 처리
+const rawOrigin = process.env.ORIGIN || `https://${rpID}`;
+const expectedOrigins = [rawOrigin, rawOrigin.replace(/\/$/, ''), rawOrigin + '/'];
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
@@ -21,11 +23,10 @@ export default async function handler(req, res) {
 
   let verification;
   try {
-    // 서명 및 도메인 일치 여부 검증
     verification = await verifyRegistrationResponse({
       response: body,
       expectedChallenge: challengeData.challenge,
-      expectedOrigin: origin,
+      expectedOrigin: expectedOrigins, // 배열 형태로 여러 형태 허용
       expectedRPID: rpID,
     });
   } catch (error) {
