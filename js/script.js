@@ -476,7 +476,10 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         // 1. 서버에 등록용 질문(Challenge) 요청
         const res = await fetch('/api/passkey-register-start', { method: 'POST' });
-        if (!res.ok) throw new Error('등록 질문을 가져오지 못했습니다.');
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error('서버 에러: ' + (errData.error || '알 수 없는 오류'));
+        }
         const options = await res.json();
 
         // 서버에서 온 문자열 데이터를 브라우저가 읽을 수 있는 버퍼로 변환
@@ -518,11 +521,8 @@ document.addEventListener('DOMContentLoaded', () => {
     btnLogin.addEventListener('click', async () => {
       try {
         // 1. 서버에 로그인용 질문(Challenge) 요청
-        const res = await fetch('/api/passkey-register-start', { method: 'POST' });
-        if (!res.ok) {
-          const errData = await res.json();
-          throw new Error('서버 에러: ' + (errData.error || '알 수 없는 오류'));
-        }
+        const res = await fetch('/api/passkey-login-start', { method: 'POST' });
+        if (!res.ok) throw new Error('로그인 질문을 가져오지 못했습니다.');
         const options = await res.json();
 
         options.challenge = base64urlToBuffer(options.challenge);
