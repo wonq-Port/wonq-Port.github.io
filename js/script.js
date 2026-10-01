@@ -872,7 +872,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   });
   // ==========================================================================
-  // 8. Passkey Authentication (WebAuthn) - 수정된 등록 및 로그인 로직
+  // 8. Passkey Authentication (WebAuthn) - 최종 통합 버전
   // ==========================================================================
   
   const btnRegister = document.getElementById('btn-register-passkey');
@@ -881,13 +881,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const authGate = document.getElementById('auth-gate');
   const privateContent = document.getElementById('private-content-area');
 
-  // [헬퍼 함수] Base64URL을 ArrayBuffer로 안전하게 변환 (에러 방지 강화)
-  // [만능 버퍼 변환 헬퍼 함수] 문자열, Buffer 객체, 배열 무엇이든 ArrayBuffer로 안전하게 변환
+  // [핵심 헬퍼 함수들] 스코프 에러를 막기 위해 가장 위에 선언합니다.
   const coerceToArrayBuffer = (input) => {
     if (!input) return new ArrayBuffer(0);
     if (input instanceof ArrayBuffer) return input;
     if (ArrayBuffer.isView(input)) return input.buffer;
-    // Node.js Buffer가 JSON으로 직렬화되어 { type: 'Buffer', data: [...] } 형태로 올 때 대응
     if (typeof input === 'object' && input.type === 'Buffer' && Array.isArray(input.data)) {
       return new Uint8Array(input.data).buffer;
     }
@@ -907,6 +905,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     return new ArrayBuffer(0);
   };
+
+  // 널리 쓰이는 alias 선언 (ReferenceError 원천 차단)
+  const base64URLToBuffer = coerceToArrayBuffer;
 
   const bufferToBase64URL = (buffer) => {
     const bytes = new Uint8Array(buffer);
@@ -931,13 +932,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const options = await res.json();
 
-        // 만능 변환기를 통해 challenge와 user.id를 안전하게 ArrayBuffer로 세팅
         options.challenge = coerceToArrayBuffer(options.challenge);
         if (options.user && options.user.id) {
           options.user.id = coerceToArrayBuffer(options.user.id);
         }
 
-        // 기기에서 패스키 생성 (지문/얼굴 인식 창 호출)
+        // 기존 등록 목록 내 ID들도 안전하게 변환
+        if (options.excludeCredentials) {
+          options.excludeCredentials.forEach(cred => {
+            cred.id = coerceToArrayBuffer(cred.id);
+          });
+        }
+
         const credential = await navigator.credentials.create({ publicKey: options });
 
         const verifyRes = await fetch('/api/passkey-register-finish', {
@@ -971,22 +977,19 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnLogin) {
     btnLogin.addEventListener('click', async () => {
       try {
-        // 1. 서버에 로그인용 질문(Challenge) 요청
         const res = await fetch('/api/passkey-login-start', { method: 'POST' });
         if (!res.ok) throw new Error('로그인 질문을 가져오지 못했습니다.');
         const options = await res.json();
 
-        options.challenge = base64URLToBuffer(options.challenge);
+        options.challenge = coerceToArrayBuffer(options.challenge);
         if (options.allowCredentials) {
           options.allowCredentials.forEach(cred => {
-            cred.id = base64URLToBuffer(cred.id);
+            cred.id = coerceToArrayBuffer(cred.id);
           });
         }
 
-        // 2. 기기에서 개인키로 서명 (지문/얼굴 인식 창 호출)
         const credential = await navigator.credentials.get({ publicKey: options });
 
-        // 3. 서명된 데이터를 서버로 보내 검증
         const verifyRes = await fetch('/api/passkey-login-finish', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1020,13 +1023,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- 로그아웃 ---
   if (btnLogout) {
     btnLogout.addEventListener('click', async () => {
-      await fetch('/api/passkey-logout', { method: 'POST' });
       if (authGate) authGate.style.display = 'flex';
       if (privateContent) privateContent.style.display = 'none';
       alert('로그아웃 되었습니다. 화면이 다시 잠깁니다.');
     });
   }
-
 });
 
 
