@@ -43,17 +43,33 @@ export default async function handler(req, res) {
       .select('credential_id')
       .eq('user_id', user.id);
 
+    const formattedPasskeys = passkeys?.map(key => {
+      // credential_id가 문자열이든 버퍼이든 안전하게 바이트 배열로 변환
+      let idBuffer;
+      if (typeof key.credential_id === 'string') {
+        // Base64URL 또는 일반 문자열인 경우
+        let base64 = key.credential_id.replace(/-/g, '+').replace(/_/g, '/');
+        while (base64.length % 4) base64 += '=';
+        const binaryString = Buffer.from(base64, 'base64');
+        idBuffer = Array.from(binaryString);
+      } else {
+        idBuffer = Array.from(Buffer.from(key.credential_id));
+      }
+
+      return {
+        id: idBuffer,
+        type: 'public-key'
+      };
+    }) || [];
+    
     // 5. 질문(Challenge) 옵션 생성
     console.log("옵션 생성 중...");
     const options = await generateRegistrationOptions({
       rpName: '이혜원 포트폴리오 (비공개)',
-      rpID: rpID, // 주의: 환경변수 RP_ID에 https:// 가 있으면 안 됩니다!
+      rpID: rpID,
       userID: Buffer.from(user.id, 'utf-8'),
       userName: user.username,
-      excludeCredentials: passkeys?.map(key => ({
-        id: key.credential_id,
-        type: 'public-key'
-      })) || [],
+      excludeCredentials: formattedPasskeys, // 수정된 배열 전달
       authenticatorSelection: {
         residentKey: 'required',
         userVerification: 'preferred',
