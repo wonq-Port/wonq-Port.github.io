@@ -6,10 +6,10 @@
   <title>플랜두씨</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- plando.html의 <head> 내부 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="css/plando.css">
+  <link rel="stylesheet" href="./plando.css">
 </head>
 <body>
 
@@ -17,7 +17,8 @@
 <div id="login-gate" class="login-gate-overlay">
   <div class="login-gate-card">
     <div class="login-gate-logo">플랜<span>두씨</span></div>
-    <p class="login-gate-desc"><br>로그인 후 이용할 수 있습니다.</p>
+    <div class="gate-eyebrow">PLAN · DO · SEE</div>
+    <p class="login-gate-desc">계획을 세우고, 실행하고, 돌아보세요.<br>나의 하루를 만드는 작은 시작.</p>
     
     <div class="form-group">
       <label for="auth-username">아이디</label>
@@ -30,11 +31,18 @@
     </div>
 
     <!-- 상태 및 에러 메시지 출력 영역 -->
-    <div id="gate-error-msg" class="gate-error" style="display:none;"></div>
+    <div id="gate-error-msg" class="gate-error" role="alert" style="display:none;"></div>
 
     <div style="display:flex; gap:8px; margin-top:14px;">
-      <button type="button" id="btn-gate-signin" class="btn-primary" style="flex:1; padding:10px; font-size:13px;" onclick="gateSignIn()">로그인</button>
-      <button type="button" id="btn-gate-signup" class="btn-sm" style="padding:10px; font-size:13px;" onclick="gateSignUp()">회원가입</button>
+      <button type="button" id="btn-gate-signup" class="btn-sm" style="padding:10px 16px; font-size:13px;" onclick="gateSignUp()">회원가입</button>
+      <button type="button" id="btn-gate-signin" class="btn-primary" style="flex:1; padding:10px; font-size:13px; justify-content:center;" onclick="gateSignIn()">로그인</button>
+    </div>
+
+    <div class="test-login-panel">
+      <div class="test-login-heading"><span class="test-label">TEST MODE</span><strong>먼저 가볍게 둘러보세요</strong></div>
+      <p>아이디 <code>admin</code><span class="test-separator">/</span>비밀번호 <code>admin1234</code></p>
+      <button type="button" class="btn-test-login" onclick="startTestLogin()">테스트 계정으로 시작하기 <span aria-hidden="true">↗</span></button>
+      <small>예시 데이터 포함 · 이 브라우저에만 저장됩니다</small>
     </div>
 
     <!-- DB 연결 설정 접기/펼치기 영역 -->
@@ -58,16 +66,28 @@
 <!-- Header -->
 <div id="header">
   <div id="logo">플랜두<span>씨</span></div>
-  <div class="header-tagline"></div>
+  <div class="header-tagline">계획에서 실행으로, 하루를 차곡차곡.</div>
   <div class="header-spacer"></div>
   
   <!-- 로그인한 사용자 정보 및 로그아웃 버튼 -->
-  <div id="header-user-area" style="display:flex;align-items:center;gap:10px;">
-    <span id="header-user-email" style="font-size:12px;font-weight:600;color:var(--secondary);display:none;"></span>
-    <button type="button" class="btn-sm" id="header-logout-btn" style="display:none;color:var(--accent);border-color:rgba(220,38,38,0.3);" onclick="gateSignOut()">로그아웃</button>
+  <div id="header-user-area">
+    <span id="header-user-email" style="display:none;"></span>
+    <button type="button" class="btn-sm" id="header-logout-btn" style="display:none;color:var(--accent);border-color:rgba(220,38,38,0.25);" onclick="gateSignOut()">로그아웃</button>
   </div>
-  
+
   <button id="export-btn" title="전체 데이터 JSON 내보내기">JSON 내보내기</button>
+</div>
+
+<div id="test-mode-banner" class="test-mode-banner" hidden>
+  <span class="test-label">TEST MODE</span>
+  <span>테스트 공간입니다. 변경 사항은 이 브라우저에만 저장되며 실제 계정의 데이터에 영향을 주지 않습니다.</span>
+</div>
+
+<!-- DB Status Bar -->
+<div id="db-status-bar">
+  <div id="db-dot"></div>
+  <div id="db-status-text">로컬 저장소 사용 중</div>
+  <button type="button" class="btn-sm" style="padding:2px 8px;font-size:11px;" onclick="openDbModal()">DB 설정</button>
 </div>
 
 <!-- Tab bar -->
@@ -81,7 +101,7 @@
 <!-- PLAN Tab -->
 <div class="tab-panel active" id="tab-plan">
   <div class="section-header">
-    <h2>계획</h2>
+    <div><div class="section-eyebrow">YOUR NEXT CHAPTER</div><h2>계획<span class="heading-dot">.</span></h2><p class="section-description">하고 싶은 일을, 이룰 수 있는 계획으로.</p></div>
     <button class="btn-primary" onclick="openPlanModal()">+ 계획 추가</button>
   </div>
   <div id="plan-list"></div>
@@ -90,46 +110,59 @@
 <!-- TASKS Tab -->
 <div class="tab-panel" id="tab-tasks">
   <div class="section-header">
-    <h2>할 일</h2>
+    <div><div class="section-eyebrow">ONE STEP AT A TIME</div><h2>할 일<span class="heading-dot">.</span></h2><p class="section-description">작은 실행이 모여 계획을 완성합니다.</p></div>
     <button class="btn-primary" onclick="openTaskModal()">+ 할 일 추가</button>
   </div>
   <div class="controls-row">
-    <input type="text" id="t-search" placeholder="제목 검색..." style="min-width:130px;" oninput="S.tSearch=this.value;renderTasks()">
+    <label class="filter-field filter-search"><span>검색</span><input type="text" id="t-search" placeholder="제목 또는 태그 검색" oninput="S.tSearch=this.value;renderTasks()"></label>
+    <label class="filter-field"><span>계획</span>
     <select id="t-plan" onchange="S.tPlan=this.value;S.tDelayed=false;renderTasks()">
       <option value="">모든 계획</option>
     </select>
+    </label><label class="filter-field"><span>상태</span>
     <select id="t-status" onchange="S.tStatus=this.value;renderTasks()">
       <option value="">모든 상태</option>
       <option value="todo">할 일</option>
       <option value="in_progress">진행 중</option>
       <option value="done">완료</option>
     </select>
+    </label><label class="filter-field"><span>우선순위</span>
     <select id="t-prio" onchange="S.tPrio=this.value;renderTasks()">
       <option value="">모든 우선순위</option>
       <option value="high">높음</option>
       <option value="medium">보통</option>
       <option value="low">낮음</option>
     </select>
-    <input type="text" id="t-tag" placeholder="태그 필터..." style="min-width:90px;" oninput="S.tTag=this.value;renderTasks()">
+    </label><label class="filter-field"><span>태그</span><input type="text" id="t-tag" placeholder="# 태그 입력" oninput="S.tTag=this.value;renderTasks()"></label>
+    <label class="filter-field"><span>정렬 기준</span>
     <select id="t-sort" onchange="S.tSort=this.value;renderTasks()">
-      <option value="priority">우선순위</option>
-      <option value="due_date">마감일</option>
-      <option value="created_at">생성일</option>
-      <option value="title">제목</option>
+      <option value="priority">우선순위순</option>
+      <option value="due_date">마감일순</option>
+      <option value="created_at">생성일순</option>
+      <option value="title">제목순</option>
     </select>
-    <button class="btn-sm" id="sort-dir-btn" onclick="S.tDir=S.tDir==='asc'?'desc':'asc';renderTasks()">&#8597;</button>
+    </label>
+    <button class="btn-sm" id="sort-dir-btn" title="정렬 방향 전환" aria-label="정렬 방향 전환">↑ 오름차순</button>
+    <button type="button" class="btn-sm" id="btn-filter-delayed" title="마감일 지난 지연된 할 일만 보기">⚠️ 지연된 일</button>
   </div>
-  <div id="sort-label"></div>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin:8px 0 12px;">
+    <div id="sort-label"></div>
+    <div id="task-count" style="font-size:12px; font-weight:600; color:var(--muted);"></div>
+  </div>
   <div id="task-list"></div>
 </div>
 
 <!-- DO Tab -->
 <div class="tab-panel" id="tab-do">
   <div class="section-header">
-    <h2>실행 기록</h2>
+    <div>
+      <h2>실행 기록</h2>
+      <div id="do-summary" style="font-size:12.5px; color:var(--muted); margin-top:4px;"></div>
+    </div>
+    <button type="button" class="btn-sm" id="btn-filter-blocked">⚠️ 막힘 기록만 보기</button>
   </div>
   <div class="exec-form">
-    <div style="font-family:var(--font-d);font-weight:700;font-size:17px;margin-bottom:12px;color:var(--primary);">+ 실행 추가</div>
+    <div style="font-family:var(--font-d);font-weight:800;font-size:18px;margin-bottom:16px;color:var(--primary);letter-spacing:0.3px;">실행 추가</div>
     <div class="form-group">
       <label>할 일 선택</label>
       <select id="exec-task">
@@ -165,8 +198,8 @@
     <h2>돌아보기</h2>
   </div>
   <div class="see-plan-select">
-    <label>계획 선택</label>
-    <select id="see-plan" onchange="S.seePlan=this.value;renderSee()" style="width:auto;min-width:200px;">
+    <label style="margin:0;">계획</label>
+    <select id="see-plan" onchange="S.seePlan=this.value;renderSee()">
       <option value="">모든 계획</option>
     </select>
   </div>
@@ -283,7 +316,7 @@
 <div class="modal-overlay" id="modal-history">
   <div class="modal-card wide">
     <button class="modal-close" onclick="closeModal('modal-history')">&#10005;</button>
-    <div class="modal-title">수정 이력</div>
+    <div class="modal-title" id="history-plan-title">수정 이력</div>
     <div id="history-list"></div>
   </div>
 </div>
@@ -428,29 +461,6 @@ create policy "public delete sees" on sees for delete using (true);</div>
     </div>
   </div>
 </div>
-<!-- 로그인 / 회원가입 팝업 모달 -->
-<div id="modal-auth" class="modal-overlay">
-  <div class="modal-card">
-    <button class="modal-close" onclick="closeModal('modal-auth')">&#10005;</button>
-    <div class="modal-title">계정 로그인 / 회원가입</div>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5;">
-      Supabase Auth 계정으로 로그인하여 나의 계획과 다이어리를 안전하게 보관하세요.
-    </p>
-    <div class="form-group">
-      <label for="auth-email">이메일 주소</label>
-      <input type="email" id="auth-email" placeholder="example@email.com" autocomplete="email" />
-    </div>
-    <div class="form-group">
-      <label for="auth-password">비밀번호</label>
-      <input type="password" id="auth-password" placeholder="6자리 이상 비밀번호" autocomplete="current-password" />
-    </div>
-    <div id="auth-error-msg" style="display:none;font-size:12px;color:var(--accent);margin-bottom:10px;"></div>
-    <div class="modal-footer" style="justify-content:flex-end;gap:8px;">
-      <button type="button" class="btn-sm" onclick="handleSignUp()">회원가입</button>
-      <button type="button" class="btn-primary" onclick="handleSignIn()">로그인</button>
-    </div>
-  </div>
-</div>
-<script src="js/plando.js"></script>
+<script src="./plando.js"></script>
 </body>
 </html>
