@@ -284,6 +284,74 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+
+  // 5-1. Story Accordion Expand/Collapse (내 이야기 아코디언 인터랙션)
+  const storyItems = document.querySelectorAll('.story-accordion-item');
+  storyItems.forEach(item => {
+    const toggleBtn = item.querySelector('.story-toggle-btn');
+    const toggleText = item.querySelector('.story-toggle-text');
+    const arrow = item.querySelector('.story-toggle-btn .arrow-icon');
+
+    const toggleStory = (e) => {
+      if (e.target.closest('a') || e.target.closest('button:not(.story-toggle-btn)')) return;
+
+      const isExpanded = item.classList.contains('is-expanded');
+      item.classList.toggle('is-expanded');
+      item.setAttribute('aria-expanded', String(!isExpanded));
+
+      if (toggleText) {
+        toggleText.textContent = !isExpanded ? '본문 닫기' : '본문 보기';
+      }
+      if (arrow) {
+        arrow.textContent = !isExpanded ? '↑' : '↓';
+      }
+    };
+
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleStory(e);
+      });
+    }
+
+    item.addEventListener('click', toggleStory);
+
+    item.addEventListener('keydown', (e) => {
+      if (e.target === item && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        toggleStory(e);
+      }
+    });
+  });
+
+  // Story 전체 펼치기 / 접기 버튼
+  const btnToggleAllStory = document.getElementById('btn-story-toggle-all');
+  if (btnToggleAllStory) {
+    btnToggleAllStory.addEventListener('click', () => {
+      const allItems = document.querySelectorAll('.story-accordion-item');
+      const anyCollapsed = Array.from(allItems).some(item => !item.classList.contains('is-expanded'));
+
+      allItems.forEach(item => {
+        const toggleText = item.querySelector('.story-toggle-text');
+        const arrow = item.querySelector('.story-toggle-btn .arrow-icon');
+        if (anyCollapsed) {
+          item.classList.add('is-expanded');
+          item.setAttribute('aria-expanded', 'true');
+          if (toggleText) toggleText.textContent = '본문 닫기';
+          if (arrow) arrow.textContent = '↑';
+        } else {
+          item.classList.remove('is-expanded');
+          item.setAttribute('aria-expanded', 'false');
+          if (toggleText) toggleText.textContent = '본문 보기';
+          if (arrow) arrow.textContent = '↓';
+        }
+      });
+
+      btnToggleAllStory.textContent = anyCollapsed ? '전체 접기' : '전체 펼치기';
+    });
+  }
+
+
   // 6. Evidence Lightbox Modal Interaction
 
   const evidenceData = {
