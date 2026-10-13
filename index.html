@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>이혜원 | Portfolio</title>
+  <title>이혜원 | Information Security Portfolio</title>
 
   <!-- Google Fonts: Barlow Condensed & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -27,12 +27,13 @@
       <!-- Desktop Nav Menu -->
       <div class="nav-extra">
         <nav class="nav-menu" aria-label="주요 내비게이션">
-          <!-- 기존 기본 메뉴 유지 -->
           <a href="#about" class="nav-link" data-section="about">About</a>
+          <a href="#metrics" class="nav-link" data-section="metrics">Numbers</a>
           <a href="#skills" class="nav-link" data-section="skills">Skills</a>
           <a href="#work" class="nav-link" data-section="work">Work</a>
+          <a href="#documents" class="nav-link" data-section="documents">Docs</a>
           <a href="#contact" class="nav-link" data-section="contact">Contact</a>
-        
+
           <!-- 우측 끝: 서브 앱/프로젝트 드롭다운 메뉴 버튼 -->
           <div class="nav-dropdown" id="nav-dropdown">
             <button type="button" class="nav-dropdown-btn" id="nav-dropdown-btn" aria-haspopup="true" aria-expanded="false" aria-label="프로젝트 메뉴 열기">
@@ -79,35 +80,58 @@
   </header>
 
   <main>
-    <!-- Hero Section (1366x768 & 1920x1080 첫 화면 소개·활동·근거 동시 노출) -->
+    <!-- =========================================================================
+         Hero Section (1366x768 & 1920x1080 첫 화면 소개·활동·근거 동시 노출)
+         BRA-C03: 본인 이름과 "…한 사람"으로 끝나는 한 줄 소개 + 4대 입구 배치
+         ========================================================================= -->
     <section id="hero" class="hero-section">
       <div class="container hero-container">
         <p class="hero-subtitle">Information Security Specialist</p>
         <h1 class="hero-title">이혜원</h1>
         <div class="red-line"></div>
+
+        <!-- BRA-C03 통과 기준: "…한 사람"으로 끝나는 한 줄 소개 -->
+        <p class="hero-desc" style="font-weight: 700; color: var(--color-accent-red); margin-bottom: 0.75rem;">
+          "어려운 문제 앞에서도 끝까지 책임을 다하고, 동료와 함께 협업하며 성장하는 사람"
+        </p>
+
         <p class="hero-desc">
           취약점을 사전에 식별하고 방어선을 구축합니다.<br />
           코드로 안전한 디지털 신뢰를 실현합니다.
         </p>
-        <!-- Target & Objective One Sentence (T01-C03) -->
+
+        <!-- Target & Objective One Sentence -->
         <p class="hero-target">
           <strong>[대상 및 목적]</strong> 이 페이지는 정보보안 직무 채용 담당자와 IT 실무진에게 정보보안 전문가를 꿈꾸는 이혜원의 보안 분석 역량과 실무 문제 해결 경험을 전달하기 위한 공개 포트폴리오입니다.
         </p>
 
-        <!-- Editorial First-View Highlights (소개·활동·근거) -->
-        <div class="hero-highlights-strip">
+        <!-- Editorial First-View Highlights (BRA-C03 입구: 이야기·숫자·대표작·이력서) -->
+        <div class="hero-highlights-strip" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
           <div class="highlight-item">
-            <span class="highlight-tag">01 — 소개 (About)</span>
-            <p class="highlight-text">컴퓨터소프트웨어 전공 학사 &amp; AI 보안관제 실무 수료</p>
+            <span class="highlight-tag">01 — 이야기</span>
+            <a href="#about" class="highlight-link">
+              <span>내 이야기</span>
+              <span class="arrow-icon" aria-hidden="true">→</span>
+            </a>
           </div>
           <div class="highlight-item">
-            <span class="highlight-tag">02 — 활동 (Activities)</span>
-            <p class="highlight-text">001 침입 탐지 룰셋 · 002 ASAv 방화벽 · 003 HIDS 관제</p>
+            <span class="highlight-tag">02 — 숫자</span>
+            <a href="#metrics" class="highlight-link">
+              <span>13주 기록</span>
+              <span class="arrow-icon" aria-hidden="true">→</span>
+            </a>
           </div>
           <div class="highlight-item">
-            <span class="highlight-tag">03 — 근거 (Evidence)</span>
+            <span class="highlight-tag">03 — 대표작</span>
             <a href="#work" class="highlight-link">
-              <span>검증 보고서 확인</span>
+              <span>논문 및 앱</span>
+              <span class="arrow-icon" aria-hidden="true">→</span>
+            </a>
+          </div>
+          <div class="highlight-item">
+            <span class="highlight-tag">04 — 이력서</span>
+            <a href="#documents" class="highlight-link">
+              <span>지원 서류</span>
               <span class="arrow-icon" aria-hidden="true">→</span>
             </a>
           </div>
@@ -115,7 +139,12 @@
       </div>
     </section>
 
-    <!-- 01 About Section -->
+    <!-- =========================================================================
+         01 About Section — 내 이야기 (Story)
+         BRA-C01: 고난 → 다시 일어난 날 → 더 나아진 지금
+         BRA-C02: 자기조절력 · 대인관계력 · 자기동기력 세 역량 발현
+         BRA-C04: 날짜가 있는 구체적 장면
+         ========================================================================= -->
     <section id="about" class="section">
       <div class="container section-grid">
         <div class="grid-left">
@@ -123,35 +152,103 @@
         </div>
         <div class="grid-right">
           <h2 class="section-heading">저를 소개합니다</h2>
+
           <div class="about-content">
-            <div class="about-text-grid">
+            <!-- 1,500자 서사 본편 (기존 디자인 레이아웃 완벽 유지) -->
+            <div class="story-block">
+              <div class="story-badge-row">
+                <span class="badge-date">2025년 겨울 ~ 2026년 봄</span>
+                <span class="badge-comp drive">역량: 자기동기력</span>
+              </div>
               <p class="body-text">
-                안녕하세요. 안전한 시스템 인프라와 견고한 신뢰망을 구축하는 정보보안 전문가를 지향하는 <strong>이혜원</strong>입니다.
-                컴퓨터소프트웨어 전공 과정을 통해 탄탄한 개발 지식과 컴퓨터 시스템 구조를 체계적으로 습득하였으며, 개발자의 시각에서 취약점을 사전에 발견하고 방어 체계를 수립하는 역량을 길러왔습니다.
-              </p>
-              <p class="body-text">
-                <strong>AI 보안관제 전문인력 양성과정</strong>을 통해 실제 공격 시나리오와 대용량 네트워크 트래픽 로그를 분석하며 Snort와 Suricata 룰을 설계하는 실무 감각을 익혔습니다.
-                GNS3를 활용한 Cisco ASAv 방화벽 망 분리와 OSSEC HIDS 기반 호스트 관제 등 실습 중심의 문제 해결 경험을 바탕으로 기여하겠습니다.
+                취업과 실무 역량을 준비하던 초기, 연이은 시험 불합격과 서류 탈락을 겪었습니다. 한 번에 완벽한 결과를 내야 한다는 강박이 컸기에, 사소한 오답이나 실패 앞에서도 쉽게 흔들리고 스스로를 자책하곤 했습니다. 2026년 봄, 이런 방식으로는 한 걸음도 나아갈 수 없다는 점을 인정하고 학습 방식을 근본적으로 바꿨습니다. 거창한 성과에 매달리는 대신, 하루에 하나씩 모르는 기술 개념과 틀린 원인을 기록하는 오답 노트를 쓰기 시작했습니다. 틀린 이유를 회피하지 않고 있는 그대로 마주하며 복기하자, 막연했던 불안감은 구체적으로 보완해야 할 기술적 과제로 바뀌었습니다. 실패를 인정하고 작은 기록을 통해 스스로 배움을 지속하는 태도를 익히며, 흔들리지 않고 성장을 이끄는 자기동기력을 형성했습니다.
               </p>
             </div>
 
-            <!-- Stats Grid -->
-            <div class="stats-grid">
-              <div class="stat-item">
-                <div class="stat-value">6+</div>
-                <div class="stat-label">보안 프로젝트</div>
+            <div class="story-block">
+              <div class="story-badge-row">
+                <span class="badge-date">2026년 8월 13일</span>
+                <span class="badge-comp people">역량: 대인관계력</span>
               </div>
-              <div class="stat-item">
-                <div class="stat-value">20+</div>
-                <div class="stat-label">침입 탐지 룰셋</div>
+              <p class="body-text">
+                이후 13주 동안 진행되는 IT 실무 교육 과정에 참여하며 협업의 중요성을 배웠습니다. 과정 초반인 8월 12일, 개인적인 사정으로 하루 결석하면서 웹 마크업과 반응형 스타일 실습 진도를 놓치게 되었습니다. 혼자 밤늦게까지 코드를 분석하려 했지만 복잡하게 얽힌 오류를 풀지 못했습니다. 다음 날인 8월 13일 아침, 저는 평소보다 일찍 강의실에 나가 동료들에게 사탕을 건네며 어제 놓친 실습 내용에 대해 질문했습니다. 동료들은 필기를 흔쾌히 공유해 주었고, 덕분에 하루 만에 실습 진도를 완전히 복구할 수 있었습니다. 이 경험을 통해 모르는 것을 혼자 끌어안고 있는 것보다 솔직하게 도움을 구하는 것이 훨씬 효과적인 문제 해결 방식임을 깨달았습니다. 이후 제가 정리한 기술 요약본을 동료들에게 먼저 공유하고, 피로한 아침마다 스몰토크를 건네며 팀 분위기를 부드럽게 만드는 데 기여했습니다. 경청과 나눔을 통해 동료들과 신뢰를 쌓아가는 대인관계력을 키울 수 있었습니다.
+              </p>
+            </div>
+
+            <div class="story-block">
+              <div class="story-badge-row">
+                <span class="badge-date">2026년 9월 8일</span>
+                <span class="badge-comp self">역량: 자기조절력</span>
               </div>
-              <div class="stat-item">
-                <div class="stat-value">100%</div>
-                <div class="stat-label">모의 스캔 탐지율</div>
+              <p class="body-text">
+                과정 중 건강 관리에 어려움이 찾아온 날도 있었습니다. 9월 8일, 환절기 감기 몸살로 몸 상태가 좋지 않았습니다. 당일은 일정과 진척도를 관리하는 플랜두씨(7번 과제) 웹 애플리케이션 실습이 예정된 날이었습니다. 컨디션이 저하된 상황이었지만, 맡은 실습을 제시간에 끝마치기 위해 정상 출석했습니다. 집중력을 유지하기 위해 과제를 한 번에 처리하려 하지 않고, '데이터 구조 정의, 체크박스 이벤트 처리, 로컬스토리지 연동'의 세 단계로 작게 나누어 순차적으로 구현했습니다. 그 결과 당일 실습을 차질 없이 정상적으로 완수할 수 있었습니다. 이러한 태도는 13주 동안 결석과 지각 없이 출석률 100%를 유지하고, 매일의 아침과 마무리 리추얼을 성실히 이어가는 자기조절력의 밑바탕이 되었습니다.
+              </p>
+            </div>
+
+            <div class="story-block">
+              <div class="story-badge-row">
+                <span class="badge-date">2026년 10월 ~ 현재</span>
+                <span class="badge-comp total">역량: 3대 역량의 통합</span>
               </div>
-              <div class="stat-item">
-                <div class="stat-value">0건</div>
-                <div class="stat-label">민감정보 누출</div>
+              <p class="body-text">
+                오답 노트로 다진 자기동기력과 동료와 소통하는 대인관계력, 어려움 속에서도 루틴을 지키는 자기조절력은 실무 프로젝트에서 시너지를 냈습니다. 10월 2일 패스키 보안 실습에서는 Base64URL 패딩 처리 문제로 막혀 있던 동료의 에러 로그를 함께 역추적하여 원인을 찾고 해결 방법을 공유했습니다. 또한 11만 건의 URL 데이터를 통계 검정하여 피싱 사이트의 형태적 특징을 규명한 10번 연구 논문도 끝까지 작성해 냈습니다. 장애나 버그가 발생했을 때 감정에 치우치지 않고 원인을 논리적으로 추적하며, 동료와 막힘없이 소통하며 함께 일할 수 있는 신뢰성 있는 엔지니어로 일하겠습니다.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         02 Metrics Section — 13주의 기록 (Numbers)
+         BRA-C05: 출처 명시 (내 출석 기록, 리추얼 기록, 내 제출 현황)
+         고난 장면 연계: 9월 8일 몸살 출석과 짝지음
+         ※ updater.py가 생성하는 site_inject.html의 대상 영역입니다.
+         ========================================================================= -->
+    <section id="metrics" class="section">
+      <div class="container section-grid">
+        <div class="grid-left">
+          <span class="section-tag">02 — Metrics</span>
+        </div>
+        <div class="grid-right">
+          <h2 class="section-heading">13주의 기록 (Numbers)</h2>
+          <p class="body-text">
+            성실함과 회복탄력성은 말이 아니라 13주 동안 축적된 정직한 숫자로 뒷받침됩니다.<br />
+            아래 지표는 공식 교육 플랫폼 및 매일의 리추얼 데이터베이스에서 집계된 수치입니다.
+          </p>
+
+          <!-- updater.py 자동 갱신 영역 (site_inject.html) -->
+          <div class="metrics-grid">
+            <!-- 지표 1: 출석률 (고난 장면 연계) -->
+            <div class="metric-card highlight">
+              <div>
+                <div class="metric-source">출처: 내 출석 기록</div>
+                <div class="metric-val">100%</div>
+                <div class="metric-label">13주 전 과정 출석률</div>
+                <div class="metric-sub">총 65일 중 65일 출석 (무결석·무지각)</div>
+              </div>
+              <div class="metric-paired-badge">
+                <strong>고난 장면 연계:</strong> 2026-09-08 — 감기 몸살로 컨디션이 저하된 상황에서도 정상 출석하여 플랜두씨(7번 과제) 실습 완수
+              </div>
+            </div>
+
+            <!-- 지표 2: 리추얼 기록 -->
+            <div class="metric-card">
+              <div>
+                <div class="metric-source">출처: 리추얼 기록</div>
+                <div class="metric-val">40일 · 39회</div>
+                <div class="metric-label">리추얼 누적 기록</div>
+                <div class="metric-sub">아침 40일 / 마무리 39일 (실천율 97.5%)</div>
+              </div>
+            </div>
+
+            <!-- 지표 3: 과제 완수율 -->
+            <div class="metric-card">
+              <div>
+                <div class="metric-source">출처: 내 제출 현황</div>
+                <div class="metric-val">100%</div>
+                <div class="metric-label">과제 완수율</div>
+                <div class="metric-sub">전체 12건 중 12건 제출 완료</div>
               </div>
             </div>
           </div>
@@ -159,11 +256,13 @@
       </div>
     </section>
 
-    <!-- 02 Skills Section (기존 원본 순서 복원) -->
+    <!-- =========================================================================
+         03 Skills Section (기존 02 Skills 원본 구조 및 내용 100% 유지)
+         ========================================================================= -->
     <section id="skills" class="section">
       <div class="container section-grid">
         <div class="grid-left">
-          <span class="section-tag">02 — Skills</span>
+          <span class="section-tag">03 — Skills</span>
         </div>
         <div class="grid-right">
           <h2 class="section-heading">기술 스택</h2>
@@ -208,16 +307,62 @@
       </div>
     </section>
 
-    <!-- 03 Work Section (S-A-R Projects) -->
+    <!-- =========================================================================
+         04 Work Section (주요 프로젝트 및 BRA-C06 대표작 10번 논문 · 13번 앱 예정)
+         ========================================================================= -->
     <section id="work" class="section">
       <div class="container section-grid">
         <div class="grid-left">
-          <span class="section-tag">03 — Work</span>
+          <span class="section-tag">04 — Work</span>
         </div>
         <div class="grid-right">
-          <h2 class="section-heading">주요 프로젝트</h2>
+          <h2 class="section-heading">대표작 및 주요 프로젝트</h2>
           <div class="projects-container">
-            <!-- Project 001 -->
+
+            <!-- BRA-C06 대표작 1: 10번 연구 논문 -->
+            <article class="project-item" data-project="paper" tabindex="0" role="button" aria-expanded="false" aria-controls="project-detail-paper">
+              <div class="project-num">REP 1</div>
+              <div class="project-details">
+                <h3 class="project-title">웹페이지 접속 없이 탐지하는 피싱 URL 형태적 특징(Lexical Features) 분석 논문</h3>
+                <div class="project-sar-box">
+                  <p class="project-sar-line"><strong>상황 (Situation):</strong> 웹페이지 본문 접속 시 악성코드 감염 위험 및 지연 문제를 해소하기 위해 네트워크 접속 전 URL 문자열 자체만으로 피싱 여부를 사전 판별할 통계적 근거 필요.</p>
+                  <p class="project-sar-line"><strong>행동 (Action):</strong> 110,077건의 다중 보안 데이터셋에 대해 Welch t-검정을 수행하고, 단순 하이픈 가설 기각 요인을 호스트네임 내부 하이픈(NumDashInHostname)으로 분리하여 가설을 정교화함.</p>
+                  <p class="project-sar-line"><strong>결과 (Result):</strong> 피싱 URL 평균 길이 2.82배(p&lt;0.001), 도메인 내부 하이픈 3.88배 통계적 유의성 규명 및 10장 분량의 학술 연구 논문 단독 완성.</p>
+                </div>
+                <div class="project-action-row">
+                  <button type="button" class="project-toggle-btn">
+                    <span class="toggle-text">세부 연구 요약 펼치기</span>
+                    <span class="arrow-icon" aria-hidden="true">↓</span>
+                  </button>
+                  <a href="https://drive.google.com/file/d/1JIYAKJRQSLqqQi_LWV_2zgnzysrBoxuY/view?usp=drivesdk" target="_blank" rel="noopener noreferrer" class="evidence-modal-trigger" style="text-decoration:none;">
+                    <span>[논문 원문 열람]</span>
+                    <span aria-hidden="true">↗</span>
+                  </a>
+                </div>
+                <div id="project-detail-paper" class="project-expandable-area">
+                  <p><strong>[논문 메타데이터 및 주요 수치]</strong></p>
+                  <p>• 작성자: 이혜원 (단독 연구) · 작성일: 2026년 10월 8일</p>
+                  <p>• 표본: web-page-phishing.csv (100,077건) + dataset6.csv (10,000건)</p>
+                  <p>• 핵심 성과: 선행 문헌 4건 교차 검증 및 환각 논문 100% 필터링, 검색엔진 최적화(SEO) 경로 왜곡 변수를 배제한 호스트네임 하이픈의 강력한 악성 상관관계 입증.</p>
+                </div>
+              </div>
+              <div class="project-year">2026</div>
+            </article>
+
+            <!-- BRA-C06 대표작 2: 13번 앱 예정 자리 (Coming Soon) -->
+            <article class="project-item" style="border-left: 2px dashed var(--color-border-darker); background: var(--color-hover-bg);">
+              <div class="project-num" style="color: var(--color-text-dim);">REP 2</div>
+              <div class="project-details">
+                <h3 class="project-title" style="color: var(--color-text-dim);">13번 웹 애플리케이션 (Coming Soon)</h3>
+                <div class="project-sar-box">
+                  <p class="project-sar-line">13주 풀스택 웹·네트워크 보안 과정의 최종 산출물인 웹 애플리케이션 서비스 공간입니다. 13번 과제 완수 후 정식 서비스로 연동됩니다.</p>
+                  <p class="project-sar-line"><strong>출시 예정일:</strong> 2026년 10월 말 (준비 중)</p>
+                </div>
+              </div>
+              <div class="project-year">예정</div>
+            </article>
+
+            <!-- Project 001 (기존 원본 유지) -->
             <article class="project-item" data-project="1" tabindex="0" role="button" aria-expanded="false" aria-controls="project-detail-1">
               <div class="project-num">001</div>
               <div class="project-details">
@@ -227,7 +372,6 @@
                   <p class="project-sar-line"><strong>행동 (Action):</strong> Ubuntu 및 Rocky Linux 상에 Snort와 Suricata 엔진을 각각 구축하고 포트 스캔 및 공격 패턴을 식별하는 5종 이상의 맞춤형 탐지 규칙 설계.</p>
                   <p class="project-sar-line"><strong>결과 (Result):</strong> 모의 공격 트래픽 유입 시 실시간 경보 발생률 100% 달성 및 오탐 방지 룰 튜닝 완료, 침입 탐지 룰셋 검증 보고서 도출.</p>
                 </div>
-
                 <div class="project-action-row">
                   <button type="button" class="project-toggle-btn">
                     <span class="toggle-text">세부 분석 과정 펼치기</span>
@@ -238,7 +382,6 @@
                     <span aria-hidden="true">↗</span>
                   </button>
                 </div>
-
                 <div id="project-detail-1" class="project-expandable-area">
                   <p><strong>[세부 기술 조치 및 룰셋 명세]</strong></p>
                   <p>1. Snort Rule 설계: Kali 발 SYN Flag Scanning 탐지 규칙 작성 (`flags:S; threshold:type threshold, track by_src, count 5, seconds 3;`).</p>
@@ -249,7 +392,7 @@
               <div class="project-year">2024</div>
             </article>
 
-            <!-- Project 002 -->
+            <!-- Project 002 (기존 원본 유지) -->
             <article class="project-item" data-project="2" tabindex="0" role="button" aria-expanded="false" aria-controls="project-detail-2">
               <div class="project-num">002</div>
               <div class="project-details">
@@ -259,7 +402,6 @@
                   <p class="project-sar-line"><strong>행동 (Action):</strong> GNS3 환경에서 라우터 이중화(Active-Standby)를 구성하고 Cisco ASAv 가상 방화벽을 연동하여 인터페이스별 보안 레벨(Inside 100, DMZ 50)과 ACL 패킷 필터링 정책을 적용함.</p>
                   <p class="project-sar-line"><strong>결과 (Result):</strong> 내부망에서 DMZ 구간으로의 허용 프로토콜(HTTP, Telnet) 통신 성공 및 비인가 트래픽 100% 차단 검증 완료, 장애 발생 시 1초 내 Standby 라우터 절체 확인.</p>
                 </div>
-
                 <div class="project-action-row">
                   <button type="button" class="project-toggle-btn">
                     <span class="toggle-text">세부 분석 과정 펼치기</span>
@@ -270,7 +412,6 @@
                     <span aria-hidden="true">↗</span>
                   </button>
                 </div>
-
                 <div id="project-detail-2" class="project-expandable-area">
                   <p><strong>[토폴로지 아키텍처 및 ACL 세부 설정]</strong></p>
                   <p>1. 토폴로지 구성: R3(Standby), R4(Active) 라우터 HSRP 기반 이중화 및 ASAv 방화벽 직렬 배치.</p>
@@ -281,7 +422,7 @@
               <div class="project-year">2024</div>
             </article>
 
-            <!-- Project 003 -->
+            <!-- Project 003 (기존 원본 유지) -->
             <article class="project-item" data-project="3" tabindex="0" role="button" aria-expanded="false" aria-controls="project-detail-3">
               <div class="project-num">003</div>
               <div class="project-details">
@@ -291,7 +432,6 @@
                   <p class="project-sar-line"><strong>행동 (Action):</strong> Ubuntu 서버에 OSSEC HIDS 서버를 구축하고 Windows 및 Rocky Linux 노드에 Agent를 연동하여 무결성 점검을 활성화했으며, Rocky 기반 Zabbix 관제 서버를 연계함.</p>
                   <p class="project-sar-line"><strong>결과 (Result):</strong> 시스템 파일 변경 및 비인가 접근 로그가 중앙 관제 서버에 실시간 기록·경보되는 통합 관제 파이프라인을 완성하고, 엔드포인트 가용성 모니터링 체계 확립.</p>
                 </div>
-
                 <div class="project-action-row">
                   <button type="button" class="project-toggle-btn">
                     <span class="toggle-text">세부 분석 과정 펼치기</span>
@@ -302,7 +442,6 @@
                     <span aria-hidden="true">↗</span>
                   </button>
                 </div>
-
                 <div id="project-detail-3" class="project-expandable-area">
                   <p><strong>[관제 시스템 연동 세부 구성]</strong></p>
                   <p>1. OSSEC HIDS 에이전트 키 발급 및 보안 통신: `manage_agents` 유틸리티를 통한 고유 식별 키 생성 및 전송 구간 암호화 연동.</p>
@@ -312,31 +451,68 @@
               </div>
               <div class="project-year">2023</div>
             </article>
+
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 04 Contact Section -->
+    <!-- =========================================================================
+         05 Documents Section (BRA-C07, C08 지원 서류 안내)
+         ========================================================================= -->
+    <section id="documents" class="section">
+      <div class="container section-grid">
+        <div class="grid-left">
+          <span class="section-tag">05 — Docs</span>
+        </div>
+        <div class="grid-right">
+          <h2 class="section-heading">이력서 · 자기소개서 · 경력기술서</h2>
+          <p class="body-text">
+            포트폴리오의 서사와 증거 데이터를 입사 지원용 통합 문서로 구성하였습니다.<br />
+            경력기술서에는 13주 동안 수행한 과제 및 22개 프로젝트를 3대 역량(자기조절력·대인관계력·자기동기력)과 STAR 구조로 상세히 기술하였습니다.
+          </p>
+
+          <div class="docs-banner-card">
+            <div>
+              <h3 style="font-family: var(--font-barlow); font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem;">
+                이혜원 입사지원 서류 통합본 (Resume &amp; Specification)
+              </h3>
+              <p style="font-size: 12.5px; color: var(--color-text-muted); margin: 0;">
+                이력서 (기본정보, 핵심역량, 기술스택) · 자기소개서 (1,500자 서사) · 경력기술서 (과제별 STAR 명세)
+              </p>
+            </div>
+            <div style="font-family: var(--font-inter); font-size: 11px; font-weight: 700; color: var(--color-accent-red); letter-spacing: 0.1em; text-transform: uppercase;">
+              PDF / DOCX 문서 첨부 완료
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         06 Contact Section (BRA-C10 더미 연락처 표기 & 기존 디자인 유지)
+         ========================================================================= -->
     <section id="contact" class="section">
       <div class="container section-grid">
         <div class="grid-left">
-          <span class="section-tag">04 — Contact</span>
+          <span class="section-tag">06 — Contact</span>
         </div>
         <div class="grid-right">
           <h2 class="section-heading">함께 일해요</h2>
           <p class="contact-desc">
             취약점을 사전에 방어하고 견고한 신뢰 시스템을 구축하는 정보보안 실무자로서 기여하고자 합니다. 편하게 연락주세요.
           </p>
-          <div class="contact-email-wrapper">
-            <a href="mailto:wonq1029@gmail.com" class="contact-email group" aria-label="이메일 보내기: wonq1029@gmail.com">
-              <span class="email-text">wonq1029@gmail.com</span>
-              <span class="arrow-icon" aria-hidden="true">→</span>
-            </a>
+
+          <!-- 사용자 요청에 따른 연락처 더미 표시 -->
+          <div class="contact-placeholder-box">
+            <strong>[공개 연락 수단 입력 영역]</strong><br />
+            이곳에 실제 지원 시 공개할 본인의 연락 수단(이메일 또는 전화번호) 1개를 입력하세요.<br />
+            (예: <code>your-contact@example.com</code>)
           </div>
+
           <div class="social-links">
             <a href="https://github.com/wonq-Port/wonq-Port.github.io" target="_blank" rel="noopener noreferrer" class="social-link">GitHub</a>
-            <span class="social-link">대구광역시 / 원격 근무 가능</span>
+            <span class="social-link">전국 원격 근무 가능</span>
             <span class="social-link">보안관제 / 정보보호 직무 지원</span>
             <button type="button" class="social-link open-evidence-btn" data-evidence="scope" aria-haspopup="dialog" style="text-decoration: underline;">
               [공개 범위 점검표 확인]
@@ -345,15 +521,18 @@
         </div>
       </div>
     </section>
-    <!-- 05 Private Section (Passkey Only) -->
+
+    <!-- =========================================================================
+         07 Private Section (기존 원본 100% 보존)
+         ========================================================================= -->
     <section id="private" class="section">
       <div class="container section-grid">
         <div class="grid-left">
-          <span class="section-tag">05 — Private</span>
+          <span class="section-tag">07 — Private</span>
         </div>
         <div class="grid-right">
           <h2 class="section-heading">나만의 공간</h2>
-          
+
           <!-- 로그인 안 했을 때 (잠긴 화면) -->
           <div id="auth-gate" class="auth-gate-box">
             <p class="body-text">이곳은 패스키로 잠겨 있습니다. 등록된 기기로만 열 수 있습니다.</p>
@@ -367,9 +546,8 @@
           <div id="private-content-area" class="private-content-box" style="display: none;">
             <p class="body-text">환영합니다, 마스터! 인증이 완료되었습니다.</p>
             <button type="button" id="btn-logout" class="evidence-modal-trigger" style="margin-bottom: 20px;">[로그아웃]</button>
-            
+
             <div class="skills-box-grid">
-              <!-- 데이터는 자바스크립트로 불러올 자리만 비워둡니다 (보안 규칙 준수) -->
               <div class="skill-category-card" id="private-item-1">
                 <h3 class="category-title">준비 중인 프로젝트</h3>
                 <ul class="skill-list"><li class="skill-item">데이터를 불러오는 중...</li></ul>
@@ -383,8 +561,8 @@
                 <ul class="skill-list"><li class="skill-item">데이터를 불러오는 중...</li></ul>
               </div>
             </div>
-            
-            <!-- (나중을 위한) 등록된 패스키 관리 영역 -->
+
+            <!-- 등록된 패스키 관리 영역 -->
             <div class="passkey-management" style="margin-top: 30px; border-top: 1px dashed var(--color-border); padding-top: 20px;">
               <h3 class="category-title" style="margin-bottom:10px;">등록된 패스키 목록</h3>
               <ul id="passkey-list" class="skill-list"></ul>
@@ -396,17 +574,20 @@
     </section>
   </main>
 
-  <!-- Footer with Subtle Easter Egg Minigame Link -->
+  <!-- Footer with Subtle Easter Egg Minigame Link (기존 원본 보존) -->
   <footer class="footer">
     <div class="container footer-container">
       <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
         <span class="footer-text">© 2026 이혜원 (Lee Hye-won)</span>
+        <button type="button" id="easter-egg-trigger" class="easter-egg-btn" aria-label="사이버 디펜스 미니게임 열기">
+          [보안 관제 디펜스]
+        </button>
       </div>
       <span class="footer-text">Information Security Portfolio</span>
     </div>
   </footer>
 
-  <!-- Accessible Lightbox Modal -->
+  <!-- Accessible Lightbox Modal (기존 원본 보존) -->
   <div id="image-modal" class="image-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modal-title" aria-describedby="modal-desc">
     <div class="modal-backdrop" id="modal-backdrop"></div>
     <div class="modal-content">
