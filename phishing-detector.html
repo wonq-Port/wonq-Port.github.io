@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lexical Phishing Detector | 피싱 URL 사전 진단기</title>
+  <!-- Google Fonts: Barlow Condensed & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Stylesheet (기존 포트폴리오2 + 13번 과제 통합 스타일) -->
+  <link rel="stylesheet" href="css/detector.css" />
+</head>
+<body>
+  <div class="site-shell">
+    <!-- Header / Navigation (포트폴리오2 기존 네비게이션 완벽 보존) -->
+    <header class="navbar">
+      <div class="nav-container">
+        <a href="index.html" class="nav-logo" aria-label="메인 포트폴리오로 이동">
+          이혜원 <span>PORTFOLIO</span>
+        </a>
+        <div class="nav-extra">
+          <span class="privacy-mark">브라우저 내부 분석 · 외부 전송 없음</span>
+          <a href="index.html#work" class="nav-link">← 대표작 목록으로</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <!-- 최상단 헤더: 기존 과제(BRB-C01, BRB-C03) 논문 배지·핵심 문장 보존 + 13번 과제 통합 -->
+      <header class="app-header">
+        <div class="eyebrow-row">
+          <div class="paper-citation-badge">
+            <span>기반 논문:</span>
+            <span>「웹페이지 접속 없이 탐지하는 피싱 URL의 형태적 특징(Lexical Features)과 악성 여부의 상관관계」 (2026, 이혜원)</span>
+          </div>
+          <span class="issue-number">110,077 URL DATASET</span>
+        </div>
+        <h1 class="app-title">Lexical Phishing Detector</h1>
+        <p class="app-mission">
+          "웹페이지에 접속하기 전 의심스러운 링크의 감염 위험을 피하고 싶은 사용자가 URL을 입력할 때, 11만 건의 보안 연구 결과(URL 29자 이상 임계점, 도메인 내부 하이픈 3.88배 위험 규칙)를 바탕으로 악성 피싱 위험도를 즉시 진단하고 근거를 제시합니다."
+        </p>
+        <p class="app-desc">
+          이 도구는 외부 서버 통신이나 웹페이지 본문(HTML/JS) 다운로드 없이, 사용자의 브라우저 내부에서 URL 문자열 구조만으로 순수 분석합니다. 단일 검사부터 최대 500줄 일괄 진단, 로컬 기록 관리, 민감도 커스터마이징까지 안전하게 수행하세요.
+        </p>
+      </header>
+
+      <!-- 13번 과제 확장: 5대 기능 탭 네비게이션 -->
+      <nav class="tab-list" role="tablist" aria-label="도구 메뉴">
+        <button type="button" id="tab-btn-scan" role="tab" aria-selected="true" aria-controls="panel-scan" class="active">
+          <span>01</span>검사
+        </button>
+        <button type="button" id="tab-btn-batch" role="tab" aria-selected="false" aria-controls="panel-batch">
+          <span>02</span>일괄 검사
+        </button>
+        <button type="button" id="tab-btn-history" role="tab" aria-selected="false" aria-controls="panel-history">
+          <span>03</span>기록
+        </button>
+        <button type="button" id="tab-btn-settings" role="tab" aria-selected="false" aria-controls="panel-settings">
+          <span>04</span>설정
+        </button>
+        <button type="button" id="tab-btn-research" role="tab" aria-selected="false" aria-controls="panel-research">
+          <span>05</span>연구 근거
+        </button>
+      </nav>
+
+      <!-- 에러 방어 및 저장소 알림 영역 (기존 BRB-C05 id="error-box" 호환) -->
+      <div id="error-box" class="error-alert-box" role="alert"></div>
+
+      <!-- 탭 1: 단일 URL 검사 (기존 화면 구조 + 13번 과제 URL 구성 분해 시각화 통합) -->
+      <section id="panel-scan" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-scan">
+        <div class="section-heading">
+          <div>
+            <span class="kicker">Single analysis</span>
+            <h2>URL 검사</h2>
+          </div>
+          <p>스킴(https://)을 생략해도 자동으로 보정하여 검사합니다.</p>
+        </div>
+
+        <form id="scan-form" class="input-panel" aria-label="URL 입력 패널">
+          <label for="url-input" class="input-label">검사할 웹사이트 URL 입력</label>
+          <div class="url-input-group">
+            <input
+              type="text"
+              id="url-input"
+              class="url-input"
+              placeholder="예: https://secure-bank-login-update.example/verify"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button type="submit" id="btn-run" class="btn-analyze primary-button">
+              위험도 진단하기
+            </button>
+          </div>
+          <div class="sample-pill-row sample-row">
+            <span class="sample-label">예시 샘플:</span>
+            <button type="button" class="btn-sample" data-sample="safe1">정상 URL (네이버)</button>
+            <button type="button" class="btn-sample" data-sample="safe2">정상 URL (GitHub)</button>
+            <button type="button" class="btn-sample" data-sample="phish1">피싱 샘플 (하이픈 도메인)</button>
+            <button type="button" class="btn-sample" data-sample="phish2">피싱 샘플 (과다 길이+골뱅이)</button>
+          </div>
+        </form>
+
+        <div id="scan-empty" class="empty-state">
+          <span>READY TO INSPECT</span>
+          <p>URL을 입력하거나 예시 샘플을 누르면 형태를 분해하고 110,077건 연구 지표와 대조합니다.</p>
+        </div>
+
+        <!-- 결과 대시보드 (기존 id="result-dashboard" 완벽 호환) -->
+        <section id="result-dashboard" class="result-dashboard" aria-label="진단 결과 대시보드">
+          <div id="score-banner" class="score-banner safe">
+            <div id="score-number" class="score-number">00</div>
+            <div>
+              <span id="banner-level-chip" class="level-chip safe">낮음</span>
+              <h3 id="score-title" class="score-title">안전 수준 (Low Risk)</h3>
+              <p id="score-desc" class="score-desc">설정된 형태적 기준에서 두드러진 위험 신호가 적습니다.</p>
+            </div>
+            <span class="score-denominator">
+              / 100<br />참고 점수
+            </span>
+          </div>
+
+          <!-- 13번 과제 신규 통합: URL 구성 분해 하이라이트 맵 -->
+          <div class="url-map" aria-label="URL 구성 분석">
+            <div id="url-visual" class="url-visual"></div>
+            <div class="url-legend">
+              <span>
+                <i class="legend-host"></i>
+                실제 호스트 <b id="legend-hostname">-</b>
+              </span>
+              <span>
+                <i class="legend-risk"></i>
+                위험 문자 (호스트 하이픈 · @ · =)
+              </span>
+              <span>
+                <i class="legend-neutral"></i>
+                경로 하이픈 · 점수 미반영 (SEO 관행)
+              </span>
+            </div>
+          </div>
+
+          <!-- 3대 형태학적 핵심 지표 카드 (기존 id 보존) -->
+          <div class="features-grid">
+            <article class="feature-card">
+              <div class="feature-tag">01 · 전체 문자열 길이</div>
+              <div class="feature-val-row">
+                <span id="stat-len" class="feature-num">0</span>
+                <span class="feature-unit">자</span>
+              </div>
+              <div id="len-benchmark-text" class="feature-benchmark">
+                • 논문 기준선: <strong>29자 이상부터 피싱 58.6% 급증</strong><br />
+                • 정상 평균: 23.59자 / 피싱 평균: 66.49자
+              </div>
+              <span id="badge-len" class="feature-status status-ok">기준치 이내</span>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-tag">02 · 도메인(호스트) 하이픈 개수</div>
+              <div class="feature-val-row">
+                <span id="stat-hyphen" class="feature-num">0</span>
+                <span class="feature-unit">개</span>
+              </div>
+              <div id="path-hyphen-note" class="feature-benchmark">
+                • 논문 기준선: <strong>피싱 사이트에서 3.88배 높음</strong><br />
+                • 경로 하이픈 0개는 점수 미반영
+              </div>
+              <span id="badge-hyphen" class="feature-status status-ok">하이픈 없음</span>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-tag">03 · 위험 특수문자 (@, =, /, .)</div>
+              <div class="feature-val-row">
+                <span id="stat-specials" class="feature-num">0</span>
+                <span class="feature-unit">개</span>
+              </div>
+              <div id="special-breakdown" class="feature-benchmark">
+                • @ 0 · = 0 · / 0 · . 0<br />
+                • 골뱅이(@) 및 다중 서브도메인 탐지
+              </div>
+              <span id="badge-specials" class="feature-status status-ok">정상 범위</span>
+            </article>
+          </div>
+
+          <!-- 논문 실증 데이터셋 대조표 (기존 id="evidence-tbody" 보존 + 연구 근거 탭 이동 버튼) -->
+          <div class="evidence-heading">
+            <div>
+              <span class="kicker">Dataset comparison</span>
+              <h3>논문 실증 데이터셋과의 정밀 대조표 (110,077건 표본 기준)</h3>
+            </div>
+            <button type="button" id="btn-go-research" class="text-button">
+              연구 근거 보기 →
+            </button>
+          </div>
+
+          <div class="table-wrap">
+            <table class="evidence-table">
+              <thead>
+                <tr>
+                  <th>검사항목</th>
+                  <th>입력 URL 관측값</th>
+                  <th>논문 정상 URL 평균</th>
+                  <th>논문 피싱 URL 평균</th>
+                  <th>위험 판정 근거</th>
+                </tr>
+              </thead>
+              <tbody id="evidence-tbody"></tbody>
+            </table>
+          </div>
+
+          <!-- 보안 권고사항 (기존 id="action-guide" 보존) -->
+          <div class="action-guide">
+            <strong>보안 권고사항 (Action Guide)</strong>
+            <p id="action-guide">
+              낮은 점수는 안전 보증이 아닙니다. 단축 URL이나 해킹된 정상 도메인의 짧은 경로는 탐지하지 못할 수 있습니다.
+            </p>
+          </div>
+          <p class="method-note">
+            점수는 논문의 집단 통계 차이를 단순 가중합한 참고 지표이며, 검증된 피싱 확률이나 분류 모델이 아닙니다.
+          </p>
+        </section>
+      </section>
+
+      <!-- 탭 2: 일괄 검사 (13번 과제 확장 F3) -->
+      <section id="panel-batch" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-btn-batch">
+        <div class="section-heading">
+          <div>
+            <span class="kicker">Batch analysis</span>
+            <h2>일괄 검사</h2>
+          </div>
+          <p>줄마다 URL 하나 · 최대 500줄</p>
+        </div>
+
+        <div class="input-panel">
+          <label for="batch-input">검사할 URL 목록</label>
+          <textarea
+            id="batch-input"
+            rows="8"
+            placeholder="example.com&#10;https://secure-login.example/verify"
+          ></textarea>
+          <div class="control-row">
+            <label class="check-label">
+              <input type="checkbox" id="remove-duplicates" checked />
+              빈 줄 및 중복 제거
+            </label>
+            <button type="button" id="btn-batch-run" class="primary-button">
+              일괄 진단하기
+            </button>
+          </div>
+        </div>
+
+        <div id="batch-results-wrap" class="hidden">
+          <div class="table-controls">
+            <div class="segmented">
+              <button type="button" id="batch-filter-all" class="active">전체</button>
+              <button type="button" id="batch-filter-danger">높음</button>
+              <button type="button" id="batch-filter-warning">주의</button>
+              <button type="button" id="batch-filter-safe">낮음</button>
+            </div>
+            <button type="button" id="btn-export-csv" class="secondary-button">
+              CSV 내보내기
+            </button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>URL</th>
+                  <th>
+                    <button type="button" id="batch-sort-score">점수 ↓</button>
+                  </th>
+                  <th>등급</th>
+                  <th>
+                    <button type="button" id="batch-sort-length">길이 ↓</button>
+                  </th>
+                  <th>호스트 -</th>
+                  <th>특수문자</th>
+                  <th>주요 신호</th>
+                </tr>
+              </thead>
+              <tbody id="batch-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 탭 3: 검사 기록 (13번 과제 확장 F4) -->
+      <section id="panel-history" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-btn-history">
+        <div class="section-heading">
+          <div>
+            <span class="kicker">Local history</span>
+            <h2>검사 기록</h2>
+          </div>
+          <p>이 브라우저에만 저장되며 서버로 전송되지 않습니다.</p>
+        </div>
+
+        <div id="history-empty" class="empty-state">
+          <span>NO LOCAL HISTORY</span>
+          <p>검사 결과가 아직 없습니다.</p>
+        </div>
+
+        <div id="history-content" class="hidden">
+          <div class="history-actions">
+            <span id="history-count">0 / 200건</span>
+            <button type="button" id="btn-clear-history" class="text-button danger-text">
+              전체 삭제
+            </button>
+          </div>
+          <div id="history-confirm-bar" class="confirm-bar hidden" role="region" aria-label="기록 전체 삭제 확인">
+            <span>저장된 검사 기록을 모두 삭제할까요?</span>
+            <div class="confirm-bar-actions">
+              <button type="button" id="btn-confirm-clear-yes" class="primary-button">삭제 확인</button>
+              <button type="button" id="btn-confirm-clear-no" class="secondary-button">취소</button>
+            </div>
+          </div>
+          <div id="history-list" class="history-list"></div>
+        </div>
+      </section>
+
+      <!-- 탭 4: 민감도 설정 (13번 과제 확장 F5) -->
+      <section id="panel-settings" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-btn-settings">
+        <div class="section-heading">
+          <div>
+            <span class="kicker">Sensitivity</span>
+            <h2>민감도 설정</h2>
+          </div>
+          <p>변경 사항은 현재 결과에 즉시 반영됩니다.</p>
+        </div>
+
+        <div class="notice persistent">
+          논문의 29자 기준은 데이터셋에 따라 일반화되지 않는 한계가 있어 직접 조정할 수 있습니다.
+        </div>
+
+        <div class="preset-row">
+          <span>프리셋</span>
+          <button type="button" data-preset="loose">느슨</button>
+          <button type="button" data-preset="default">기본</button>
+          <button type="button" data-preset="strict">엄격</button>
+          <button type="button" id="btn-reset-settings" class="reset">
+            기본으로 되돌리기
+          </button>
+        </div>
+
+        <div class="settings-panel">
+          <label class="range-setting" for="range-threshold">
+            <span>길이 임계값</span>
+            <input type="range" id="range-threshold" min="15" max="100" value="29" />
+            <strong id="val-threshold">29<small>자</small></strong>
+          </label>
+          <label class="range-setting" for="range-length">
+            <span>길이 가중치</span>
+            <input type="range" id="range-length" min="0" max="40" value="35" />
+            <strong id="val-length">35</strong>
+          </label>
+          <label class="range-setting" for="range-hyphen">
+            <span>호스트 하이픈</span>
+            <input type="range" id="range-hyphen" min="0" max="40" value="20" />
+            <strong id="val-hyphen">20</strong>
+          </label>
+          <label class="range-setting" for="range-at">
+            <span>@ 문자</span>
+            <input type="range" id="range-at" min="0" max="40" value="25" />
+            <strong id="val-at">25</strong>
+          </label>
+          <label class="range-setting" for="range-equal">
+            <span>= 문자</span>
+            <input type="range" id="range-equal" min="0" max="40" value="8" />
+            <strong id="val-equal">8</strong>
+          </label>
+          <label class="range-setting" for="range-slash">
+            <span>슬래시</span>
+            <input type="range" id="range-slash" min="0" max="40" value="7" />
+            <strong id="val-slash">7</strong>
+          </label>
+          <label class="range-setting" for="range-dot">
+            <span>점</span>
+            <input type="range" id="range-dot" min="0" max="40" value="5" />
+            <strong id="val-dot">5</strong>
+          </label>
+          <div class="storage-setting">
+            <div>
+              <strong>검사 기록 저장</strong>
+              <p>최대 200건을 이 브라우저에만 보관합니다.</p>
+            </div>
+            <button type="button" id="btn-toggle-storage" role="switch" aria-checked="true" class="switch on">
+              ON
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 탭 5: 연구 근거 (13번 과제 확장 F6) -->
+      <section id="panel-research" class="tab-panel research hidden" role="tabpanel" aria-labelledby="tab-btn-research">
+        <div class="section-heading">
+          <div>
+            <span class="kicker">Research evidence</span>
+            <h2>연구 근거</h2>
+          </div>
+          <p>공개 데이터셋 2종 · 총 110,077건</p>
+        </div>
+
+        <div class="research-lead">
+          <strong>형태는 단서이지 판결이 아닙니다.</strong>
+          <p>
+            Welch 독립표본 t-검정으로 정상·피싱 URL 집단의 형태 차이를 확인했습니다. 모든 항목 p &lt; 0.001.
+          </p>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>변수</th>
+                <th>정상 평균 ± SD</th>
+                <th>피싱 평균 ± SD</th>
+                <th>배율</th>
+                <th>Welch t</th>
+                <th>판정</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>전체 길이</td>
+                <td>23.59 ± 16.14</td>
+                <td>66.49 ± 68.60</td>
+                <td>2.82배</td>
+                <td>117.42</td>
+                <td>지지</td>
+              </tr>
+              <tr>
+                <td>점 (.)</td>
+                <td>2.05 ± 0.64</td>
+                <td>2.53 ± 1.86</td>
+                <td>1.23배</td>
+                <td>47.00</td>
+                <td>지지</td>
+              </tr>
+              <tr>
+                <td>전체 하이픈</td>
+                <td>0.26 ± 1.13</td>
+                <td>0.66 ± 1.48</td>
+                <td>2.55배</td>
+                <td>44.78</td>
+                <td>주력 DB 지지</td>
+              </tr>
+              <tr>
+                <td>골뱅이 (@)</td>
+                <td>0.00003 ± 0.006</td>
+                <td>0.061 ± 0.443</td>
+                <td>1,939.73배</td>
+                <td>26.22</td>
+                <td>지지</td>
+              </tr>
+              <tr>
+                <td>슬래시 (/)</td>
+                <td>0.29 ± 0.77</td>
+                <td>2.62 ± 2.17</td>
+                <td>9.00배</td>
+                <td>197.15</td>
+                <td>지지</td>
+              </tr>
+              <tr>
+                <td>등호 (=)</td>
+                <td>0.03 ± 0.31</td>
+                <td>0.55 ± 1.48</td>
+                <td>20.27배</td>
+                <td>66.06</td>
+                <td>지지</td>
+              </tr>
+              <tr>
+                <td>전체 하이픈 · 교차검증</td>
+                <td>2.97 ± 3.88</td>
+                <td>0.66 ± 1.24</td>
+                <td>0.22배</td>
+                <td>−40.10</td>
+                <td>기각</td>
+              </tr>
+              <tr>
+                <td>호스트 하이픈</td>
+                <td>0.06 ± 0.27</td>
+                <td>0.22 ± 0.71</td>
+                <td>3.88배</td>
+                <td>15.22</td>
+                <td>수정 가설 지지</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="research-grid">
+          <article>
+            <span class="kicker">Length distribution</span>
+            <h3>길이 구간별 데이터셋 내 피싱 비율</h3>
+            <div class="bar-row">
+              <span>24자 이하</span>
+              <div><i style="width: 13.6%"></i></div>
+              <strong>13.6%</strong>
+            </div>
+            <div class="bar-row">
+              <span>29–38자</span>
+              <div><i style="width: 58.6%"></i></div>
+              <strong>58.6%</strong>
+            </div>
+            <div class="bar-row">
+              <span>38–51자</span>
+              <div><i style="width: 73.1%"></i></div>
+              <strong>73.1%</strong>
+            </div>
+            <div class="bar-row">
+              <span>75자 이상</span>
+              <div><i style="width: 87%"></i></div>
+              <strong>87%</strong>
+            </div>
+            <p class="method-note">
+              표본 구성에 따른 데이터셋 내 비율이며 실제 환경의 피싱 확률이 아닙니다.
+            </p>
+          </article>
+
+          <article>
+            <span class="kicker">Hypothesis revision</span>
+            <h3>하이픈 가설의 수정</h3>
+            <div class="hypothesis rejected">
+              <span>BEFORE · 기각</span>
+              <p>URL 전체의 하이픈이 많을수록 피싱일 것이다.</p>
+            </div>
+            <div class="hypothesis accepted">
+              <span>AFTER · 지지</span>
+              <p>호스트 내부 하이픈이 많을수록 피싱 집단에서 높게 관측된다.</p>
+            </div>
+            <p>
+              경로 하이픈은 정상 사이트의 SEO 관행일 수 있어 점수에서 제외합니다.
+            </p>
+          </article>
+        </div>
+
+        <div class="limitations">
+          <span class="kicker">Limitations</span>
+          <h3>이 도구가 보지 못하는 것</h3>
+          <ol>
+            <li>
+              <b>단축 URL과 침해된 정상 도메인</b>
+              <span>짧고 정상적으로 보이는 주소 내부의 피싱은 탐지하기 어렵습니다.</span>
+            </li>
+            <li>
+              <b>네트워크 기반 정보</b>
+              <span>TLS 인증서, WHOIS 도메인 연령, 페이지 본문을 분석하지 않습니다.</span>
+            </li>
+            <li>
+              <b>절대 기준이 아닌 29자</b>
+              <span>dataset6에서는 정상 URL 평균 길이가 더 길어 데이터셋 차이를 확인했습니다.</span>
+            </li>
+          </ol>
+        </div>
+
+        <div class="references">
+          <span class="kicker">References</span>
+          <h3>참고문헌</h3>
+          <p>
+            Garera, Provos, Chew, Rubin (2007). <i>A framework for detection and measurement of phishing attacks.</i>
+          </p>
+          <p>
+            Ma, Saul, Savage, Voelker (2009). <i>Beyond blacklists: Learning to detect malicious web sites from suspicious URLs.</i>
+          </p>
+          <p>
+            Tan, C. L. (2018). <i>Phishing dataset for machine learning: Feature evaluation.</i> Mendeley Data V1.
+          </p>
+          <p>
+            Vrbančič, Fister Jr., Podgorelec (2020). <i>Datasets for phishing websites detection.</i> Data in Brief 33.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container footer-container">
+        <span class="footer-text">© 2026 이혜원 (Lee Hye-won) · Lexical Phishing Detector · 브라우저 내부 분석</span>
+        <a href="index.html" class="footer-text" style="text-decoration: underline;">포트폴리오 메인으로</a>
+      </div>
+    </footer>
+  </div>
+  <script src="js/detector.js"></script>
+</body>
+</html>
