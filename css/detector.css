@@ -1,0 +1,1260 @@
+/* ==========================================================================
+   Lexical Phishing Detector Styles (포트폴리오2 기존 detector.css + 13번 과제 통합본)
+   Editorial Minimalist Swiss Design (Barlow Condensed & Inter)
+   100% Self-Contained Stylesheet
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --font-barlow: 'Barlow Condensed', sans-serif;
+  --font-inter: 'Inter', sans-serif;
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --color-bg: #ffffff;
+  --color-text-main: #0a0a0a;
+  --color-text-secondary: #2b2b2b;
+  --color-text-muted: #404040;
+  --color-text-subtle: #525252;
+  --color-text-dim: #595959;
+  --color-accent-red: #b91c1c;
+  --color-border: rgba(0, 0, 0, 0.12);
+  --color-border-darker: rgba(0, 0, 0, 0.22);
+  --color-hover-bg: #fafafa;
+  --max-width: 72rem;
+  --ink: #0a0a0a;
+  --ink-2: #2b2b2b;
+  --muted: #595959;
+  --paper: #ffffff;
+  --wash: #fafafa;
+  --red: #b91c1c;
+  --line: rgba(0, 0, 0, .12);
+  --line-dark: rgba(0, 0, 0, .24);
+  --safe: #15803d;
+  --safe-bg: #f0fdf4;
+  --safe-line: #bbf7d0;
+  --warn: #9a4d08;
+  --warn-bg: #fffbeb;
+  --warn-line: #fde68a;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--paper);
+  font-synthesis: none;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  color: var(--color-text-main);
+  font-family: var(--font-inter);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button, input, textarea {
+  font: inherit;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+}
+
+button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.site-shell {
+  min-height: 100vh;
+}
+
+/* Navigation Bar (포트폴리오2 기존 규격 호환) */
+.navbar {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background-color: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.nav-container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.nav-logo {
+  font-family: var(--font-barlow);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: color 0.2s ease;
+}
+
+.nav-logo:hover {
+  color: var(--color-accent-red);
+}
+
+.nav-logo span {
+  font-family: var(--font-inter);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-subtle);
+  letter-spacing: 0.12em;
+}
+
+.nav-extra {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.privacy-mark {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.nav-link {
+  font-family: var(--font-inter);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--color-text-subtle);
+  transition: color 0.2s ease;
+}
+
+.nav-link:hover {
+  color: var(--color-accent-red);
+}
+
+/* App Main Layout & Header (기존 BRB-C01/C03 + 13번 과제 통합) */
+.app-main {
+  max-width: 58rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 5rem 1.5rem;
+}
+
+.app-header {
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--ink);
+}
+
+.eyebrow-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.paper-citation-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 4px 10px;
+  background: var(--color-hover-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--color-text-subtle);
+}
+
+.issue-number, .kicker {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.app-title {
+  font-family: var(--font-barlow);
+  font-size: clamp(38px, 6vw, 64px);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+  color: var(--color-text-main);
+  margin: 0.5rem 0 1.25rem;
+}
+
+.app-mission {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-accent-red);
+  line-height: 1.6;
+  margin-top: 0.5rem;
+}
+
+.app-desc {
+  font-size: 13.5px;
+  color: var(--color-text-muted);
+  margin-top: 0.5rem;
+  line-height: 1.6;
+}
+
+/* Sticky 5-Tab Bar */
+.tab-list {
+  position: sticky;
+  top: 4rem;
+  z-index: 15;
+  display: flex;
+  overflow-x: auto;
+  background: rgba(255, 255, 255, 0.97);
+  border-bottom: 1px solid var(--line-dark);
+}
+
+.tab-list button {
+  flex: 1;
+  min-width: 7.5rem;
+  padding: 1.05rem 0.7rem 0.85rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.tab-list button span {
+  margin-right: 0.5rem;
+  color: #9a9a9a;
+  font-family: var(--font-display);
+}
+
+.tab-list button:hover {
+  color: var(--red);
+}
+
+.tab-list button.active {
+  border-bottom-color: var(--red);
+  color: var(--ink);
+}
+
+.tab-list button.active span {
+  color: var(--red);
+}
+
+/* Error / Notice Boxes (BRB-C05 호환) */
+.error-alert-box, .notice {
+  display: none;
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 2px;
+  font-size: 13px;
+  color: #92400e;
+  line-height: 1.5;
+}
+
+.error-alert-box.active, .notice.active {
+  display: block;
+}
+
+.notice.persistent {
+  display: block;
+  margin: 0 0 1.5rem;
+}
+
+.confirm-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.confirm-bar-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+/* Tab Panels & Section Headings */
+.tab-panel {
+  padding-top: 2.5rem;
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2rem;
+  margin-bottom: 1.25rem;
+}
+
+.section-heading h2, .evidence-heading h3, .research h3 {
+  margin: 0.15rem 0 0;
+  font-family: var(--font-display);
+  font-size: 1.85rem;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.section-heading p {
+  max-width: 26rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  text-align: right;
+}
+
+/* Input Panel & Buttons */
+.input-panel, .result-dashboard, .settings-panel {
+  border: 1px solid var(--color-border-darker);
+  border-radius: 2px;
+  padding: 1.75rem;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.input-panel {
+  margin-bottom: 1.5rem;
+}
+
+.input-label, .input-panel > label {
+  font-family: var(--font-inter);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-main);
+  display: block;
+  margin-bottom: 0.55rem;
+}
+
+.url-input-group {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.url-input, .url-input-group input, textarea {
+  flex: 1;
+  width: 100%;
+  min-width: 240px;
+  padding: 0.85rem 1rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px;
+  border: 1px solid var(--color-border-darker);
+  border-radius: 2px;
+  background: var(--color-bg);
+  color: var(--color-text-main);
+  outline: none;
+  transition: border-color 0.2s ease;
+  resize: vertical;
+}
+
+.url-input:focus, .url-input-group input:focus, textarea:focus {
+  border-color: var(--color-accent-red);
+}
+
+.btn-analyze, .primary-button, .secondary-button {
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+  cursor: pointer;
+  font-family: var(--font-inter);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.btn-analyze, .primary-button {
+  padding: 0.85rem 1.5rem;
+  background: var(--color-text-main);
+  color: #ffffff;
+}
+
+.btn-analyze:hover, .primary-button:hover {
+  background: var(--color-accent-red);
+  border-color: var(--color-accent-red);
+}
+
+.secondary-button {
+  padding: 0.6rem 1rem;
+  background: #ffffff;
+  color: var(--ink);
+}
+
+.secondary-button:hover {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.sample-pill-row, .sample-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.sample-label, .sample-row > span, .preset-row > span {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-right: 0.2rem;
+}
+
+.btn-sample, .sample-row button, .preset-row button, .segmented button {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 9px;
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  background: var(--color-hover-bg);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-sample:hover, .sample-row button:hover, .preset-row button:hover, .segmented button:hover {
+  border-color: var(--color-text-main);
+  color: var(--color-text-main);
+}
+
+.empty-state {
+  padding: 3.5rem 2rem;
+  border: 1px solid var(--line);
+  background: var(--wash);
+  text-align: center;
+}
+
+.empty-state span {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.empty-state p {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Result Dashboard & Score Banner */
+.result-dashboard {
+  display: none;
+  margin-bottom: 2rem;
+}
+
+.result-dashboard.active {
+  display: block;
+}
+
+.score-banner {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1.2rem;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-radius: 2px;
+  margin-bottom: 1.5rem;
+  border: 1px solid;
+}
+
+.score-banner.safe {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #15803d;
+}
+
+.score-banner.warning {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #b45309;
+}
+
+.score-banner.danger {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: var(--color-accent-red);
+}
+
+.score-number {
+  min-width: 4.2rem;
+  font-family: var(--font-barlow);
+  font-size: 52px;
+  font-weight: 800;
+  line-height: 0.9;
+}
+
+.score-title {
+  margin: 0.25rem 0 0.1rem;
+  font-family: var(--font-barlow);
+  font-size: 22px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.score-desc {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.score-denominator {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.level-chip, .feature-status {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 2px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.level-chip.safe, .status-ok {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.level-chip.warning, .status-warn {
+  background: #fef08a;
+  color: #854d0e;
+}
+
+.level-chip.danger, .status-alert {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* URL Breakdown Highlight Map (13번 과제 핵심 기능 F2) */
+.url-map {
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--line);
+  background: var(--wash);
+}
+
+.url-visual {
+  overflow-x: auto;
+  padding: 1.25rem 1.35rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14.5px;
+  white-space: nowrap;
+}
+
+.url-visual .scheme, .url-visual .query {
+  color: var(--muted);
+}
+
+.url-visual .userinfo {
+  color: var(--red);
+  text-decoration: line-through;
+}
+
+.url-visual .path {
+  color: #444;
+}
+
+.risk-char {
+  padding: 1px 3px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-weight: 800;
+}
+
+.neutral-char {
+  border-bottom: 1px dashed #888;
+  color: #777;
+}
+
+.url-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.65rem 1.35rem;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.url-legend span {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.url-legend i {
+  width: 0.65rem;
+  height: 0.65rem;
+  border: 1px solid var(--line-dark);
+  display: inline-block;
+}
+
+.legend-host {
+  background: var(--ink);
+}
+
+.legend-risk {
+  background: #fee2e2;
+}
+
+.legend-neutral {
+  border-style: dashed !important;
+  background: white;
+}
+
+/* 3 Feature Cards (기존 클래스 및 신규 레이아웃 통합) */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.feature-card {
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  padding: 1.25rem;
+  background: var(--color-hover-bg);
+}
+
+.feature-tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-subtle);
+  margin-bottom: 0.35rem;
+}
+
+.feature-val-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  margin: 0.4rem 0;
+}
+
+.feature-num {
+  font-family: var(--font-barlow);
+  font-size: 34px;
+  font-weight: 800;
+  color: var(--color-text-main);
+  line-height: 1;
+}
+
+.feature-unit {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.feature-benchmark {
+  font-size: 11.5px;
+  color: var(--color-text-dim);
+  margin: 0.35rem 0 0.6rem;
+  line-height: 1.45;
+}
+
+/* Evidence & Batch Tables */
+.evidence-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.text-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.text-button:hover {
+  color: var(--red);
+}
+
+.danger-text {
+  color: var(--red);
+}
+
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table, .evidence-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+th, td, .evidence-table th, .evidence-table td {
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--color-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+th, .evidence-table th {
+  background: var(--color-hover-bg);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-subtle);
+}
+
+th button {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-transform: inherit;
+}
+
+th button:hover {
+  color: var(--red);
+}
+
+tbody tr:hover {
+  background: var(--wash);
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.url-cell {
+  max-width: 18rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.score-cell {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.invalid {
+  color: var(--red);
+}
+
+.action-guide {
+  margin-top: 1.5rem;
+  padding: 1.15rem 1.25rem;
+  border-left: 3px solid var(--red);
+  background: var(--wash);
+}
+
+.action-guide strong {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.action-guide p, .method-note {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.result-dashboard > .method-note {
+  margin-top: 0.85rem;
+}
+
+/* Batch, History & Settings Controls */
+.control-row, .table-controls, .history-actions, .preset-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.check-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.check-label input {
+  accent-color: var(--red);
+}
+
+.table-controls {
+  margin: 0 0 0.75rem;
+}
+
+.segmented {
+  display: flex;
+}
+
+.segmented button.active {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: white;
+}
+
+.history-actions {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.history-list {
+  border-top: 1px solid var(--ink);
+}
+
+.history-item {
+  display: grid;
+  grid-template-columns: 4rem 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.history-score {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.history-copy > div {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.history-copy time, .history-copy > span {
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.history-copy p {
+  max-width: 34rem;
+  margin: 0.35rem 0 0.15rem;
+  overflow: hidden;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-buttons {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.history-buttons button {
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--line);
+  background: white;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.history-buttons button:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.preset-row {
+  justify-content: flex-start;
+  margin: 0 0 0.8rem;
+}
+
+.preset-row .reset {
+  margin-left: auto;
+}
+
+.settings-panel {
+  padding: 0 1.75rem;
+}
+
+.range-setting {
+  display: grid;
+  grid-template-columns: 10rem 1fr 4.5rem;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 1.1rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.range-setting > span {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.range-setting input {
+  width: 100%;
+  accent-color: var(--red);
+}
+
+.range-setting > strong {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  text-align: right;
+}
+
+.range-setting small {
+  margin-left: 0.25rem;
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.storage-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 0;
+}
+
+.storage-setting strong {
+  font-size: 13px;
+}
+
+.storage-setting p {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.switch {
+  min-width: 3.4rem;
+  padding: 0.45rem;
+  border: 1px solid var(--line-dark);
+  background: white;
+  cursor: pointer;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.switch.on {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: white;
+}
+
+/* Research Panel */
+.research-lead {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  border: 1px solid var(--ink);
+}
+
+.research-lead strong {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.research-lead p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.research-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.research-grid > article, .limitations, .references {
+  padding: 1.5rem;
+  border: 1px solid var(--line);
+}
+
+.research h3 {
+  margin: 0.35rem 0 1.25rem;
+  font-size: 1.45rem;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: 5rem 1fr 3rem;
+  gap: 0.6rem;
+  align-items: center;
+  margin: 0.8rem 0;
+  font-size: 12px;
+}
+
+.bar-row > div {
+  height: 0.6rem;
+  background: #ededed;
+}
+
+.bar-row i {
+  display: block;
+  height: 100%;
+  background: var(--red);
+}
+
+.bar-row strong {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  text-align: right;
+}
+
+.hypothesis {
+  margin-bottom: 0.7rem;
+  padding: 0.8rem;
+  border-left: 3px solid;
+  background: var(--wash);
+}
+
+.hypothesis.rejected {
+  border-color: #999;
+}
+
+.hypothesis.accepted {
+  border-color: var(--red);
+}
+
+.hypothesis span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.hypothesis p, .research-grid article > p {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.limitations, .references {
+  margin-top: 1rem;
+}
+
+.limitations ol {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: limits;
+}
+
+.limitations li {
+  counter-increment: limits;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--ink);
+}
+
+.limitations li::before {
+  content: '0' counter(limits);
+  display: block;
+  margin-bottom: 0.8rem;
+  color: var(--red);
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.limitations b, .limitations span {
+  display: block;
+  font-size: 12.5px;
+}
+
+.limitations span {
+  margin-top: 0.4rem;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.references p {
+  margin: 0.65rem 0;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+/* Footer (포트폴리오2 기존 footer 클래스 호환) */
+.footer, footer {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.footer-container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.footer-text {
+  font-family: var(--font-inter);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--color-text-dim);
+}
+
+@media (max-width: 720px) {
+  .app-main {
+    padding: 2rem 1rem 4rem;
+  }
+  .privacy-mark, .issue-number {
+    display: none;
+  }
+  .research-lead, .research-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .tab-list {
+    margin-inline: -1rem;
+    padding-left: 1rem;
+  }
+  .tab-list button {
+    flex: 0 0 auto;
+  }
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .section-heading p {
+    text-align: left;
+  }
+  .input-panel, .result-dashboard, .settings-panel {
+    padding: 1.15rem;
+  }
+  .url-input-group {
+    flex-direction: column;
+  }
+  .features-grid, .limitations ol {
+    grid-template-columns: 1fr;
+  }
+  .score-banner {
+    grid-template-columns: auto 1fr;
+  }
+  .score-denominator {
+    display: none;
+  }
+  .score-number {
+    font-size: 40px;
+  }
+  .control-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .history-item {
+    grid-template-columns: 3.3rem 1fr;
+  }
+  .history-buttons {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+  .range-setting {
+    grid-template-columns: 1fr 3.5rem;
+    gap: 0.8rem;
+  }
+  .range-setting input {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .range-setting > strong {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .footer-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
