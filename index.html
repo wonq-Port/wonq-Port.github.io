@@ -12,6 +12,29 @@
 
   <!-- Stylesheet -->
   <link rel="stylesheet" href="css/style.css" />
+  <!-- Compact Navigation Style Enhancements -->
+  <style>
+    .nav-sections-btn {
+      background: var(--color-hover-bg) !important;
+      color: var(--color-text-main) !important;
+      border: 1px solid var(--color-border-darker) !important;
+    }
+    .nav-sections-btn:hover {
+      border-color: var(--color-text-main) !important;
+      background: #f0f0f0 !important;
+    }
+    .nav-link-compact {
+      font-size: 11px !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.1em !important;
+      text-transform: uppercase !important;
+      padding: 4px 8px !important;
+      color: var(--color-text-secondary) !important;
+    }
+    .nav-link-compact:hover {
+      color: var(--color-accent-red) !important;
+    }
+  </style>
 </head>
 <body>
   <!-- Scroll Progress Bar -->
@@ -27,14 +50,61 @@
       <!-- Desktop Nav Menu -->
       <div class="nav-extra">
         <nav class="nav-menu" aria-label="주요 내비게이션">
-          <!-- 기존 기본 메뉴 유지 -->
-          <a href="#about" class="nav-link" data-section="about">About</a>
- <a href="#metrics" class="nav-link" data-section="metrics">Numbers</a>
-          <a href="#skills" class="nav-link" data-section="skills">Skills</a>
-          <a href="#work" class="nav-link" data-section="work">Work</a>
- <a href="#documents" class="nav-link" data-section="documents">Docs</a>
-          <a href="#contact" class="nav-link" data-section="contact">Contact</a>
-        
+          <!-- 컴팩트 네비게이션: Overview 섹션 드롭다운 -->
+          <div class="nav-dropdown" id="nav-sections-dropdown">
+            <button type="button" class="nav-dropdown-btn nav-sections-btn" id="nav-sections-btn" aria-haspopup="true" aria-expanded="false" aria-label="포트폴리오 섹션 메뉴 열기">
+              <span>Overview</span>
+              <span class="dropdown-caret" aria-hidden="true">▾</span>
+            </button>
+            <div class="nav-dropdown-menu" id="nav-sections-menu" role="menu">
+              <a href="#about" class="dropdown-item nav-link" data-section="about" role="menuitem">
+                <span class="item-badge">01</span>
+                <div class="item-text">
+                  <span class="item-title">About</span>
+                  <span class="item-desc">보안 가치관 &amp; 소개</span>
+                </div>
+              </a>
+              <a href="#metrics" class="dropdown-item nav-link" data-section="metrics" role="menuitem">
+                <span class="item-badge">02</span>
+                <div class="item-text">
+                  <span class="item-title">Numbers</span>
+                  <span class="item-desc">11만 데이터셋 &amp; 핵심 수치</span>
+                </div>
+              </a>
+              <a href="#skills" class="dropdown-item nav-link" data-section="skills" role="menuitem">
+                <span class="item-badge">03</span>
+                <div class="item-text">
+                  <span class="item-title">Skills</span>
+                  <span class="item-desc">취약점 분석 &amp; 보안 스택</span>
+                </div>
+              </a>
+              <a href="#work" class="dropdown-item nav-link" data-section="work" role="menuitem">
+                <span class="item-badge">04</span>
+                <div class="item-text">
+                  <span class="item-title">Work</span>
+                  <span class="item-desc">대표 실무 보안 프로젝트</span>
+                </div>
+              </a>
+              <a href="#documents" class="dropdown-item nav-link" data-section="documents" role="menuitem">
+                <span class="item-badge">05</span>
+                <div class="item-text">
+                  <span class="item-title">Docs</span>
+                  <span class="item-desc">실증 연구 논문 &amp; 자격증</span>
+                </div>
+              </a>
+              <a href="#contact" class="dropdown-item nav-link" data-section="contact" role="menuitem">
+                <span class="item-badge">06</span>
+                <div class="item-text">
+                  <span class="item-title">Contact</span>
+                  <span class="item-desc">협업 및 연락처 채널</span>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- 대표작 바로가기 (컴팩트 링크) -->
+          <a href="#work" class="nav-link nav-link-compact" data-section="work">Work</a>
+
           <!-- 우측 끝: 서브 앱/프로젝트 드롭다운 메뉴 버튼 -->
           <div class="nav-dropdown" id="nav-dropdown">
             <button type="button" class="nav-dropdown-btn" id="nav-dropdown-btn" aria-haspopup="true" aria-expanded="false" aria-label="프로젝트 메뉴 열기">
@@ -391,18 +461,27 @@
  <div class="project-year">2026</div>
  </article>
 
- <!-- BRA-C06 대표작 2: 13번 앱 예정 자리 (Coming Soon) -->
- <article class="project-item" style="border-left: 2px dashed var(--color-border-darker); background: var(--color-hover-bg);">
- <div class="project-num" style="color: var(--color-text-dim);">REP 2</div>
- <div class="project-details">
- <h3 class="project-title" style="color: var(--color-text-dim);">13번 웹 애플리케이션 (Coming Soon)</h3>
- <div class="project-sar-box">
- <p class="project-sar-line">13주 풀스택 웹·네트워크 보안 과정의 최종 산출물인 웹 애플리케이션 서비스 공간입니다. 13번 과제 완수 후 정식 서비스로 연동됩니다.</p>
- <p class="project-sar-line"><strong>출시 예정일:</strong> 2026년 10월 말 (준비 중)</p>
- </div>
- </div>
- <div class="project-year">예정</div>
- </article>
+ <!-- BRA-C06 대표작 2: Lexical Phishing Detector 웹 애플리케이션 정식 연동 -->
+        <article class="project-item" style="border-left: 2px solid var(--color-accent-red);">
+          <div class="project-num">REP 2</div>
+          <div class="project-details">
+            <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.35rem;">
+              <h3 class="project-title" style="margin-bottom: 0;">Lexical Phishing Detector (피싱 URL 사전 진단기)</h3>
+              <span class="badge" style="background: var(--color-accent-red); color: #fff; font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 2px;">LIVE APP</span>
+            </div>
+            <div class="project-sar-box">
+              <p class="project-sar-line"><strong>개요:</strong> 110,077건의 실증 보안 데이터셋 논문 연구를 기반으로, 외부 서버 통신 없이 브라우저 내부에서 URL 형태학적 위험 신호를 즉시 사전 진단하는 클라이언트 정적 웹 애플리케이션입니다.</p>
+              <p class="project-sar-line"><strong>핵심 기능:</strong> 단일 URL 정밀 분해 진단, 1:1 A/B 대조 비교, 최대 500줄 일괄 검사, 실전 피싱 모의 훈련 퀴즈, 로컬 검사 이력 통계 대시보드, 논문 기반 가설 검증표 제공.</p>
+              <div style="margin-top: 0.85rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <a href="phishing-detector.html" class="nav-dropdown-btn" style="text-decoration: none; font-size: 11px; padding: 6px 14px; background: var(--color-text-main); color: #fff; display: inline-flex; align-items: center; gap: 6px;" target="_blank" rel="noopener">
+                  <span>웹 애플리케이션 실행하기</span>
+                  <span aria-hidden="true">→</span>
+                </a>
+              </div>
+            </div>
+          </div>
+          <div class="project-year">2026</div>
+        </article>
             <!-- Project 001 -->
             <article class="project-item" data-project="1" tabindex="0" role="button" aria-expanded="false" aria-controls="project-detail-1">
               <div class="project-num">001</div>
@@ -634,5 +713,37 @@
 
   <!-- JavaScript -->
   <script src="js/script.js"></script>
+  <!-- Sections Dropdown Control Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var navSectionsDropdown = document.getElementById('nav-sections-dropdown');
+      var navSectionsBtn = document.getElementById('nav-sections-btn');
+      var navDropdown = document.getElementById('nav-dropdown');
+
+      if (navSectionsDropdown && navSectionsBtn) {
+        navSectionsBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = navSectionsDropdown.classList.contains('open');
+          navSectionsDropdown.classList.toggle('open');
+          navSectionsBtn.setAttribute('aria-expanded', !isOpen);
+          if (navDropdown) navDropdown.classList.remove('open');
+        });
+
+        navSectionsDropdown.querySelectorAll('.dropdown-item').forEach(function(item) {
+          item.addEventListener('click', function() {
+            navSectionsDropdown.classList.remove('open');
+            navSectionsBtn.setAttribute('aria-expanded', 'false');
+          });
+        });
+      }
+
+      document.addEventListener('click', function(e) {
+        if (navSectionsDropdown && !navSectionsDropdown.contains(e.target)) {
+          navSectionsDropdown.classList.remove('open');
+          if (navSectionsBtn) navSectionsBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    });
+  </script>
 </body>
 </html>
