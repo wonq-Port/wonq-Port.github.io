@@ -1,9 +1,11 @@
 /**
- * Lexical Phishing Detector v2 — 고도화 통합 클라이언트 스크립트 (js/detector.js)
- * [적용 내역]
- * 1. 앱 UX 인터랙션(1번): 클립보드 원클릭 붙여넣기·진단, 진단 리포트 원클릭 복사, 전역 단축키(/, 1~6, Esc), 인앱 토스트 알림, 모션 줄이기 토글
- * 2. 실무 보안 분석(2번): 정상 vs 의심 URL 1:1 A/B 정밀 비교 탭(02 A/B 비교), 로컬 검사 이력 통계 대시보드 및 검색·필터(04 기록)
- * 3. 기존 포트폴리오2/phishing-detector.html (BRB-C01~C05) 호환성 100% 유지
+ * Lexical Phishing Detector v3 — 고도화 최종 클라이언트 스크립트 (js/detector.js)
+ * [v3 신규 구현 내역]
+ * 1. 실전 피싱 모의 훈련 퀴즈 모드 (04 퀴즈 모드): 11만 데이터셋 어휘적 특징 기반 5문항 인터랙티브 퀴즈, 실시간 채점, 논문 해설 및 '01 검사 탭 연동' 지원
+ * 2. URL 쿼리 파라미터 딥링크 (?url=...): 접속 시 자동 진단 및 결과 공유 링크 원클릭 복사
+ * 3. 보안 진단 리포트 인쇄 / PDF 출력 (window.print() 연동)
+ * 4. 전역 단축키 확장 (1~7 탭 전환, / 입력창 포커스, Esc 초기화)
+ * 5. 기존 포트폴리오2 (BRB-C01 ~ BRB-C05) 호환성 100% 보존
  */
 
 (function () {
@@ -37,7 +39,45 @@
     }
   };
 
-  var TABS = ['scan', 'compare', 'batch', 'history', 'settings', 'research'];
+  var QUIZ_ITEMS = [
+    {
+      id: 'q1',
+      url: 'https://nid-naver-security-login.example/verify?session=9482',
+      answer: 'danger',
+      title: '문항 1 · 포털 로그인 위장',
+      explanation: '호스트 내부에 하이픈이 3개("nid-naver-security-login") 포함되어 있습니다. 논문 11만 표본 교차검증 결과, 호스트 하이픈은 피싱 집단에서 정상 사이트 대비 3.88배 높게 나타나는 핵심 악성 지표입니다.'
+    },
+    {
+      id: 'q2',
+      url: 'https://news.example.com/2026/10/how-to-prevent-phishing-attacks-with-ai',
+      answer: 'safe',
+      title: '문항 2 · 뉴스 기사 하이픈 경로',
+      explanation: '하이픈이 경로(Path)에만 6개 존재하며 호스트에는 0개입니다. 하위 경로 하이픈은 검색엔진 최적화(SEO) 관행이므로 위험 점수에서 제외(중립) 처리되어 안전 등급으로 판정됩니다.'
+    },
+    {
+      id: 'q3',
+      url: 'https://github.com@security-account-check.example/auth',
+      answer: 'danger',
+      title: '문항 3 · 골뱅이(@) 인증 위장',
+      explanation: '골뱅이(@) 기호는 앞부분을 사용자 인증정보로 무시하고 뒷부분의 "security-account-check.example"로 연결하는 브라우저 표준을 악용한 전형적인 사칭 기법입니다.'
+    },
+    {
+      id: 'q4',
+      url: 'https://www.google.com',
+      answer: 'safe',
+      title: '문항 4 · 공식 검색 포털',
+      explanation: '스킴 제외 길이 14자로 임계 기준선 29자보다 훨씬 짧고, 호스트 하이픈 0개, 점 1개로 전형적인 정상 URL 형태를 갖추고 있습니다.'
+    },
+    {
+      id: 'q5',
+      url: 'https://secure-banking-portal-verification.example/login?client_id=9872&session=auth&token=2984',
+      answer: 'danger',
+      title: '문항 5 · 초장문 및 다중 등호',
+      explanation: '스킴 제외 길이 79자로 데이터셋 내 피싱 비율이 87%에 달하는 75자 이상 초장문 구간에 해당하며, 호스트 하이픈 3개 및 파라미터 등호(=) 다중 검출이 중복 감지되었습니다.'
+    }
+  ];
+
+  var TABS = ['scan', 'compare', 'batch', 'quiz', 'history', 'settings', 'research'];
 
   var LEVEL_COPY = {
     safe: {
@@ -111,6 +151,7 @@
     compareB: COMPARE_PAIRS.pair1.b,
     compareResultA: null,
     compareResultB: null,
+    quizAnswers: {},
     error: '',
     storageNotice: '',
     batchText: '',
@@ -691,6 +732,72 @@
     }).join('');
   }
 
+  // 04 퀴즈 모드 렌더링
+  function renderQuizPanel() {
+    var listEl = document.getElementById('quiz-cards-list');
+    if (!listEl) return;
+
+    var answeredCount = 0;
+    var correctCount = 0;
+
+    QUIZ_ITEMS.forEach(function (q) {
+      if (state.quizAnswers[q.id]) {
+        answeredCount++;
+        if (state.quizAnswers[q.id] === q.answer) {
+          correctCount++;
+        }
+      }
+    });
+
+    var scoreEl = document.getElementById('quiz-score-val');
+    var verdictEl = document.getElementById('quiz-summary-verdict');
+    if (scoreEl) {
+      scoreEl.textContent = correctCount + ' / ' + QUIZ_ITEMS.length + ' 정답';
+    }
+    if (verdictEl) {
+      if (answeredCount === 0) {
+        verdictEl.textContent = '아래 5개 실전 URL의 피싱 여부를 직접 맞춰보세요.';
+      } else if (answeredCount < QUIZ_ITEMS.length) {
+        verdictEl.textContent = '진행 중: ' + answeredCount + '/' + QUIZ_ITEMS.length + '문항 완료';
+      } else {
+        var gradeText = correctCount === 5 ? '★ 보안 분석 전문가 수준 (만점!)' : correctCount >= 4 ? '우수: 어휘적 피싱 패턴을 잘 식별합니다.' : '보통: 형태적 위험 신호 복습을 권장합니다.';
+        verdictEl.textContent = '훈련 완료! ' + gradeText;
+      }
+    }
+
+    listEl.innerHTML = QUIZ_ITEMS.map(function (q, idx) {
+      var userAnswer = state.quizAnswers[q.id];
+      var isAnswered = Boolean(userAnswer);
+      var isCorrect = userAnswer === q.answer;
+
+      var buttonsHtml = '<div class="quiz-btn-row">' +
+        '<button type="button" class="quiz-opt-btn ' + (userAnswer === 'safe' ? 'chosen' : '') + '" data-quiz-id="' + q.id + '" data-opt="safe">정상 URL (Safe)</button>' +
+        '<button type="button" class="quiz-opt-btn ' + (userAnswer === 'danger' ? 'chosen' : '') + '" data-quiz-id="' + q.id + '" data-opt="danger">피싱 의심 (Danger)</button>' +
+      '</div>';
+
+      var feedbackHtml = '';
+      if (isAnswered) {
+        feedbackHtml = '<div class="quiz-feedback-box ' + (isCorrect ? 'correct' : 'incorrect') + '">' +
+          '<div class="quiz-feedback-verdict">' +
+            '<strong>' + (isCorrect ? '✓ 정답입니다!' : '✕ 오답입니다.') + ' (실제 분류: ' + (q.answer === 'safe' ? '정상' : '피싱 의심') + ')</strong>' +
+            '<button type="button" class="btn-quick-action" data-quiz-send="' + escapeHtml(q.url) + '">01 검사 탭에서 정밀 분석 →</button>' +
+          '</div>' +
+          '<p class="quiz-feedback-desc">' + escapeHtml(q.explanation) + '</p>' +
+        '</div>';
+      }
+
+      return '<article class="quiz-card">' +
+        '<div class="quiz-card-head">' +
+          '<span class="quiz-q-num">Q' + (idx + 1) + ' · ' + escapeHtml(q.title) + '</span>' +
+          '<span class="kicker">' + (isAnswered ? (isCorrect ? 'PASS' : 'RETRY') : 'PENDING') + '</span>' +
+        '</div>' +
+        '<div class="quiz-url-box">' + escapeHtml(q.url) + '</div>' +
+        buttonsHtml +
+        feedbackHtml +
+      '</article>';
+    }).join('');
+  }
+
   function renderHistoryPanel() {
     var emptyEl = document.getElementById('history-empty');
     var contentEl = document.getElementById('history-content');
@@ -712,7 +819,6 @@
       confirmBar.classList.toggle('hidden', !state.confirmClearOpen);
     }
 
-    // 2번 기능 F9: 로컬 검사 이력 통계 대시보드 계산
     var total = state.history.length;
     var sumScore = 0;
     var countDanger = 0;
@@ -792,7 +898,6 @@
         '<span><strong style="color:var(--safe);">낮음(Safe)</strong> ' + countSafe + '건 (' + pctSafe + '%)</span>';
     }
 
-    // 기록 탭 필터 버튼 활성화 표시
     ['all', 'danger', 'warning', 'safe', 'pinned'].forEach(function (fKey) {
       var fBtn = document.getElementById('hist-filter-' + fKey);
       if (fBtn) fBtn.classList.toggle('active', state.historyFilter === fKey);
@@ -880,6 +985,7 @@
     renderScanPanel();
     renderComparePanel();
     renderBatchPanel();
+    renderQuizPanel();
     renderHistoryPanel();
     renderSettingsPanel();
   }
@@ -1032,7 +1138,7 @@
     showToast('CSV 리포트(lexical-url-scan.csv)를 내려받았습니다.');
   }
 
-  // 기존 포트폴리오2/phishing-detector.html 샘플 호출 함수 100% 호환
+  // 기존 포트폴리오2 샘플 호출 호환 함수
   window.loadSample = function (key) {
     if (SAMPLES[key]) {
       state.input = SAMPLES[key];
@@ -1049,10 +1155,23 @@
       state.tab = initialHash;
     }
 
-    // 초기 A/B 비교 기본 샘플 자동 계산
+    // 쿼리 파라미터 자동 분석 지원 (?url=...)
+    try {
+      var urlParams = new URLSearchParams(window.location.search);
+      var queryUrl = urlParams.get('url');
+      if (queryUrl) {
+        state.input = queryUrl.trim();
+        var urlInputEl = document.getElementById('url-input');
+        if (urlInputEl) urlInputEl.value = state.input;
+        runScan(state.input, true);
+        showToast('공유 링크 URL을 파싱하여 즉시 진단을 완료했습니다.');
+      }
+    } catch (e) {}
+
+    // 초기 A/B 비교 기본 샘플 계산
     runCompare(state.compareA, state.compareB, true);
 
-    // 모션 줄이기 토글 버튼 (포트폴리오2 공통 UX)
+    // 모션 줄이기 토글
     var motionBtn = document.getElementById('btn-motion-toggle');
     if (motionBtn) {
       motionBtn.addEventListener('click', function () {
@@ -1064,7 +1183,7 @@
       });
     }
 
-    // 전역 키보드 단축키 지원 (1번 UX 기능: /, 1~6, Esc)
+    // 전역 단축키: /, 1~7, Esc
     document.addEventListener('keydown', function (event) {
       var activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
       var isTyping = activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select';
@@ -1099,7 +1218,7 @@
       }
     });
 
-    // 탭 전환 및 좌우 방향키 접근성
+    // 탭 전환
     TABS.forEach(function (tabId, index) {
       var btn = document.getElementById('tab-btn-' + tabId);
       if (!btn) return;
@@ -1118,7 +1237,7 @@
       });
     });
 
-    // 단일 검사 폼 및 클립보드 원클릭 붙여넣기
+    // 01 단일 검사 폼 및 클립보드 붙여넣기
     var scanForm = document.getElementById('scan-form');
     var urlInput = document.getElementById('url-input');
     if (urlInput) {
@@ -1175,7 +1294,7 @@
       });
     }
 
-    // 진단 결과 리포트 원클릭 복사 & A/B 비교 연동 버튼
+    // 진단 리포트 복사, A/B 전송, 공유 링크 복사, 인쇄/PDF
     var btnCopyReport = document.getElementById('btn-copy-report');
     if (btnCopyReport) {
       btnCopyReport.addEventListener('click', function () {
@@ -1190,6 +1309,23 @@
           '• 검출 신호: ' + (r.signals.join(' · ') || '두드러진 위험 신호 없음')
         ].join('\n');
         copyTextToClipboard(reportText, '진단 요약 리포트가 클립보드에 복사되었습니다.');
+      });
+    }
+
+    var btnShareLink = document.getElementById('btn-share-link');
+    if (btnShareLink) {
+      btnShareLink.addEventListener('click', function () {
+        if (!state.result) return;
+        var shareUrl = window.location.origin + window.location.pathname + '?url=' + encodeURIComponent(state.result.raw);
+        copyTextToClipboard(shareUrl, '현재 URL 진단 다이렉트 공유 링크가 복사되었습니다.');
+      });
+    }
+
+    var btnPrintReport = document.getElementById('btn-print-report');
+    if (btnPrintReport) {
+      btnPrintReport.addEventListener('click', function () {
+        if (!state.result) return;
+        window.print();
       });
     }
 
@@ -1219,7 +1355,7 @@
       });
     }
 
-    // 02 A/B 비교 탭 이벤트 바인딩
+    // 02 A/B 비교 탭
     var compareForm = document.getElementById('compare-form');
     var compareInputA = document.getElementById('compare-input-a');
     var compareInputB = document.getElementById('compare-input-b');
@@ -1283,7 +1419,7 @@
       });
     }
 
-    // 03 일괄 검사 컨트롤
+    // 03 일괄 검사
     var batchInput = document.getElementById('batch-input');
     if (batchInput) {
       batchInput.addEventListener('input', function (e) {
@@ -1357,7 +1493,43 @@
       });
     }
 
-    // 04 기록 탭 컨트롤 및 통계 필터
+    // 04 퀴즈 모드 이벤트
+    var quizList = document.getElementById('quiz-cards-list');
+    if (quizList) {
+      quizList.addEventListener('click', function (e) {
+        var optBtn = e.target.closest('button[data-quiz-id]');
+        if (optBtn) {
+          var qId = optBtn.getAttribute('data-quiz-id');
+          var chosenOpt = optBtn.getAttribute('data-opt');
+          state.quizAnswers[qId] = chosenOpt;
+          renderQuizPanel();
+          showToast('답안이 선택되었습니다. 즉시 판정 결과를 확인하세요.');
+          return;
+        }
+
+        var sendBtn = e.target.closest('button[data-quiz-send]');
+        if (sendBtn) {
+          var targetUrl = sendBtn.getAttribute('data-quiz-send');
+          if (targetUrl) {
+            state.input = targetUrl;
+            runScan(targetUrl, true);
+            navigate('scan');
+            showToast('퀴즈 URL을 01 검사 탭으로 불러왔습니다.');
+          }
+        }
+      });
+    }
+
+    var btnResetQuiz = document.getElementById('btn-reset-quiz');
+    if (btnResetQuiz) {
+      btnResetQuiz.addEventListener('click', function () {
+        state.quizAnswers = {};
+        renderQuizPanel();
+        showToast('모의 훈련 퀴즈를 초기화했습니다.');
+      });
+    }
+
+    // 05 기록 탭
     ['all', 'danger', 'warning', 'safe', 'pinned'].forEach(function (fKey) {
       var fBtn = document.getElementById('hist-filter-' + fKey);
       if (fBtn) {
@@ -1374,7 +1546,6 @@
         renderHistoryPanel();
       });
     }
-
     var btnClearHistory = document.getElementById('btn-clear-history');
     if (btnClearHistory) {
       btnClearHistory.addEventListener('click', function () {
@@ -1439,7 +1610,7 @@
       });
     }
 
-    // 05 민감도 설정 컨트롤
+    // 06 민감도 설정
     var presetBtns = document.querySelectorAll('[data-preset]');
     presetBtns.forEach(function (btn) {
       btn.addEventListener('click', function () {
