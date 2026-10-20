@@ -1,8 +1,9 @@
 /**
- * Lexical Phishing Detector — 통합 클라이언트 스크립트 (js/detector.js)
- * - 기존 포트폴리오2/phishing-detector.html (BRB-C01~C05 과제 요건 및 DOM ID) 100% 호환
- * - 13번 과제 확장 웹앱 5대 탭(단일 검사·URL 분해 시각화·일괄 검사·기록·설정·연구 근거) 통합
- * - 외부 프레임워크 및 외부 네트워크 통신 없음 (Pure Vanilla JS)
+ * Lexical Phishing Detector v2 — 고도화 통합 클라이언트 스크립트 (js/detector.js)
+ * [적용 내역]
+ * 1. 앱 UX 인터랙션(1번): 클립보드 원클릭 붙여넣기·진단, 진단 리포트 원클릭 복사, 전역 단축키(/, 1~6, Esc), 인앱 토스트 알림, 모션 줄이기 토글
+ * 2. 실무 보안 분석(2번): 정상 vs 의심 URL 1:1 A/B 정밀 비교 탭(02 A/B 비교), 로컬 검사 이력 통계 대시보드 및 검색·필터(04 기록)
+ * 3. 기존 포트폴리오2/phishing-detector.html (BRB-C01~C05) 호환성 100% 유지
  */
 
 (function () {
@@ -21,7 +22,22 @@
     phish2: 'https://trusted.example@account-security-confirmation.example/verify?id=4820'
   };
 
-  var TABS = ['scan', 'batch', 'history', 'settings', 'research'];
+  var COMPARE_PAIRS = {
+    pair1: {
+      a: 'https://www.naver.com/login',
+      b: 'https://nid-naver-security-login.example/verify?session=9482'
+    },
+    pair2: {
+      a: 'https://github.com/wonq-Port',
+      b: 'https://github.com@account-verify-auth-update.example/signin'
+    },
+    pair3: {
+      a: 'https://news.example.com/2026/10/how-to-analyze-data-with-ai',
+      b: 'https://news-example-account-check.example/login?redirect=home'
+    }
+  };
+
+  var TABS = ['scan', 'compare', 'batch', 'history', 'settings', 'research'];
 
   var LEVEL_COPY = {
     safe: {
@@ -91,6 +107,10 @@
     history: safeRead('lpd.history.v1', []),
     input: '',
     result: null,
+    compareA: COMPARE_PAIRS.pair1.a,
+    compareB: COMPARE_PAIRS.pair1.b,
+    compareResultA: null,
+    compareResultB: null,
     error: '',
     storageNotice: '',
     batchText: '',
@@ -98,8 +118,50 @@
     batchFilter: 'all',
     batchSort: 'score',
     removeDuplicates: true,
-    confirmClearOpen: false
+    historyFilter: 'all',
+    historySearch: '',
+    confirmClearOpen: false,
+    reduceMotion: false
   };
+
+  var toastTimer = null;
+
+  function showToast(msg) {
+    var toastEl = document.getElementById('app-toast');
+    if (!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+      toastEl.classList.remove('show');
+    }, 2400);
+  }
+
+  function copyTextToClipboard(text, successMsg) {
+    var fallbackCopy = function () {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast(successMsg || '클립보드에 복사되었습니다.');
+      } catch (err) {
+        showToast('복사에 실패했습니다. 직접 선택해 복사해 주세요.');
+      }
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        showToast(successMsg || '클립보드에 복사되었습니다.');
+      }).catch(fallbackCopy);
+    } else {
+      fallbackCopy();
+    }
+  }
 
   function escapeHtml(str) {
     return String(str)
@@ -253,6 +315,10 @@
       rescored.pinned = state.result.pinned;
       state.result = rescored;
     }
+    if (state.compareResultA && state.compareResultB) {
+      state.compareResultA = scoreFeatures(state.compareResultA, state.settings);
+      state.compareResultB = scoreFeatures(state.compareResultB, state.settings);
+    }
     if (state.batchRows.length > 0) {
       state.batchRows = state.batchRows.map(function (row) {
         if (!row.result) return row;
@@ -384,7 +450,6 @@
       legendHostEl.textContent = r.hostname;
     }
 
-    // Feature Card 1: Length
     var statLenEl = document.getElementById('stat-len');
     if (statLenEl) statLenEl.textContent = String(r.length);
     var lenBenchmarkEl = document.getElementById('len-benchmark-text');
@@ -395,7 +460,6 @@
     var lenBadgeText = r.length >= threshold ? '주의 (' + threshold + '자 기준 이상)' : '기준치 이내 (' + threshold + '자 미만)';
     setStatusBadge(document.getElementById('badge-len'), lenLevel, lenBadgeText);
 
-    // Feature Card 2: Host Hyphens
     var statHyphenEl = document.getElementById('stat-hyphen');
     if (statHyphenEl) statHyphenEl.textContent = String(r.hostHyphens);
     var pathHyphenNoteEl = document.getElementById('path-hyphen-note');
@@ -406,7 +470,6 @@
     var hyphenBadgeText = r.hostHyphens ? '위험 (호스트 하이픈 ' + r.hostHyphens + '개)' : '하이픈 없음';
     setStatusBadge(document.getElementById('badge-hyphen'), hyphenLevel, hyphenBadgeText);
 
-    // Feature Card 3: Special Chars
     var specialCount = r.at + r.equal + r.slashes + r.dots;
     var statSpecialsEl = document.getElementById('stat-specials');
     if (statSpecialsEl) statSpecialsEl.textContent = String(specialCount);
@@ -418,7 +481,6 @@
     var specialBadgeText = r.at ? '위험 (@ 기호 포함)' : specialCount >= 7 ? '주의 (특수문자 과다)' : '정상 범위';
     setStatusBadge(document.getElementById('badge-specials'), specialLevel, specialBadgeText);
 
-    // Evidence Comparison Table (6 rows)
     var rows = [
       ['전체 길이 (url_length)', r.length + '자', '23.59자', '66.49자', r.length >= threshold ? threshold + '자 기준 이상 (피싱 58.6% 급증 구간)' : threshold + '자 기준 미만 (정상 범위)'],
       ['도메인 내 하이픈 (NumDashInHostname)', r.hostHyphens + '개', '0.06개', '0.22개', r.hostHyphens ? '호스트에서 발견 (피싱 3.88배 규칙 해당)' : '발견되지 않음 (정상 범위)'],
@@ -441,6 +503,132 @@
       guideEl.textContent = r.level === 'safe'
         ? '낮은 점수는 안전 보증이 아닙니다. 단축 URL이나 해킹된 정상 도메인의 짧은 경로는 탐지하지 못할 수 있으므로 로그인·결제 시 주소창의 정식 도메인과 HTTPS 인증서를 반드시 재확인하세요.'
         : '경고: 피싱 의심 형태 신호가 감지되었습니다. 링크를 직접 열지 말고, 해당 서비스의 공식 앱이나 직접 입력한 정식 주소로 이동해 요청 내용을 확인하세요.';
+    }
+  }
+
+  function renderComparePanel() {
+    var inputA = document.getElementById('compare-input-a');
+    var inputB = document.getElementById('compare-input-b');
+    if (inputA && inputA.value !== state.compareA) inputA.value = state.compareA;
+    if (inputB && inputB.value !== state.compareB) inputB.value = state.compareB;
+
+    var wrapEl = document.getElementById('compare-result-wrap');
+    if (!wrapEl) return;
+
+    if (!state.compareResultA || !state.compareResultB) {
+      wrapEl.classList.add('hidden');
+      return;
+    }
+    wrapEl.classList.remove('hidden');
+
+    var a = state.compareResultA;
+    var b = state.compareResultB;
+    var scoreDiff = b.score - a.score;
+    var sameHost = a.hostname.toLowerCase() === b.hostname.toLowerCase();
+
+    var deltaEl = document.getElementById('compare-delta-badge');
+    if (deltaEl) {
+      var sign = scoreDiff > 0 ? '+' : '';
+      deltaEl.textContent = 'Δ ' + sign + scoreDiff + '점';
+      deltaEl.className = 'compare-delta-badge ' + (scoreDiff > 0 ? 'diff-worse' : scoreDiff < 0 ? 'diff-safe' : 'diff-same');
+    }
+
+    var summaryTextEl = document.getElementById('compare-summary-text');
+    if (summaryTextEl) {
+      var hostMsg = sameHost
+        ? '두 URL의 실제 접속 호스트(' + a.hostname + ')가 동일합니다.'
+        : '주의: 실제 접속 호스트가 서로 다릅니다! (' + a.hostname + ' ≠ ' + b.hostname + ')';
+      summaryTextEl.textContent = hostMsg + ' · 기준(A) ' + a.score + '점(' + LEVEL_LABEL[a.level] + ') vs 비교(B) ' + b.score + '점(' + LEVEL_LABEL[b.level] + ')';
+    }
+
+    var cardsGrid = document.getElementById('compare-cards-grid');
+    if (cardsGrid) {
+      cardsGrid.innerHTML = [
+        { label: '기준 URL (A · 공식/대조군)', item: a },
+        { label: '비교 URL (B · 의심/검사군)', item: b }
+      ].map(function (entry) {
+        var it = entry.item;
+        return '<article class="compare-card">' +
+          '<div class="compare-card-head">' +
+            '<div>' +
+              '<span class="kicker">' + escapeHtml(entry.label) + '</span>' +
+              '<div style="margin-top:4px;"><span class="level-chip ' + it.level + '">' + LEVEL_LABEL[it.level] + '</span> <strong style="font-size:13px;">호스트: ' + escapeHtml(it.hostname) + '</strong></div>' +
+            '</div>' +
+            '<div class="compare-card-score">' + String(it.score).padStart(2, '0') + '<small style="font-size:11px;font-weight:600;color:var(--muted);">/100</small></div>' +
+          '</div>' +
+          '<div class="url-map" style="margin-bottom:0.75rem;">' +
+            '<div class="url-visual" style="padding:0.85rem 1rem;font-size:12.5px;">' + buildHighlightedUrlHtml(it) + '</div>' +
+          '</div>' +
+          '<div style="font-size:12px;color:var(--muted);">검출 신호: <strong style="color:var(--ink);">' + escapeHtml(it.signals.join(' · ') || '두드러진 위험 신호 없음') + '</strong></div>' +
+        '</article>';
+      }).join('');
+    }
+
+    var formatDiff = function (valA, valB, unit, neutralFlag) {
+      var d = valB - valA;
+      if (d === 0) return '<span class="diff-same">동일 (0' + unit + ')</span>';
+      var prefix = d > 0 ? '+' : '';
+      if (neutralFlag) {
+        return '<span class="diff-same">' + prefix + d + unit + ' (경로 하이픈 · 점수 미반영)</span>';
+      }
+      return '<span class="' + (d > 0 ? 'diff-worse' : 'diff-safe') + '">' + prefix + d + unit + (d > 0 ? ' (위험 신호 증가)' : ' (위험 신호 감소)') + '</span>';
+    };
+
+    var diffRows = [
+      [
+        '실제 접속 호스트 (hostname)',
+        escapeHtml(a.hostname),
+        escapeHtml(b.hostname),
+        sameHost ? '<span class="diff-safe">일치 (동일 도메인)</span>' : '<span class="diff-worse">불일치 (사칭·피싱 도메인 주의)</span>'
+      ],
+      [
+        '종합 위험도 점수',
+        a.score + '점 (' + LEVEL_LABEL[a.level] + ')',
+        b.score + '점 (' + LEVEL_LABEL[b.level] + ')',
+        formatDiff(a.score, b.score, '점', false)
+      ],
+      [
+        '전체 문자열 길이 (스킴 제외)',
+        a.length + '자',
+        b.length + '자',
+        formatDiff(a.length, b.length, '자', false)
+      ],
+      [
+        '호스트 내부 하이픈 (핵심 지표)',
+        a.hostHyphens + '개',
+        b.hostHyphens + '개',
+        formatDiff(a.hostHyphens, b.hostHyphens, '개', false)
+      ],
+      [
+        '하위 경로 하이픈 (SEO 중립)',
+        a.pathHyphens + '개',
+        b.pathHyphens + '개',
+        formatDiff(a.pathHyphens, b.pathHyphens, '개', true)
+      ],
+      [
+        '골뱅이 (@) 인증 위장 기호',
+        a.at + '개',
+        b.at + '개',
+        formatDiff(a.at, b.at, '개', false)
+      ],
+      [
+        '기타 특수문자 (= / . 합계)',
+        (a.equal + a.slashes + a.dots) + '개 (= ' + a.equal + ' · / ' + a.slashes + ' · . ' + a.dots + ')',
+        (b.equal + b.slashes + b.dots) + '개 (= ' + b.equal + ' · / ' + b.slashes + ' · . ' + b.dots + ')',
+        formatDiff(a.equal + a.slashes + a.dots, b.equal + b.slashes + b.dots, '개', false)
+      ]
+    ];
+
+    var diffTbody = document.getElementById('compare-diff-tbody');
+    if (diffTbody) {
+      diffTbody.innerHTML = diffRows.map(function (row) {
+        return '<tr>' +
+          '<td><strong>' + row[0] + '</strong></td>' +
+          '<td>' + row[1] + '</td>' +
+          '<td>' + row[2] + '</td>' +
+          '<td>' + row[3] + '</td>' +
+        '</tr>';
+      }).join('');
     }
   }
 
@@ -519,16 +707,116 @@
 
     if (emptyEl) emptyEl.classList.add('hidden');
     if (contentEl) contentEl.classList.remove('hidden');
-    if (countEl) countEl.textContent = state.history.length + ' / 200건';
+    if (countEl) countEl.textContent = '총 ' + state.history.length + ' / 200건 보관 중';
     if (confirmBar) {
       confirmBar.classList.toggle('hidden', !state.confirmClearOpen);
     }
 
-    var sorted = state.history.slice().sort(function (a, b) {
+    // 2번 기능 F9: 로컬 검사 이력 통계 대시보드 계산
+    var total = state.history.length;
+    var sumScore = 0;
+    var countDanger = 0;
+    var countWarning = 0;
+    var countSafe = 0;
+    var signalCounts = {
+      '길이 기준 초과': 0,
+      '호스트 하이픈': 0,
+      '@ 기호 포함': 0,
+      '= 쿼리 포함': 0,
+      '다중 슬래시(/)': 0,
+      '다중 서브도메인(.)': 0
+    };
+
+    state.history.forEach(function (item) {
+      sumScore += Number(item.score || 0);
+      if (item.level === 'danger') countDanger++;
+      else if (item.level === 'warning') countWarning++;
+      else countSafe++;
+
+      if (item.length >= state.settings.threshold) signalCounts['길이 기준 초과']++;
+      if (item.hostHyphens > 0) signalCounts['호스트 하이픈']++;
+      if (item.at > 0) signalCounts['@ 기호 포함']++;
+      if (item.equal > 0) signalCounts['= 쿼리 포함']++;
+      if (item.slashes >= 3) signalCounts['다중 슬래시(/)']++;
+      if (item.dots >= 4) signalCounts['다중 서브도메인(.)']++;
+    });
+
+    var avgScore = (sumScore / total).toFixed(1);
+    var highRiskRatio = Math.round(((countDanger + countWarning) / total) * 100);
+
+    var topSignalName = '검출 신호 없음';
+    var topSignalVal = 0;
+    Object.keys(signalCounts).forEach(function (key) {
+      if (signalCounts[key] > topSignalVal) {
+        topSignalVal = signalCounts[key];
+        topSignalName = key;
+      }
+    });
+
+    var statTotalEl = document.getElementById('hist-stat-total');
+    var statAvgEl = document.getElementById('hist-stat-avg');
+    var statRiskRatioEl = document.getElementById('hist-stat-risk-ratio');
+    var statRiskSubEl = document.getElementById('hist-stat-risk-sub');
+    var statTopSigEl = document.getElementById('hist-stat-top-sig');
+    var statTopSigSubEl = document.getElementById('hist-stat-top-sig-sub');
+
+    if (statTotalEl) statTotalEl.textContent = total + '건';
+    if (statAvgEl) statAvgEl.textContent = avgScore + '점';
+    if (statRiskRatioEl) statRiskRatioEl.textContent = highRiskRatio + '%';
+    if (statRiskSubEl) {
+      statRiskSubEl.textContent = '높음 ' + countDanger + ' · 주의 ' + countWarning + ' · 낮음 ' + countSafe;
+    }
+    if (statTopSigEl) {
+      statTopSigEl.textContent = topSignalVal > 0 ? topSignalName : '-';
+    }
+    if (statTopSigSubEl) {
+      statTopSigSubEl.textContent = topSignalVal > 0 ? ('총 ' + topSignalVal + '회 검출 (' + Math.round((topSignalVal / total) * 100) + '%)') : '위험 신호 검출 이력 없음';
+    }
+
+    var pctDanger = ((countDanger / total) * 100).toFixed(1);
+    var pctWarning = ((countWarning / total) * 100).toFixed(1);
+    var pctSafe = ((countSafe / total) * 100).toFixed(1);
+
+    var segDangerEl = document.getElementById('ratio-seg-danger');
+    var segWarnEl = document.getElementById('ratio-seg-warning');
+    var segSafeEl = document.getElementById('ratio-seg-safe');
+    if (segDangerEl) segDangerEl.style.width = pctDanger + '%';
+    if (segWarnEl) segWarnEl.style.width = pctWarning + '%';
+    if (segSafeEl) segSafeEl.style.width = pctSafe + '%';
+
+    var ratioLegendEl = document.getElementById('history-ratio-legend');
+    if (ratioLegendEl) {
+      ratioLegendEl.innerHTML =
+        '<span><strong style="color:var(--red);">높음(Danger)</strong> ' + countDanger + '건 (' + pctDanger + '%)</span>' +
+        '<span><strong style="color:#b45309;">주의(Warning)</strong> ' + countWarning + '건 (' + pctWarning + '%)</span>' +
+        '<span><strong style="color:var(--safe);">낮음(Safe)</strong> ' + countSafe + '건 (' + pctSafe + '%)</span>';
+    }
+
+    // 기록 탭 필터 버튼 활성화 표시
+    ['all', 'danger', 'warning', 'safe', 'pinned'].forEach(function (fKey) {
+      var fBtn = document.getElementById('hist-filter-' + fKey);
+      if (fBtn) fBtn.classList.toggle('active', state.historyFilter === fKey);
+    });
+
+    var searchQuery = state.historySearch.trim().toLowerCase();
+    var filteredHistory = state.history.filter(function (item) {
+      if (state.historyFilter === 'pinned' && !item.pinned) return false;
+      if (state.historyFilter !== 'all' && state.historyFilter !== 'pinned' && item.level !== state.historyFilter) return false;
+      if (searchQuery && item.raw.toLowerCase().indexOf(searchQuery) === -1 && item.hostname.toLowerCase().indexOf(searchQuery) === -1) {
+        return false;
+      }
+      return true;
+    });
+
+    var sorted = filteredHistory.slice().sort(function (a, b) {
       return Number(Boolean(b.pinned)) - Number(Boolean(a.pinned));
     });
 
     if (listEl) {
+      if (sorted.length === 0) {
+        listEl.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--muted);font-size:12.5px;">선택한 필터 조건에 맞는 검사 기록이 없습니다.</div>';
+        return;
+      }
       listEl.innerHTML = sorted.map(function (item) {
         var timeStr = '';
         try {
@@ -549,6 +837,7 @@
           '</div>' +
           '<div class="history-buttons">' +
             '<button type="button" data-history-action="pin" data-id="' + escapeHtml(item.id) + '">' + (item.pinned ? 'UNPIN' : 'PIN') + '</button>' +
+            '<button type="button" data-history-action="compare" data-id="' + escapeHtml(item.id) + '">비교(B)</button>' +
             '<button type="button" data-history-action="rescan" data-id="' + escapeHtml(item.id) + '">재검사</button>' +
             '<button type="button" data-history-action="delete" data-id="' + escapeHtml(item.id) + '">삭제</button>' +
           '</div>' +
@@ -589,6 +878,7 @@
     renderNotice();
     renderTabs();
     renderScanPanel();
+    renderComparePanel();
     renderBatchPanel();
     renderHistoryPanel();
     renderSettingsPanel();
@@ -601,7 +891,7 @@
       window.history.replaceState(null, '', '#' + nextTab);
     } catch (e) {}
     renderAll();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: state.reduceMotion ? 'auto' : 'smooth' });
   }
 
   function runScan(value, shouldSave) {
@@ -618,6 +908,26 @@
     } catch (err) {
       state.result = null;
       state.error = err instanceof Error ? err.message : 'URL을 분석하지 못했습니다.';
+    }
+    renderAll();
+  }
+
+  function runCompare(urlA, urlB, silentToast) {
+    var rawA = urlA !== undefined ? urlA : state.compareA;
+    var rawB = urlB !== undefined ? urlB : state.compareB;
+    try {
+      var resA = analyze(rawA, state.settings);
+      var resB = analyze(rawB, state.settings);
+      state.compareA = rawA;
+      state.compareB = rawB;
+      state.compareResultA = resA;
+      state.compareResultB = resB;
+      state.error = '';
+      if (!silentToast) {
+        showToast('기준(A) vs 비교(B) 1:1 대조 분석이 완료되었습니다.');
+      }
+    } catch (err) {
+      state.error = err instanceof Error ? ('A/B 비교 오류: ' + err.message) : '두 URL을 비교 분석하지 못했습니다.';
     }
     renderAll();
   }
@@ -670,6 +980,7 @@
       state.history = validResults.slice().reverse().concat(state.history).slice(0, 200);
       persistHistory();
     }
+    showToast('총 ' + rows.length + '건의 URL 일괄 진단이 완료되었습니다.');
     renderAll();
   }
 
@@ -718,6 +1029,7 @@
     anchor.click();
     document.body.removeChild(anchor);
     URL.revokeObjectURL(url);
+    showToast('CSV 리포트(lexical-url-scan.csv)를 내려받았습니다.');
   }
 
   // 기존 포트폴리오2/phishing-detector.html 샘플 호출 함수 100% 호환
@@ -727,6 +1039,7 @@
       var inputEl = document.getElementById('url-input');
       if (inputEl) inputEl.value = state.input;
       runScan(state.input, true);
+      showToast('예시 샘플을 불러와 진단을 완료했습니다.');
     }
   };
 
@@ -735,6 +1048,56 @@
     if (TABS.indexOf(initialHash) !== -1) {
       state.tab = initialHash;
     }
+
+    // 초기 A/B 비교 기본 샘플 자동 계산
+    runCompare(state.compareA, state.compareB, true);
+
+    // 모션 줄이기 토글 버튼 (포트폴리오2 공통 UX)
+    var motionBtn = document.getElementById('btn-motion-toggle');
+    if (motionBtn) {
+      motionBtn.addEventListener('click', function () {
+        state.reduceMotion = !state.reduceMotion;
+        document.body.classList.toggle('reduce-motion', state.reduceMotion);
+        motionBtn.setAttribute('aria-pressed', state.reduceMotion ? 'true' : 'false');
+        motionBtn.textContent = '모션 줄이기: ' + (state.reduceMotion ? 'ON' : 'OFF');
+        showToast(state.reduceMotion ? '화면 모션 줄이기 모드가 켜졌습니다.' : '화면 모션이 기본 상태로 복원되었습니다.');
+      });
+    }
+
+    // 전역 키보드 단축키 지원 (1번 UX 기능: /, 1~6, Esc)
+    document.addEventListener('keydown', function (event) {
+      var activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+      var isTyping = activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select';
+
+      if (event.key === 'Escape') {
+        if (state.tab === 'scan') {
+          state.input = '';
+          state.error = '';
+          var urlInputEl = document.getElementById('url-input');
+          if (urlInputEl) urlInputEl.value = '';
+          renderAll();
+          showToast('입력창을 초기화했습니다.');
+        }
+        return;
+      }
+
+      if (isTyping) return;
+
+      if (event.key === '/') {
+        event.preventDefault();
+        if (state.tab !== 'scan') navigate('scan');
+        var targetInput = document.getElementById('url-input');
+        if (targetInput) targetInput.focus();
+        showToast('URL 입력창으로 포커스되었습니다.');
+        return;
+      }
+
+      var num = parseInt(event.key, 10);
+      if (num >= 1 && num <= TABS.length && !event.ctrlKey && !event.metaKey && !event.altKey) {
+        event.preventDefault();
+        navigate(TABS[num - 1]);
+      }
+    });
 
     // 탭 전환 및 좌우 방향키 접근성
     TABS.forEach(function (tabId, index) {
@@ -755,10 +1118,9 @@
       });
     });
 
-    // 단일 검사 폼 및 버튼 이벤트
+    // 단일 검사 폼 및 클립보드 원클릭 붙여넣기
     var scanForm = document.getElementById('scan-form');
     var urlInput = document.getElementById('url-input');
-    var btnRun = document.getElementById('btn-run');
     if (urlInput) {
       urlInput.addEventListener('input', function (e) {
         state.input = e.target.value;
@@ -771,10 +1133,74 @@
         runScan(state.input, true);
       });
     }
-    if (btnRun && !scanForm) {
-      btnRun.addEventListener('click', function () {
-        if (urlInput) state.input = urlInput.value;
-        runScan(state.input, true);
+
+    var btnPasteRun = document.getElementById('btn-paste-run');
+    if (btnPasteRun) {
+      btnPasteRun.addEventListener('click', function () {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          navigator.clipboard.readText().then(function (clipText) {
+            var trimmed = String(clipText || '').trim();
+            if (!trimmed) {
+              showToast('클립보드에 복사된 텍스트가 없습니다. 직접 붙여넣어 주세요.');
+              if (urlInput) urlInput.focus();
+              return;
+            }
+            state.input = trimmed;
+            if (urlInput) urlInput.value = trimmed;
+            runScan(trimmed, true);
+            showToast('클립보드 URL을 붙여넣어 즉시 진단을 완료했습니다.');
+          }).catch(function () {
+            if (urlInput) urlInput.focus();
+            showToast('브라우저 권한 정책상 입력창에서 Ctrl+V(또는 붙여넣기)를 눌러주세요.');
+          });
+        } else {
+          if (urlInput) urlInput.focus();
+          showToast('입력창에서 Ctrl+V(또는 길게 눌러 붙여넣기)를 사용해 주세요.');
+        }
+      });
+    }
+
+    var btnClearInput = document.getElementById('btn-clear-input');
+    if (btnClearInput) {
+      btnClearInput.addEventListener('click', function () {
+        state.input = '';
+        state.result = null;
+        state.error = '';
+        if (urlInput) {
+          urlInput.value = '';
+          urlInput.focus();
+        }
+        renderAll();
+        showToast('입력값과 결과 화면을 초기화했습니다.');
+      });
+    }
+
+    // 진단 결과 리포트 원클릭 복사 & A/B 비교 연동 버튼
+    var btnCopyReport = document.getElementById('btn-copy-report');
+    if (btnCopyReport) {
+      btnCopyReport.addEventListener('click', function () {
+        if (!state.result) return;
+        var r = state.result;
+        var reportText = [
+          '[Lexical Phishing Detector 진단 리포트]',
+          '• 검사 URL: ' + r.raw,
+          '• 종합 위험도: ' + r.score + ' / 100점 (' + LEVEL_LABEL[r.level] + ' - ' + LEVEL_COPY[r.level].title + ')',
+          '• 실제 접속 호스트: ' + r.hostname,
+          '• 주요 측정치: 전체 길이 ' + r.length + '자 | 호스트 하이픈 ' + r.hostHyphens + '개 | 경로 하이픈 ' + r.pathHyphens + '개(중립) | 특수문자(@ ' + r.at + ', = ' + r.equal + ', / ' + r.slashes + ', . ' + r.dots + ')',
+          '• 검출 신호: ' + (r.signals.join(' · ') || '두드러진 위험 신호 없음')
+        ].join('\n');
+        copyTextToClipboard(reportText, '진단 요약 리포트가 클립보드에 복사되었습니다.');
+      });
+    }
+
+    var btnSendCompare = document.getElementById('btn-send-compare');
+    if (btnSendCompare) {
+      btnSendCompare.addEventListener('click', function () {
+        if (!state.result) return;
+        state.compareB = state.result.raw;
+        runCompare(state.compareA, state.compareB, true);
+        navigate('compare');
+        showToast('현재 URL을 02 A/B 비교 탭의 비교군(B)으로 보냈습니다.');
       });
     }
 
@@ -793,7 +1219,71 @@
       });
     }
 
-    // 일괄 검사 컨트롤
+    // 02 A/B 비교 탭 이벤트 바인딩
+    var compareForm = document.getElementById('compare-form');
+    var compareInputA = document.getElementById('compare-input-a');
+    var compareInputB = document.getElementById('compare-input-b');
+    if (compareInputA) {
+      compareInputA.addEventListener('input', function (e) {
+        state.compareA = e.target.value;
+      });
+    }
+    if (compareInputB) {
+      compareInputB.addEventListener('input', function (e) {
+        state.compareB = e.target.value;
+      });
+    }
+    if (compareForm) {
+      compareForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (compareInputA) state.compareA = compareInputA.value;
+        if (compareInputB) state.compareB = compareInputB.value;
+        runCompare(state.compareA, state.compareB, false);
+      });
+    }
+
+    var btnCompareSwap = document.getElementById('btn-compare-swap');
+    if (btnCompareSwap) {
+      btnCompareSwap.addEventListener('click', function () {
+        var tmp = state.compareA;
+        state.compareA = state.compareB;
+        state.compareB = tmp;
+        runCompare(state.compareA, state.compareB, true);
+        showToast('기준 URL(A)과 비교 URL(B)의 위치를 맞바꾸었습니다.');
+      });
+    }
+
+    var comparePresetBtns = document.querySelectorAll('[data-compare-pair]');
+    comparePresetBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var key = btn.getAttribute('data-compare-pair');
+        if (key && COMPARE_PAIRS[key]) {
+          state.compareA = COMPARE_PAIRS[key].a;
+          state.compareB = COMPARE_PAIRS[key].b;
+          runCompare(state.compareA, state.compareB, false);
+        }
+      });
+    });
+
+    var btnCopyCompare = document.getElementById('btn-copy-compare');
+    if (btnCopyCompare) {
+      btnCopyCompare.addEventListener('click', function () {
+        if (!state.compareResultA || !state.compareResultB) return;
+        var a = state.compareResultA;
+        var b = state.compareResultB;
+        var diffScore = b.score - a.score;
+        var text = [
+          '[Lexical Phishing Detector — URL 1:1 A/B 비교 리포트]',
+          '• 기준 URL (A): ' + a.raw + ' -> ' + a.score + '점 (' + LEVEL_LABEL[a.level] + ', 호스트: ' + a.hostname + ')',
+          '• 비교 URL (B): ' + b.raw + ' -> ' + b.score + '점 (' + LEVEL_LABEL[b.level] + ', 호스트: ' + b.hostname + ')',
+          '• 점수 차이: ' + (diffScore > 0 ? '+' : '') + diffScore + '점 | 호스트 일치 여부: ' + (a.hostname.toLowerCase() === b.hostname.toLowerCase() ? '일치' : '불일치(사칭 주의)'),
+          '• 핵심 지표 대비: 길이 ' + a.length + '자 vs ' + b.length + '자 | 호스트 하이픈 ' + a.hostHyphens + '개 vs ' + b.hostHyphens + '개 | @ 기호 ' + a.at + '개 vs ' + b.at + '개'
+        ].join('\n');
+        copyTextToClipboard(text, 'A/B 비교 분석 리포트가 클립보드에 복사되었습니다.');
+      });
+    }
+
+    // 03 일괄 검사 컨트롤
     var batchInput = document.getElementById('batch-input');
     if (batchInput) {
       batchInput.addEventListener('input', function (e) {
@@ -809,6 +1299,21 @@
     var btnBatchRun = document.getElementById('btn-batch-run');
     if (btnBatchRun) {
       btnBatchRun.addEventListener('click', runBatch);
+    }
+    var btnBatchSample = document.getElementById('btn-batch-sample');
+    if (btnBatchSample) {
+      btnBatchSample.addEventListener('click', function () {
+        var sampleLines = [
+          'https://www.naver.com',
+          'https://github.com/wonq-Port',
+          'https://news.example.com/2026/10/how-to-analyze-data-with-ai',
+          'https://secure-bank-login-update.example/verify',
+          'https://trusted.example@account-security-confirmation.example/verify?id=4820'
+        ].join('\n');
+        state.batchText = sampleLines;
+        if (batchInput) batchInput.value = sampleLines;
+        runBatch();
+      });
     }
     ['all', 'danger', 'warning', 'safe'].forEach(function (filterKey) {
       var filterBtn = document.getElementById('batch-filter-' + filterKey);
@@ -852,7 +1357,24 @@
       });
     }
 
-    // 기록 탭 컨트롤
+    // 04 기록 탭 컨트롤 및 통계 필터
+    ['all', 'danger', 'warning', 'safe', 'pinned'].forEach(function (fKey) {
+      var fBtn = document.getElementById('hist-filter-' + fKey);
+      if (fBtn) {
+        fBtn.addEventListener('click', function () {
+          state.historyFilter = fKey;
+          renderHistoryPanel();
+        });
+      }
+    });
+    var histSearchInput = document.getElementById('history-search');
+    if (histSearchInput) {
+      histSearchInput.addEventListener('input', function (e) {
+        state.historySearch = e.target.value;
+        renderHistoryPanel();
+      });
+    }
+
     var btnClearHistory = document.getElementById('btn-clear-history');
     if (btnClearHistory) {
       btnClearHistory.addEventListener('click', function () {
@@ -867,6 +1389,7 @@
         state.confirmClearOpen = false;
         persistHistory();
         renderHistoryPanel();
+        showToast('저장된 모든 검사 기록을 삭제했습니다.');
       });
     }
     var btnConfirmClearNo = document.getElementById('btn-confirm-clear-no');
@@ -891,6 +1414,15 @@
           });
           persistHistory();
           renderHistoryPanel();
+          showToast('기록 상단 고정(PIN) 상태를 변경했습니다.');
+        } else if (action === 'compare') {
+          var compItem = state.history.find(function (entry) { return entry.id === id; });
+          if (compItem) {
+            state.compareB = compItem.raw;
+            runCompare(state.compareA, state.compareB, true);
+            navigate('compare');
+            showToast('선택한 기록을 A/B 비교 탭의 비교군(B)으로 불러왔습니다.');
+          }
         } else if (action === 'rescan') {
           var targetItem = state.history.find(function (entry) { return entry.id === id; });
           if (targetItem) {
@@ -902,11 +1434,12 @@
           state.history = state.history.filter(function (entry) { return entry.id !== id; });
           persistHistory();
           renderHistoryPanel();
+          showToast('검사 기록 1건을 삭제했습니다.');
         }
       });
     }
 
-    // 민감도 설정 컨트롤
+    // 05 민감도 설정 컨트롤
     var presetBtns = document.querySelectorAll('[data-preset]');
     presetBtns.forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -917,6 +1450,7 @@
           persistSettings();
           recalculateActiveResults();
           renderAll();
+          showToast('민감도 프리셋이 적용되어 현재 결과가 재계산되었습니다.');
         }
       });
     });
@@ -927,6 +1461,7 @@
         persistSettings();
         recalculateActiveResults();
         renderAll();
+        showToast('민감도 설정을 논문 기본값(29자 기준)으로 복원했습니다.');
       });
     }
 
@@ -955,6 +1490,7 @@
         state.settings.saveHistory = !state.settings.saveHistory;
         persistSettings();
         renderAll();
+        showToast(state.settings.saveHistory ? '로컬 검사 기록 저장이 켜졌습니다.' : '로컬 검사 기록 저장이 일시 중지되었습니다.');
       });
     }
 
