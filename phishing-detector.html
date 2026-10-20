@@ -3,25 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Lexical Phishing Detector | 피싱 URL 사전 진단기</title>
   <!-- Google Fonts: Barlow Condensed & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <!-- Stylesheet (포트폴리오2 통합 + 1·2번 앱 고도화 스타일) -->
   <link rel="stylesheet" href="css/detector.css" />
 </head>
 <body>
   <div class="site-shell">
-    <!-- 상단 네비게이션 (포트폴리오2 공통 네비게이션 + 모션 줄이기 토글 연동) -->
+    <!-- 상단 네비게이션 -->
     <header class="navbar">
       <div class="nav-container">
-        <a href="index.html" class="nav-logo" aria-label="메인 포트폴리오로 이동">
+        <a href="https://wonq-port.github.io/index.html" class="nav-logo" aria-label="메인 포트폴리오로 이동">
           이혜원 <span>SEC · PORTFOLIO</span>
         </a>
         <div class="nav-extra">
           <span class="privacy-mark">브라우저 내부 분석 · 외부 전송 없음</span>
-          <a href="index.html#work" class="nav-link">← 대표작 목록으로</a>
+          <a href="https://wonq-port.github.io/index.html#work" class="nav-link">← 대표작 목록으로</a>
           <button type="button" id="btn-motion-toggle" class="motion-btn" aria-pressed="false" aria-label="화면 모션 애니메이션 줄이기 토글">
             모션 줄이기: OFF
           </button>
@@ -30,34 +32,34 @@
     </header>
 
     <main class="app-main">
-      <!-- 최상단 헤더: 기존 과제(BRB-C01, BRB-C03) 논문 배지·핵심 문장 보존 + 단축키 스트립 -->
+      <!-- 최상단 헤더 -->
       <header class="app-header">
         <div class="eyebrow-row">
           <div class="paper-citation-badge">
             <span>기반 논문:</span>
             <span>「웹페이지 접속 없이 탐지하는 피싱 URL의 형태적 특징(Lexical Features)과 악성 여부의 상관관계」 (2026, 이혜원)</span>
           </div>
-          <span class="issue-number">110,077 URL DATASET · V2 APP</span>
+          <span class="issue-number">110,077 URL DATASET · V3 APP</span>
         </div>
         <h1 class="app-title">Lexical Phishing Detector</h1>
         <p class="app-mission">
           "웹페이지에 접속하기 전 의심스러운 링크의 감염 위험을 피하고 싶은 사용자가 URL을 입력할 때, 11만 건의 보안 연구 결과(URL 29자 이상 임계점, 도메인 내부 하이픈 3.88배 위험 규칙)를 바탕으로 악성 피싱 위험도를 즉시 진단하고 근거를 제시합니다."
         </p>
         <p class="app-desc">
-          외부 서버 통신이나 웹페이지 다운로드 없이 브라우저 내부에서 URL 문자열 구조만으로 분석합니다. 클립보드 원클릭 진단, 정상 vs 의심 URL 1:1 비교(A/B), 최대 500줄 일괄 진단, 누적 통계 대시보드까지 안전하게 수행하세요.
+          외부 서버 통신이나 웹페이지 다운로드 없이 브라우저 내부에서 URL 문자열 구조만으로 분석합니다. 클립보드 원클릭 진단, 정상 vs 의심 URL 1:1 비교(A/B), 최대 500줄 일괄 진단, 실전 피싱 모의 훈련 퀴즈, 누적 통계 대시보드까지 안전하게 수행하세요.
         </p>
         <div class="shortcut-strip" aria-label="키보드 단축키 안내">
           <div class="shortcut-items">
             <span><kbd>/</kbd> URL 입력창 포커스</span>
-            <span><kbd>1</kbd>~<kbd>6</kbd> 탭 즉시 전환</span>
+            <span><kbd>1</kbd>~<kbd>7</kbd> 탭 즉시 전환</span>
             <span><kbd>Enter</kbd> 즉시 진단</span>
             <span><kbd>Esc</kbd> 입력창 초기화</span>
           </div>
-          <span>ZERO-NETWORK CLIENT UTILITY</span>
+          <span>ZERO-NETWORK CLIENT SECURITY UTILITY</span>
         </div>
       </header>
 
-      <!-- 6대 기능 탭 네비게이션 (02 A/B 비교 추가) -->
+      <!-- 7대 기능 탭 네비게이션 -->
       <nav class="tab-list" role="tablist" aria-label="도구 메뉴">
         <button type="button" id="tab-btn-scan" role="tab" aria-selected="true" aria-controls="panel-scan" class="active">
           <span>01</span>검사
@@ -68,21 +70,24 @@
         <button type="button" id="tab-btn-batch" role="tab" aria-selected="false" aria-controls="panel-batch">
           <span>03</span>일괄 검사
         </button>
+        <button type="button" id="tab-btn-quiz" role="tab" aria-selected="false" aria-controls="panel-quiz">
+          <span>04</span>퀴즈 모드
+        </button>
         <button type="button" id="tab-btn-history" role="tab" aria-selected="false" aria-controls="panel-history">
-          <span>04</span>기록 · 통계
+          <span>05</span>기록 · 통계
         </button>
         <button type="button" id="tab-btn-settings" role="tab" aria-selected="false" aria-controls="panel-settings">
-          <span>05</span>설정
+          <span>06</span>설정
         </button>
         <button type="button" id="tab-btn-research" role="tab" aria-selected="false" aria-controls="panel-research">
-          <span>06</span>연구 근거
+          <span>07</span>연구 근거
         </button>
       </nav>
 
-      <!-- 에러 방어 및 저장소 알림 영역 (기존 BRB-C05 id="error-box" 호환) -->
+      <!-- 에러 방어 및 저장소 알림 영역 (BRB-C05 id="error-box" 호환) -->
       <div id="error-box" class="error-alert-box" role="alert"></div>
 
-      <!-- 탭 1: 단일 URL 검사 (클립보드 원클릭 붙여넣기 + 진단 리포트 복사 + A/B 비교 연동) -->
+      <!-- 탭 1: 단일 URL 검사 -->
       <section id="panel-scan" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-scan">
         <div class="section-heading">
           <div>
@@ -131,13 +136,19 @@
           <p>URL을 입력하거나 [클립보드 붙여넣기 및 진단] 또는 예시 샘플을 눌러 즉시 분석하세요.</p>
         </div>
 
-        <!-- 결과 대시보드 (기존 id="result-dashboard" 완벽 호환) -->
+        <!-- 결과 대시보드 (기존 id="result-dashboard" 호환) -->
         <section id="result-dashboard" class="result-dashboard" aria-label="진단 결과 대시보드">
           <div class="result-toolbar">
             <span class="result-toolbar-title">DIAGNOSTIC REPORT · INSTANT ACTIONS</span>
             <div class="result-toolbar-actions">
               <button type="button" id="btn-copy-report" class="btn-quick-action">
                 진단 리포트 복사
+              </button>
+              <button type="button" id="btn-share-link" class="btn-quick-action">
+                공유 링크 복사
+              </button>
+              <button type="button" id="btnPrintReport" class="btn-quick-action" onclick="window.print()">
+                리포트 인쇄 / PDF
               </button>
               <button type="button" id="btn-send-compare" class="btn-quick-action">
                 이 URL을 A/B 비교로 보내기 →
@@ -256,7 +267,7 @@
         </section>
       </section>
 
-      <!-- 탭 2: 정상 vs 의심 URL 1:1 A/B 정밀 비교 (2번 심화 기능 F7) -->
+      <!-- 탭 2: 정상 vs 의심 URL 1:1 A/B 정밀 비교 -->
       <section id="panel-compare" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-btn-compare">
         <div class="section-heading">
           <div>
@@ -415,7 +426,33 @@
         </div>
       </section>
 
-      <!-- 탭 4: 검사 기록 및 누적 통계 대시보드 (2번 심화 기능 F9) -->
+      <!-- 탭 4: 퀴즈 모드 (실전 피싱 모의 훈련 — F8 New!) -->
+      <section id="panel-quiz" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-btn-quiz">
+        <div class="section-heading">
+          <div>
+            <span class="kicker">Security training</span>
+            <h2>피싱 모의 훈련 퀴즈</h2>
+          </div>
+          <p>11만 건 데이터셋의 형태적 특성을 바탕으로 실제 피싱 여부를 직접 판별해보세요.</p>
+        </div>
+
+        <div class="quiz-summary-banner">
+          <div>
+            <span class="kicker">Training scorecard</span>
+            <div id="quiz-score-val" class="quiz-score-num">0 / 5 정답</div>
+            <p id="quiz-summary-verdict" style="font-size:13px;color:var(--ink-2);margin-top:4px;">
+              아래 5개 실전 URL의 피싱 여부를 직접 맞춰보세요.
+            </p>
+          </div>
+          <button type="button" id="btn-reset-quiz" class="secondary-button">
+            처음부터 다시 풀기
+          </button>
+        </div>
+
+        <div id="quiz-cards-list" class="quiz-cards-list"></div>
+      </section>
+
+      <!-- 탭 5: 검사 기록 및 누적 통계 대시보드 -->
       <section id="panel-history" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-btn-history">
         <div class="section-heading">
           <div>
@@ -431,7 +468,6 @@
         </div>
 
         <div id="history-content" class="hidden">
-          <!-- 로컬 이력 기반 4대 요약 통계 카드 -->
           <div class="stats-summary-grid" aria-label="검사 기록 요약 통계">
             <article class="stat-summary-card">
               <span class="stat-summary-label">총 누적 검사</span>
@@ -455,7 +491,6 @@
             </article>
           </div>
 
-          <!-- 위험 등급 비율 스택 바 -->
           <div class="history-analytics-box">
             <div style="display:flex;justify-content:space-between;align-items:center;">
               <strong style="font-size:11.5px;text-transform:uppercase;letter-spacing:0.08em;">누적 위험 등급 분포 (Risk Distribution)</strong>
@@ -469,7 +504,6 @@
             <div id="history-ratio-legend" class="ratio-legend-row"></div>
           </div>
 
-          <!-- 기록 필터·검색 및 전체 삭제 컨트롤 -->
           <div class="history-filter-bar">
             <div class="segmented">
               <button type="button" id="hist-filter-all" class="active">전체</button>
@@ -484,7 +518,7 @@
                 id="history-search"
                 class="url-input history-search-input"
                 placeholder="도메인 또는 URL 검색..."
-                 aria-label="검사 기록 내 도메인 또는 URL 검색"
+                aria-label="검사 기록 내 도메인 또는 URL 검색"
               />
               <button type="button" id="btn-clear-history" class="text-button danger-text">
                 전체 삭제
@@ -504,7 +538,7 @@
         </div>
       </section>
 
-      <!-- 탭 5: 민감도 설정 -->
+      <!-- 탭 6: 민감도 설정 -->
       <section id="panel-settings" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-btn-settings">
         <div class="section-heading">
           <div>
@@ -576,7 +610,7 @@
         </div>
       </section>
 
-      <!-- 탭 6: 연구 근거 -->
+      <!-- 탭 7: 연구 근거 -->
       <section id="panel-research" class="tab-panel research hidden" role="tabpanel" aria-labelledby="tab-btn-research">
         <div class="section-heading">
           <div>
@@ -758,13 +792,13 @@
       </section>
     </main>
 
-    <!-- 플로팅 인앱 토스트 알림 (1번 UX 기능) -->
+    <!-- 플로팅 인앱 토스트 알림 -->
     <div id="app-toast" class="app-toast" role="status" aria-live="polite"></div>
 
     <footer class="footer">
       <div class="container footer-container">
-        <span class="footer-text">© 2026 이혜원 (Lee Hye-won) · Lexical Phishing Detector v2 · 브라우저 내부 분석</span>
-        <a href="index.html" class="footer-text" style="text-decoration: underline;">포트폴리오 메인으로</a>
+        <span class="footer-text">© 2026 이혜원 (Lee Hye-won) · Lexical Phishing Detector v3 · 브라우저 내부 분석</span>
+        <a href="https://wonq-port.github.io/index.html" class="footer-text" style="text-decoration: underline;">포트폴리오 메인으로</a>
       </div>
     </footer>
   </div>
