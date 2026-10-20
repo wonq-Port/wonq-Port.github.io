@@ -12,27 +12,112 @@
 
   <!-- Stylesheet -->
   <link rel="stylesheet" href="css/style.css" />
-  <!-- Compact Navigation Style Enhancements -->
+  <!-- Unified Dual Dropdown & Motion Button Styles -->
   <style>
-    .nav-sections-btn {
-      background: var(--color-hover-bg) !important;
-      color: var(--color-text-main) !important;
-      border: 1px solid var(--color-border-darker) !important;
+    .nav-extra {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
     }
-    .nav-sections-btn:hover {
-      border-color: var(--color-text-main) !important;
-      background: #f0f0f0 !important;
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
     }
-    .nav-link-compact {
-      font-size: 11px !important;
-      font-weight: 700 !important;
-      letter-spacing: 0.1em !important;
-      text-transform: uppercase !important;
-      padding: 4px 8px !important;
-      color: var(--color-text-secondary) !important;
+    .nav-dropdown {
+      position: relative;
+      display: inline-block;
     }
-    .nav-link-compact:hover {
-      color: var(--color-accent-red) !important;
+    .nav-dropdown-btn {
+      font-family: var(--font-inter);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      height: 32px;
+      padding: 0 13px;
+      border-radius: 3px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+      box-sizing: border-box;
+      white-space: nowrap;
+    }
+    /* Overview: Editorial Minimal Monochrome */
+    .nav-btn-overview {
+      background: #ffffff;
+      color: var(--color-text-main);
+      border-color: var(--color-border-darker);
+    }
+    .nav-btn-overview:hover,
+    .nav-dropdown.open .nav-btn-overview {
+      background: var(--color-text-main);
+      color: #ffffff;
+      border-color: var(--color-text-main);
+    }
+    /* Projects: Accent Red */
+    .nav-btn-projects {
+      background: var(--color-accent-red);
+      color: #ffffff;
+      border-color: var(--color-accent-red);
+    }
+    .nav-btn-projects:hover,
+    .nav-dropdown.open .nav-btn-projects {
+      background: #991b1b;
+      border-color: #991b1b;
+    }
+    .dropdown-caret {
+      font-size: 10px;
+      transition: transform 0.2s ease;
+    }
+    .nav-dropdown.open .dropdown-caret {
+      transform: rotate(180deg);
+    }
+    .nav-dropdown-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 255px;
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.14);
+      border-radius: 4px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+      padding: 6px;
+      z-index: 100;
+    }
+    .nav-dropdown.open .nav-dropdown-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .dropdown-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 3px;
+      text-decoration: none;
+      transition: background 0.15s ease;
+      color: #111111;
+    }
+    .dropdown-item:hover {
+      background: #f8f9fa;
+    }
+    .dropdown-item:hover .item-title {
+      color: var(--color-accent-red);
+    }
+    .motion-btn {
+      height: 32px;
+      padding: 0 11px;
+      box-sizing: border-box;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 3px;
+      font-size: 10.5px;
     }
   </style>
 </head>
@@ -47,52 +132,52 @@
         이혜원
       </a>
 
-      <!-- Desktop Nav Menu -->
+      <!-- Desktop Nav Menu: Unified Dual Dropdown -->
       <div class="nav-extra">
         <nav class="nav-menu" aria-label="주요 내비게이션">
-          <!-- 컴팩트 네비게이션: Overview 섹션 드롭다운 -->
-          <div class="nav-dropdown" id="nav-sections-dropdown">
-            <button type="button" class="nav-dropdown-btn nav-sections-btn" id="nav-sections-btn" aria-haspopup="true" aria-expanded="false" aria-label="포트폴리오 섹션 메뉴 열기">
+          <!-- 1. 포트폴리오 섹션 드롭다운 (Overview) -->
+          <div class="nav-dropdown" id="nav-overview-dropdown">
+            <button type="button" class="nav-dropdown-btn nav-btn-overview" id="nav-overview-btn" aria-haspopup="true" aria-expanded="false" aria-label="섹션 메뉴 열기">
               <span>Overview</span>
               <span class="dropdown-caret" aria-hidden="true">▾</span>
             </button>
-            <div class="nav-dropdown-menu" id="nav-sections-menu" role="menu">
-              <a href="#about" class="dropdown-item nav-link" data-section="about" role="menuitem">
+            <div class="nav-dropdown-menu" id="nav-overview-menu" role="menu">
+              <a href="#about" class="dropdown-item" role="menuitem">
                 <span class="item-badge">01</span>
                 <div class="item-text">
                   <span class="item-title">About</span>
                   <span class="item-desc">보안 가치관 &amp; 소개</span>
                 </div>
               </a>
-              <a href="#metrics" class="dropdown-item nav-link" data-section="metrics" role="menuitem">
+              <a href="#metrics" class="dropdown-item" role="menuitem">
                 <span class="item-badge">02</span>
                 <div class="item-text">
                   <span class="item-title">Numbers</span>
-                  <span class="item-desc">11만 데이터셋 &amp; 핵심 수치</span>
+                  <span class="item-desc">11만 데이터셋 &amp; 핵심 지표</span>
                 </div>
               </a>
-              <a href="#skills" class="dropdown-item nav-link" data-section="skills" role="menuitem">
+              <a href="#skills" class="dropdown-item" role="menuitem">
                 <span class="item-badge">03</span>
                 <div class="item-text">
                   <span class="item-title">Skills</span>
                   <span class="item-desc">취약점 분석 &amp; 보안 스택</span>
                 </div>
               </a>
-              <a href="#work" class="dropdown-item nav-link" data-section="work" role="menuitem">
-                <span class="item-badge">04</span>
+              <a href="#work" class="dropdown-item" role="menuitem">
+                <span class="item-badge new">04</span>
                 <div class="item-text">
                   <span class="item-title">Work</span>
                   <span class="item-desc">대표 실무 보안 프로젝트</span>
                 </div>
               </a>
-              <a href="#documents" class="dropdown-item nav-link" data-section="documents" role="menuitem">
+              <a href="#documents" class="dropdown-item" role="menuitem">
                 <span class="item-badge">05</span>
                 <div class="item-text">
                   <span class="item-title">Docs</span>
                   <span class="item-desc">실증 연구 논문 &amp; 자격증</span>
                 </div>
               </a>
-              <a href="#contact" class="dropdown-item nav-link" data-section="contact" role="menuitem">
+              <a href="#contact" class="dropdown-item" role="menuitem">
                 <span class="item-badge">06</span>
                 <div class="item-text">
                   <span class="item-title">Contact</span>
@@ -102,16 +187,13 @@
             </div>
           </div>
 
-          <!-- 대표작 바로가기 (컴팩트 링크) -->
-          <a href="#work" class="nav-link nav-link-compact" data-section="work">Work</a>
-
-          <!-- 우측 끝: 서브 앱/프로젝트 드롭다운 메뉴 버튼 -->
-          <div class="nav-dropdown" id="nav-dropdown">
-            <button type="button" class="nav-dropdown-btn" id="nav-dropdown-btn" aria-haspopup="true" aria-expanded="false" aria-label="프로젝트 메뉴 열기">
+          <!-- 2. 서브 앱/프로젝트 드롭다운 (Projects) -->
+          <div class="nav-dropdown" id="nav-projects-dropdown">
+            <button type="button" class="nav-dropdown-btn nav-btn-projects" id="nav-projects-btn" aria-haspopup="true" aria-expanded="false" aria-label="프로젝트 메뉴 열기">
               <span>Projects</span>
               <span class="dropdown-caret" aria-hidden="true">▾</span>
             </button>
-            <div class="nav-dropdown-menu" id="nav-dropdown-menu" role="menu">
+            <div class="nav-dropdown-menu" id="nav-projects-menu" role="menu">
               <a href="plando.html" class="dropdown-item" role="menuitem">
                 <span class="item-badge new">PDS</span>
                 <div class="item-text">
@@ -144,12 +226,13 @@
                 <span class="item-badge new">SEC</span>
                 <div class="item-text">
                   <span class="item-title">피싱 URL 사전 진단기</span>
-                  <span class="item-desc">어휘적 피싱 탐지 웹</span>
+                  <span class="item-desc">어휘적 피싱 탐지 웹 (13번 과제)</span>
                 </div>
               </a>
             </div>
           </div>
         </nav>
+
         <button type="button" id="motion-toggle-btn" class="motion-btn" aria-pressed="false" aria-label="화면 모션 애니메이션 줄이기 토글">
           모션 줄이기: OFF
         </button>
@@ -473,7 +556,7 @@
               <p class="project-sar-line"><strong>개요:</strong> 110,077건의 실증 보안 데이터셋 논문 연구를 기반으로, 외부 서버 통신 없이 브라우저 내부에서 URL 형태학적 위험 신호를 즉시 사전 진단하는 클라이언트 정적 웹 애플리케이션입니다.</p>
               <p class="project-sar-line"><strong>핵심 기능:</strong> 단일 URL 정밀 분해 진단, 1:1 A/B 대조 비교, 최대 500줄 일괄 검사, 실전 피싱 모의 훈련 퀴즈, 로컬 검사 이력 통계 대시보드, 논문 기반 가설 검증표 제공.</p>
               <div style="margin-top: 0.85rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <a href="phishing-detector.html" class="nav-dropdown-btn" style="text-decoration: none; font-size: 11px; padding: 6px 14px; background: var(--color-text-main); color: #fff; display: inline-flex; align-items: center; gap: 6px;" target="_blank" rel="noopener">
+                <a href="phishing-detector.html" class="nav-dropdown-btn nav-btn-projects" style="text-decoration: none; font-size: 11px; padding: 6px 14px; display: inline-flex; align-items: center; gap: 6px;" target="_blank" rel="noopener">
                   <span>웹 애플리케이션 실행하기</span>
                   <span aria-hidden="true">→</span>
                 </a>
@@ -713,34 +796,63 @@
 
   <!-- JavaScript -->
   <script src="js/script.js"></script>
-  <!-- Sections Dropdown Control Script -->
+  <!-- Dual Dropdown Navigation Script -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      var navSectionsDropdown = document.getElementById('nav-sections-dropdown');
-      var navSectionsBtn = document.getElementById('nav-sections-btn');
-      var navDropdown = document.getElementById('nav-dropdown');
+      var overviewDropdown = document.getElementById('nav-overview-dropdown');
+      var overviewBtn = document.getElementById('nav-overview-btn');
+      var projectsDropdown = document.getElementById('nav-projects-dropdown');
+      var projectsBtn = document.getElementById('nav-projects-btn');
 
-      if (navSectionsDropdown && navSectionsBtn) {
-        navSectionsBtn.addEventListener('click', function(e) {
+      function closeAllDropdowns() {
+        if (overviewDropdown) {
+          overviewDropdown.classList.remove('open');
+          if (overviewBtn) overviewBtn.setAttribute('aria-expanded', 'false');
+        }
+        if (projectsDropdown) {
+          projectsDropdown.classList.remove('open');
+          if (projectsBtn) projectsBtn.setAttribute('aria-expanded', 'false');
+        }
+      }
+
+      if (overviewBtn && overviewDropdown) {
+        overviewBtn.addEventListener('click', function(e) {
           e.stopPropagation();
-          var isOpen = navSectionsDropdown.classList.contains('open');
-          navSectionsDropdown.classList.toggle('open');
-          navSectionsBtn.setAttribute('aria-expanded', !isOpen);
-          if (navDropdown) navDropdown.classList.remove('open');
+          var isOpen = overviewDropdown.classList.contains('open');
+          closeAllDropdowns();
+          if (!isOpen) {
+            overviewDropdown.classList.add('open');
+            overviewBtn.setAttribute('aria-expanded', 'true');
+          }
         });
+      }
 
-        navSectionsDropdown.querySelectorAll('.dropdown-item').forEach(function(item) {
+      if (projectsBtn && projectsDropdown) {
+        projectsBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = projectsDropdown.classList.contains('open');
+          closeAllDropdowns();
+          if (!isOpen) {
+            projectsDropdown.classList.add('open');
+            projectsBtn.setAttribute('aria-expanded', 'true');
+          }
+        });
+      }
+
+      // Close dropdown when internal link is clicked (e.g. scroll to section)
+      if (overviewDropdown) {
+        overviewDropdown.querySelectorAll('.dropdown-item').forEach(function(item) {
           item.addEventListener('click', function() {
-            navSectionsDropdown.classList.remove('open');
-            navSectionsBtn.setAttribute('aria-expanded', 'false');
+            closeAllDropdowns();
           });
         });
       }
 
       document.addEventListener('click', function(e) {
-        if (navSectionsDropdown && !navSectionsDropdown.contains(e.target)) {
-          navSectionsDropdown.classList.remove('open');
-          if (navSectionsBtn) navSectionsBtn.setAttribute('aria-expanded', 'false');
+        if (overviewDropdown && projectsDropdown) {
+          if (!overviewDropdown.contains(e.target) && !projectsDropdown.contains(e.target)) {
+            closeAllDropdowns();
+          }
         }
       });
     });
