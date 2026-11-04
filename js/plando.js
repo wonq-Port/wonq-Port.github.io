@@ -1349,6 +1349,8 @@ async function hashPassword(plainText) {
 
 
 
+
+
 // ============================================================================
 // Unified Portfolio Navigation (Overview & Projects Dropdowns + Scroll Progress + Motion Toggle)
 // ============================================================================

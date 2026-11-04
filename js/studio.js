@@ -755,6 +755,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+
+
 // ============================================================================
 // Unified Portfolio Navigation (Overview & Projects Dropdowns + Scroll Progress + Motion Toggle)
 // ============================================================================

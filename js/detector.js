@@ -1965,3 +1965,100 @@
     }
   });
 })();
+
+
+// ============================================================================
+// Unified Portfolio Navigation (Overview & Projects Dropdowns + Scroll Progress + Motion Toggle)
+// ============================================================================
+(function() {
+  document.addEventListener('DOMContentLoaded', function() {
+    var scrollProgress = document.getElementById('scroll-progress');
+    var navbar = document.getElementById('navbar');
+    var overviewDropdown = document.getElementById('nav-overview-dropdown');
+    var overviewBtn = document.getElementById('nav-overview-btn');
+    var projectsDropdown = document.getElementById('nav-projects-dropdown');
+    var projectsBtn = document.getElementById('nav-projects-btn');
+    var motionBtn = document.getElementById('btn-motion-toggle') || document.getElementById('motion-toggle-btn');
+
+    // 1. Scroll progress bar
+    var updateScroll = function() {
+      var scrollY = window.scrollY || window.pageYOffset;
+      if (navbar) {
+        navbar.classList.toggle('scrolled', scrollY > 10);
+      }
+      if (scrollProgress) {
+        var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        var pct = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+        scrollProgress.style.width = Math.min(100, Math.max(0, pct)) + '%';
+      }
+    };
+    window.addEventListener('scroll', updateScroll, { passive: true });
+    updateScroll();
+
+    // 2. Dual Dropdowns (Overview & Projects)
+    var closeAllDropdowns = function() {
+      if (overviewDropdown) {
+        overviewDropdown.classList.remove('open');
+        if (overviewBtn) overviewBtn.setAttribute('aria-expanded', 'false');
+      }
+      if (projectsDropdown) {
+        projectsDropdown.classList.remove('open');
+        if (projectsBtn) projectsBtn.setAttribute('aria-expanded', 'false');
+      }
+    };
+
+    if (overviewBtn && overviewDropdown) {
+      overviewBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var isOpen = overviewDropdown.classList.contains('open');
+        closeAllDropdowns();
+        if (!isOpen) {
+          overviewDropdown.classList.add('open');
+          overviewBtn.setAttribute('aria-expanded', 'true');
+        }
+      });
+    }
+
+    if (projectsBtn && projectsDropdown) {
+      projectsBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var isOpen = projectsDropdown.classList.contains('open');
+        closeAllDropdowns();
+        if (!isOpen) {
+          projectsDropdown.classList.add('open');
+          projectsBtn.setAttribute('aria-expanded', 'true');
+        }
+      });
+    }
+
+    document.querySelectorAll('.dropdown-item').forEach(function(item) {
+      item.addEventListener('click', function() {
+        closeAllDropdowns();
+      });
+    });
+
+    document.addEventListener('click', function(e) {
+      var inOverview = overviewDropdown && overviewDropdown.contains(e.target);
+      var inProjects = projectsDropdown && projectsDropdown.contains(e.target);
+      if (!inOverview && !inProjects) {
+        closeAllDropdowns();
+      }
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeAllDropdowns();
+      }
+    });
+
+    // 3. Motion Toggle (if not already bound by page script)
+    if (motionBtn && !motionBtn.dataset.boundUnified) {
+      motionBtn.dataset.boundUnified = 'true';
+      motionBtn.addEventListener('click', function() {
+        var reduced = document.body.classList.toggle('reduce-motion');
+        motionBtn.setAttribute('aria-pressed', String(reduced));
+        motionBtn.textContent = reduced ? '모션 줄이기: ON' : '모션 줄이기: OFF';
+      });
+    }
+  });
+})();
