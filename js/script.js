@@ -1,26 +1,19 @@
 /**
-
- * Portfolio Interactive Scripts
-
- * Pure Vanilla JavaScript (No Framework Dependency)
-
- * Full Keyboard & Mouse Accessibility & Zero Console Errors
-
+ * Portfolio Interactive Scripts (js/script.js)
+ * Pure Vanilla JavaScript — Smooth Scroll Reveal, Metric Counter,
+ * Unified Dual Dropdown, Accordion & Lightbox Modal
  */
-
-
 
 document.addEventListener('DOMContentLoaded', () => {
   const navbar = document.getElementById('navbar');
   const scrollProgress = document.getElementById('scroll-progress');
-  const navLinks = document.querySelectorAll('.nav-link');
   const logoBtn = document.getElementById('logo-btn');
   const motionToggleBtn = document.getElementById('motion-toggle-btn');
-  const sections = ['hero', 'about', 'skills', 'work', 'contact']
-    .map(id => document.getElementById(id))
-    .filter(Boolean);
 
-
+  const overviewDropdown = document.getElementById('nav-overview-dropdown');
+  const overviewBtn = document.getElementById('nav-overview-btn');
+  const projectsDropdown = document.getElementById('nav-projects-dropdown');
+  const projectsBtn = document.getElementById('nav-projects-btn');
 
   const modal = document.getElementById('image-modal');
   const modalTitle = document.getElementById('modal-title');
@@ -30,270 +23,228 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalBackdrop = document.getElementById('modal-backdrop');
   let lastActiveElement = null;
 
-
-
-  // 1. Scroll Progress & Navbar Style on Scroll
-
+  // 1. Scroll Progress & Navbar Elevation
   const handleScroll = () => {
-
     const scrollY = window.scrollY;
-
     if (navbar) {
-
-      if (scrollY > 48) {
-
+      if (scrollY > 24) {
         navbar.classList.add('scrolled');
-
       } else {
-
         navbar.classList.remove('scrolled');
-
       }
-
     }
-
-
 
     if (scrollProgress) {
-
       const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-
       const progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
-
       scrollProgress.style.width = `${Math.min(100, Math.max(0, progress))}%`;
-
     }
-
   };
 
-
-
   window.addEventListener('scroll', handleScroll, { passive: true });
-
   handleScroll();
 
+  // 2. Dual Dropdown Navigation
+  const closeAllDropdowns = () => {
+    if (overviewDropdown) {
+      overviewDropdown.classList.remove('open');
+      if (overviewBtn) overviewBtn.setAttribute('aria-expanded', 'false');
+    }
+    if (projectsDropdown) {
+      projectsDropdown.classList.remove('open');
+      if (projectsBtn) projectsBtn.setAttribute('aria-expanded', 'false');
+    }
+  };
 
-
-  // 2. Active Section Spy
-
-  if ('IntersectionObserver' in window && sections.length > 0) {
-
-    const observer = new IntersectionObserver((entries) => {
-
-      entries.forEach(entry => {
-
-        if (entry.isIntersecting) {
-
-          const currentId = entry.target.id;
-
-          navLinks.forEach(link => {
-
-            if (link.dataset.section === currentId || link.getAttribute('href') === `#${currentId}`) {
-
-              link.classList.add('active');
-
-            } else {
-
-              link.classList.remove('active');
-
-            }
-
-          });
-
-        }
-
-      });
-
-    }, { root: null, rootMargin: '-30% 0px -50% 0px', threshold: 0 });
-
-
-
-    sections.forEach(section => observer.observe(section));
-
+  if (overviewBtn && overviewDropdown) {
+    overviewBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = overviewDropdown.classList.contains('open');
+      closeAllDropdowns();
+      if (!isOpen) {
+        overviewDropdown.classList.add('open');
+        overviewBtn.setAttribute('aria-expanded', 'true');
+      }
+    });
   }
 
+  if (projectsBtn && projectsDropdown) {
+    projectsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = projectsDropdown.classList.contains('open');
+      closeAllDropdowns();
+      if (!isOpen) {
+        projectsDropdown.classList.add('open');
+        projectsBtn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  }
 
+  document.querySelectorAll('.dropdown-item').forEach((item) => {
+    item.addEventListener('click', () => {
+      closeAllDropdowns();
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    if (overviewDropdown && projectsDropdown) {
+      if (!overviewDropdown.contains(e.target) && !projectsDropdown.contains(e.target)) {
+        closeAllDropdowns();
+      }
+    }
+  });
 
   // 3. Smooth Scroll Navigation
-
   if (logoBtn) {
-
     logoBtn.addEventListener('click', (e) => {
-
       e.preventDefault();
-
       window.scrollTo({ top: 0, behavior: 'smooth' });
-
     });
-
   }
 
-
-
-  document.querySelectorAll('a[href^="#"]').forEach(link => {
-
+  document.querySelectorAll('a[href^="#"]').forEach((link) => {
     link.addEventListener('click', function (e) {
-
       const targetId = this.getAttribute('href').slice(1);
-
       const targetEl = document.getElementById(targetId);
-
       if (targetEl) {
-
         e.preventDefault();
-
+        closeAllDropdowns();
         targetEl.scrollIntoView({ behavior: 'smooth' });
-
         targetEl.setAttribute('tabindex', '-1');
-
         targetEl.focus({ preventScroll: true });
-
       }
-
     });
-
   });
-
-
 
   // 4. Motion Reduction Toggle
-
   if (motionToggleBtn) {
-
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-
     const applyMotionSetting = (shouldReduce) => {
-
       if (shouldReduce) {
-
         document.body.classList.add('reduce-motion');
-
         motionToggleBtn.setAttribute('aria-pressed', 'true');
-
         motionToggleBtn.textContent = '모션 줄이기: ON';
-
       } else {
-
         document.body.classList.remove('reduce-motion');
-
         motionToggleBtn.setAttribute('aria-pressed', 'false');
-
         motionToggleBtn.textContent = '모션 줄이기: OFF';
-
       }
-
     };
-
-
 
     if (mediaQuery.matches) {
-
       applyMotionSetting(true);
-
     }
-
-
 
     motionToggleBtn.addEventListener('click', () => {
-
       const isCurrentlyReduced = document.body.classList.contains('reduce-motion');
-
       applyMotionSetting(!isCurrentlyReduced);
-
     });
-
   }
 
+  // 5. Smooth Scroll Reveal & Metric Count-Up Animation
+  const animateMetricValue = (el) => {
+    if (el.dataset.animated === 'true') return;
+    el.dataset.animated = 'true';
 
-
-  // 5. Project Accordion Expand/Collapse (Mouse & Keyboard Enter/Space)
-
-  const projectItems = document.querySelectorAll('.project-item');
-
-  projectItems.forEach(item => {
-
-    const toggleBtn = item.querySelector('.project-toggle-btn');
-
-    const toggleText = item.querySelector('.toggle-text');
-
-    const arrow = item.querySelector('.project-toggle-btn .arrow-icon');
-
-
-
-    const toggleProject = (e) => {
-
-      if (e.target.closest('.evidence-modal-trigger')) return;
-
-
-
-      const isExpanded = item.classList.contains('is-expanded');
-
-      item.classList.toggle('is-expanded');
-
-      item.setAttribute('aria-expanded', String(!isExpanded));
-
-
-
-      if (toggleText) {
-
-        toggleText.textContent = !isExpanded ? '세부 분석 과정 닫기' : '세부 분석 과정 펼치기';
-
-      }
-
-      if (arrow) {
-
-        arrow.textContent = !isExpanded ? '↑' : '↓';
-
-      }
-
-    };
-
-
-
-    if (toggleBtn) {
-
-      toggleBtn.addEventListener('click', (e) => {
-
-        e.stopPropagation();
-
-        toggleProject(e);
-
-      });
-
+    const target = parseInt(el.dataset.countTarget || '0', 10);
+    const suffix = el.dataset.countSuffix || '';
+    const format = el.dataset.countFormat || '';
+    if (!target || document.body.classList.contains('reduce-motion')) {
+      const formatted = format === 'comma' ? target.toLocaleString('ko-KR') : String(target);
+      el.textContent = formatted + suffix;
+      return;
     }
 
+    const duration = 900;
+    const startTime = performance.now();
 
+    const step = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(target * eased);
+      const formatted = format === 'comma' ? current.toLocaleString('ko-KR') : String(current);
+      el.textContent = formatted + suffix;
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    };
+
+    requestAnimationFrame(step);
+  };
+
+  const revealElements = document.querySelectorAll('.reveal-on-scroll');
+  if ('IntersectionObserver' in window) {
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          const metricVal = entry.target.querySelector('.metric-val[data-count-target]');
+          if (metricVal) animateMetricValue(metricVal);
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { root: null, rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+
+    revealElements.forEach((el) => revealObserver.observe(el));
+  } else {
+    revealElements.forEach((el) => el.classList.add('is-visible'));
+  }
+
+  // 6. Project Accordion Expand/Collapse
+  const projectItems = document.querySelectorAll('.project-item');
+  projectItems.forEach((item) => {
+    const toggleBtn = item.querySelector('.project-toggle-btn');
+    const toggleText = item.querySelector('.toggle-text');
+    const arrow = item.querySelector('.project-toggle-btn .arrow-icon');
+
+    const toggleProject = (e) => {
+      if (e.target.closest('a') || e.target.closest('.open-evidence-btn')) return;
+
+      const isExpanded = item.classList.contains('is-expanded');
+      item.classList.toggle('is-expanded');
+      item.setAttribute('aria-expanded', String(!isExpanded));
+
+      if (toggleText) {
+        toggleText.textContent = !isExpanded ? '세부 분석 과정 닫기' : '세부 분석 과정 펼치기';
+      }
+      if (arrow) {
+        arrow.textContent = !isExpanded ? '↑' : '↓';
+      }
+    };
+
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleProject(e);
+      });
+    }
 
     item.addEventListener('click', toggleProject);
-
-
-
     item.addEventListener('keydown', (e) => {
-
       if (e.target === item && (e.key === 'Enter' || e.key === ' ')) {
-
         e.preventDefault();
-
         toggleProject(e);
-
       }
-
     });
-
   });
 
-
-
-
-  // 5-1. Story Accordion Expand/Collapse (내 이야기 아코디언 인터랙션)
+  // 7. Story Accordion Expand/Collapse
   const storyItems = document.querySelectorAll('.story-accordion-item');
-  storyItems.forEach(item => {
-    const toggleBtn = item.querySelector('.story-toggle-btn');
+  const btnToggleAllStory = document.getElementById('btn-story-toggle-all');
+
+  const updateToggleAllBtnLabel = () => {
+    if (!btnToggleAllStory) return;
+    const anyCollapsed = Array.from(storyItems).some((item) => !item.classList.contains('is-expanded'));
+    btnToggleAllStory.textContent = anyCollapsed ? '전체 펼치기' : '전체 접기';
+  };
+
+  storyItems.forEach((item) => {
     const toggleText = item.querySelector('.story-toggle-text');
-    const arrow = item.querySelector('.story-toggle-btn .arrow-icon');
+    const arrow = item.querySelector('.story-toggle-indicator .arrow-icon');
 
     const toggleStory = (e) => {
-      if (e.target.closest('a') || e.target.closest('button:not(.story-toggle-btn)')) return;
+      if (e.target.closest('a') || e.target.closest('button')) return;
 
       const isExpanded = item.classList.contains('is-expanded');
       item.classList.toggle('is-expanded');
@@ -305,17 +256,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (arrow) {
         arrow.textContent = !isExpanded ? '↑' : '↓';
       }
+      updateToggleAllBtnLabel();
     };
 
-    if (toggleBtn) {
-      toggleBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleStory(e);
-      });
-    }
-
     item.addEventListener('click', toggleStory);
-
     item.addEventListener('keydown', (e) => {
       if (e.target === item && (e.key === 'Enter' || e.key === ' ')) {
         e.preventDefault();
@@ -324,16 +268,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Story 전체 펼치기 / 접기 버튼
-  const btnToggleAllStory = document.getElementById('btn-story-toggle-all');
   if (btnToggleAllStory) {
     btnToggleAllStory.addEventListener('click', () => {
-      const allItems = document.querySelectorAll('.story-accordion-item');
-      const anyCollapsed = Array.from(allItems).some(item => !item.classList.contains('is-expanded'));
+      const anyCollapsed = Array.from(storyItems).some((item) => !item.classList.contains('is-expanded'));
 
-      allItems.forEach(item => {
+      storyItems.forEach((item) => {
         const toggleText = item.querySelector('.story-toggle-text');
-        const arrow = item.querySelector('.story-toggle-btn .arrow-icon');
+        const arrow = item.querySelector('.story-toggle-indicator .arrow-icon');
         if (anyCollapsed) {
           item.classList.add('is-expanded');
           item.setAttribute('aria-expanded', 'true');
@@ -347,609 +288,96 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
 
-      btnToggleAllStory.textContent = anyCollapsed ? '전체 접기' : '전체 펼치기';
+      updateToggleAllBtnLabel();
     });
   }
 
-
-  // 6. Evidence Lightbox Modal Interaction
-
+  // 8. Evidence Lightbox Modal Interaction
   const evidenceData = {
-
     evidence1: {
-
       title: "Snort & Suricata 기반 침입 탐지(IDS) 룰셋 및 탐지 검증 보고서",
-
       desc: "Kali Linux 발 SYN Flag Scanning 및 비정상 패킷 공격 시나리오에 대해 Snort 및 Suricata 침입 탐지 엔진의 룰셋을 작성하고 실시간 알림 로그를 검증한 실증 결과입니다.",
-
       code: "[Snort Rule 명세]\nalert tcp any any -> $HOME_NET any (msg:\"SYN Flag Scanning Detected\"; flags:S; threshold:type threshold, track by_src, count 5, seconds 3; sid:1000005; rev:1;)\nalert icmp any any -> $HOME_NET any (msg:\"ICMP Echo Request Detected\"; itype:8; sid:1000001; rev:1;)\n\n[검증 결과]\n- Kali 발 포트 스캔 유입 시 alert 파일 내 timestamp, src IP, dst port 정확 매칭\n- 오탐 방지: 내부 DNS/NTP 통신 포트 예외 처리 완료"
-
     },
-
     evidence2: {
-
       title: "GNS3 가상 토폴로지 구축 및 Cisco ASAv 방화벽 망 분리 설계서",
-
       desc: "GNS3 환경에서 라우터 이중화(HSRP)와 Cisco ASAv 방화벽을 배치하여 내부망(Inside), DMZ 웹 서버망, 인터넷 구간을 격리하고 인터페이스별 보안 레벨 정책을 적용한 보고서입니다.",
-
       code: "[Cisco ASAv 방화벽 인터페이스 보안 레벨]\ninterface GigabitEthernet0/0 -> nameif inside, security-level 100\ninterface GigabitEthernet0/1 -> nameif dmz, security-level 50\ninterface GigabitEthernet0/2 -> nameif outside, security-level 0\n\n[ACL 패킷 필터링 정책]\naccess-list DMZ_IN extended permit tcp any host 192.168.20.10 eq 80\naccess-list DMZ_IN extended permit tcp any host 192.168.20.10 eq 23\naccess-list DMZ_IN extended deny ip any any"
-
     },
-
     evidence3: {
-
       title: "OSSEC(HIDS) 및 Zabbix 기반 호스트 관제 체계 구축 명세서",
-
       desc: "Ubuntu 중앙 관제 서버에 OSSEC HIDS 서버를 구축하고 Windows 및 Rocky Linux 노드에 Agent를 연동하여 파일 무결성 및 시스템 가용성을 실시간 모니터링한 구성 문서입니다.",
-
       code: "[OSSEC HIDS 에이전트 연동 상태]\n- Server: Ubuntu 22.04 LTS (IP: 192.168.10.50)\n- Agent 001: Windows 10 (IP: 192.168.10.101) - Status: Active\n- Agent 002: Rocky Linux 9 (IP: 192.168.10.102) - Status: Active\n\n[Syscheck 무결성 감시]\n- 감시 대상: /etc/passwd, /etc/shadow, C:\\Windows\\System32\\drivers\\etc\\hosts\n- Zabbix 연동: CPU 점유율 85% 초과 또는 Agent Unreachable 시 즉시 대시보드 경보"
-
     },
-
     scope: {
-
       title: "공개 범위 및 보안 점검표 (Disclosure Scope Checklist)",
-
       desc: "정보보안 전문가로서 개인정보보호법 준수 및 자산 침해사고 예방을 위해 공개/비공개 범위를 명확히 규정합니다.",
-
-      code: "[대상 및 목적]\n- 대상: 정보보안 직무 채용 담당자 및 IT 실무진\n- 목적: 정보보안 전문가를 꿈꾸는 이혜원의 보안 분석 역량과 실무 문제 해결 경험 전달\n\n[공개 정보 (4개)]\n1. 이름 및 전문 지향점: 이혜원 / 주니어 정보보안 전문가\n2. 보유 기술 스택: Snort/Suricata, GNS3/ASAv, AI 보안관제, Linux, Python\n3. 공식 채용 소통 이메일: wonq1029@gmail.com\n4. 실무 산출물: 비식별화된 S-A-R 침입 탐지 룰셋 및 네트워크 아키텍처 보고서\n\n[비공개 정보 (3개)]\n1. 주민등록번호, 생년월일 등 고유식별정보 (사유: 개인정보보호법 준수 및 도용 방지)\n2. 개인 휴대전화번호 및 상세 거주지 주소 (사유: 사생활 보호 및 스팸 방지)\n3. 시스템 계정 비밀번호, API Secret 토큰 원문 (사유: 침해사고 예방 및 보안 윤리)"
-
+      code: "[대상 및 목적]\n- 대상: 정보보안 직무 채용 담당자 및 IT 실무진\n- 목적: 보안 엔지니어 이혜원의 ZTNA·XDR 아키텍처 구현 역량과 실무 문제 해결 경험 전달\n\n[공개 정보 (4개)]\n1. 이름 및 전문 지향점: 이혜원 / AI 보안 에이전트 및 ZTNA·XDR 엔지니어\n2. 보유 기술 스택: ZTNA/XDR, WebAuthn/JWKS, Snort/Suricata, GNS3/ASAv, Linux, Python\n3. 공식 채용 소통 이메일: three78945@naver.com\n4. 실무 산출물: 비식별화된 S-A-R 침입 탐지 룰셋, 연구 논문 및 보안 웹앱\n\n[비공개 정보 (3개)]\n1. 주민등록번호, 생년월일 등 고유식별정보 (사유: 개인정보보호법 준수 및 도용 방지)\n2. 개인 휴대전화번호 및 상세 거주지 주소 (사유: 사생활 보호 및 스팸 방지)\n3. 시스템 계정 비밀번호, API Secret 토큰 원문 (사유: 침해사고 예방 및 보안 윤리)"
     }
-
   };
-
-
 
   const openModal = (key) => {
-
     if (!modal) return;
-
     const data = evidenceData[key];
-
     if (!data) return;
 
-
-
     lastActiveElement = document.activeElement;
-
     if (modalTitle) modalTitle.textContent = data.title;
-
     if (modalDesc) modalDesc.textContent = data.desc;
-
     if (modalCode) modalCode.textContent = data.code;
 
-
-
     modal.classList.add('open');
-
     modal.setAttribute('aria-hidden', 'false');
-
     document.body.style.overflow = 'hidden';
-
-
 
     if (modalClose) modalClose.focus();
-
   };
-
-
 
   const closeModal = () => {
-
     if (!modal) return;
-
     modal.classList.remove('open');
-
     modal.setAttribute('aria-hidden', 'true');
-
     document.body.style.overflow = '';
 
-
-
     if (lastActiveElement && typeof lastActiveElement.focus === 'function') {
-
       lastActiveElement.focus();
-
     }
-
   };
 
-
-
-  document.querySelectorAll('.open-evidence-btn').forEach(btn => {
-
+  document.querySelectorAll('.open-evidence-btn').forEach((btn) => {
     btn.addEventListener('click', (e) => {
-
       e.stopPropagation();
-
       const key = btn.dataset.evidence;
-
       openModal(key);
-
     });
-
   });
-
-
 
   if (modalClose) modalClose.addEventListener('click', closeModal);
-
   if (modalBackdrop) modalBackdrop.addEventListener('click', closeModal);
 
-
-
   document.addEventListener('keydown', (e) => {
-
-    if (e.key === 'Escape' && modal && modal.classList.contains('open')) {
-
-      closeModal();
-
+    if (e.key === 'Escape') {
+      closeAllDropdowns();
+      if (modal && modal.classList.contains('open')) {
+        closeModal();
+      }
     }
-
   });
 
-
-
-  // 7. Easter Egg: Cyber Defense Tic-Tac-Toe Minigame
-
-  const gameTriggerBtn = document.getElementById('game-trigger-btn');
-
-  const gameModal = document.getElementById('game-modal');
-
-  const gameCloseBtn = document.getElementById('game-close-btn');
-
-  const gameBackdrop = document.getElementById('game-backdrop');
-
-  const gameCells = document.querySelectorAll('.game-cell');
-
-  const gameStatus = document.getElementById('game-status');
-
-  const gameResetBtn = document.getElementById('game-reset-btn');
-
-  const scoreWinsEl = document.getElementById('score-wins');
-
-  const scoreDrawsEl = document.getElementById('score-draws');
-
-  const scoreLossesEl = document.getElementById('score-losses');
-
-
-
-  let boardState = Array(9).fill(null);
-
-  let isGameOver = false;
-
-  let isAiThinking = false;
-
-  let scores = { wins: 0, draws: 0, losses: 0 };
-
-
-
-  const winningLines = [
-
-    [0, 1, 2], [3, 4, 5], [6, 7, 8],
-
-    [0, 3, 6], [1, 4, 7], [2, 5, 8],
-
-    [0, 4, 8], [2, 4, 6]
-
-  ];
-
-
-
-  const checkWinner = (state) => {
-
-    for (let line of winningLines) {
-
-      const [a, b, c] = line;
-
-      if (state[a] && state[a] === state[b] && state[a] === state[c]) {
-
-        return { winner: state[a], line };
-
-      }
-
-    }
-
-    if (state.every(cell => cell !== null)) {
-
-      return { winner: 'draw', line: null };
-
-    }
-
-    return null;
-
-  };
-
-
-
-  const updateScores = () => {
-
-    if (scoreWinsEl) scoreWinsEl.textContent = scores.wins;
-
-    if (scoreDrawsEl) scoreDrawsEl.textContent = scores.draws;
-
-    if (scoreLossesEl) scoreLossesEl.textContent = scores.losses;
-
-  };
-
-
-
-  const renderBoard = () => {
-
-    gameCells.forEach((cell, idx) => {
-
-      const val = boardState[idx];
-
-      cell.textContent = val || '';
-
-      cell.classList.remove('cell-o', 'cell-x', 'winning-cell');
-
-      if (val === 'O') cell.classList.add('cell-o');
-
-      if (val === 'X') cell.classList.add('cell-x');
-
-      cell.disabled = val !== null || isGameOver || isAiThinking;
-
-    });
-
-  };
-
-
-
-  const resetGame = () => {
-
-    boardState = Array(9).fill(null);
-
-    isGameOver = false;
-
-    isAiThinking = false;
-
-    if (gameStatus) {
-
-      gameStatus.textContent = '당신의 턴입니다 (🛡️ O). 노드를 선택하세요.';
-
-      gameStatus.style.color = 'var(--color-text-main)';
-
-    }
-
-    renderBoard();
-
-  };
-
-
-
-  const handleGameEnd = (result) => {
-
-    isGameOver = true;
-
-    renderBoard();
-
-
-
-    if (result.winner === 'O') {
-
-      scores.wins++;
-
-      if (gameStatus) {
-
-        gameStatus.textContent = '방어 성공! 공격 라인을 완벽히 차단했습니다.';
-
-        gameStatus.style.color = '#15803d';
-
-      }
-
-      if (result.line) {
-
-        result.line.forEach(i => gameCells[i].classList.add('winning-cell'));
-
-      }
-
-    } else if (result.winner === 'X') {
-
-      scores.losses++;
-
-      if (gameStatus) {
-
-        gameStatus.textContent = '침해 발생! AI 침입자가 방어선을 돌파했습니다.';
-
-        gameStatus.style.color = 'var(--color-accent-red)';
-
-      }
-
-      if (result.line) {
-
-        result.line.forEach(i => gameCells[i].classList.add('winning-cell'));
-
-      }
-
-    } else {
-
-      scores.draws++;
-
-      if (gameStatus) {
-
-        gameStatus.textContent = '방어전 무승부! 시스템 상태가 유지되었습니다.';
-
-        gameStatus.style.color = 'var(--color-text-secondary)';
-
-      }
-
-    }
-
-    updateScores();
-
-  };
-
-
-
-  const makeAiMove = () => {
-
-    if (isGameOver) return;
-
-    isAiThinking = true;
-
-    if (gameStatus) {
-
-      gameStatus.textContent = 'AI 침입자가 취약점 경로를 스캔 중입니다... (⚔️ X)';
-
-      gameStatus.style.color = 'var(--color-text-subtle)';
-
-    }
-
-    renderBoard();
-
-
-
-    setTimeout(() => {
-
-      // 1. AI winning move
-
-      for (let i = 0; i < 9; i++) {
-
-        if (!boardState[i]) {
-
-          boardState[i] = 'X';
-
-          if (checkWinner(boardState)?.winner === 'X') {
-
-            isAiThinking = false;
-
-            handleGameEnd({ winner: 'X', line: checkWinner(boardState).line });
-
-            return;
-
-          }
-
-          boardState[i] = null;
-
-        }
-
-      }
-
-
-
-      // 2. Block Player move
-
-      for (let i = 0; i < 9; i++) {
-
-        if (!boardState[i]) {
-
-          boardState[i] = 'O';
-
-          if (checkWinner(boardState)?.winner === 'O') {
-
-            boardState[i] = 'X';
-
-            isAiThinking = false;
-
-            const res = checkWinner(boardState);
-
-            if (res) {
-
-              handleGameEnd(res);
-
-            } else {
-
-              if (gameStatus) {
-
-                gameStatus.textContent = '당신의 턴입니다 (🛡️ O). 노드를 선택하세요.';
-
-                gameStatus.style.color = 'var(--color-text-main)';
-
-              }
-
-              renderBoard();
-
-            }
-
-            return;
-
-          }
-
-          boardState[i] = null;
-
-        }
-
-      }
-
-
-
-      // 3. Center or Random move
-
-      let bestMove = null;
-
-      if (!boardState[4] && Math.random() < 0.7) {
-
-        bestMove = 4;
-
-      } else {
-
-        const available = [];
-
-        boardState.forEach((val, idx) => {
-
-          if (!val) available.push(idx);
-
-        });
-
-        if (available.length > 0) {
-
-          bestMove = available[Math.floor(Math.random() * available.length)];
-
-        }
-
-      }
-
-
-
-      if (bestMove !== null) {
-
-        boardState[bestMove] = 'X';
-
-      }
-
-
-
-      isAiThinking = false;
-
-      const finalCheck = checkWinner(boardState);
-
-      if (finalCheck) {
-
-        handleGameEnd(finalCheck);
-
-      } else {
-
-        if (gameStatus) {
-
-          gameStatus.textContent = '당신의 턴입니다 (🛡️ O). 노드를 선택하세요.';
-
-          gameStatus.style.color = 'var(--color-text-main)';
-
-        }
-
-        renderBoard();
-
-      }
-
-    }, 450);
-
-  };
-
-
-
-  const handleCellClick = (idx) => {
-
-    if (boardState[idx] || isGameOver || isAiThinking) return;
-
-
-
-    boardState[idx] = 'O';
-
-    renderBoard();
-
-
-
-    const result = checkWinner(boardState);
-
-    if (result) {
-
-      handleGameEnd(result);
-
-    } else {
-
-      makeAiMove();
-
-    }
-
-  };
-
-
-
-  gameCells.forEach((cell, idx) => {
-
-    cell.addEventListener('click', () => handleCellClick(idx));
-
-  });
-
-
-
-  if (gameResetBtn) {
-
-    gameResetBtn.addEventListener('click', resetGame);
-
-  }
-
-
-
-  const openGameModal = () => {
-
-    if (!gameModal) return;
-
-    lastActiveElement = document.activeElement;
-
-    gameModal.classList.add('open');
-
-    gameModal.setAttribute('aria-hidden', 'false');
-
-    document.body.style.overflow = 'hidden';
-
-    resetGame();
-
-    if (gameCloseBtn) gameCloseBtn.focus();
-
-  };
-
-
-
-  const closeGameModal = () => {
-
-    if (!gameModal) return;
-
-    gameModal.classList.remove('open');
-
-    gameModal.setAttribute('aria-hidden', 'true');
-
-    document.body.style.overflow = '';
-
-    if (lastActiveElement && typeof lastActiveElement.focus === 'function') {
-
-      lastActiveElement.focus();
-
-    }
-
-  };
-
-
-
-  if (gameTriggerBtn) gameTriggerBtn.addEventListener('click', openGameModal);
-
-  if (gameCloseBtn) gameCloseBtn.addEventListener('click', closeGameModal);
-
-  if (gameBackdrop) gameBackdrop.addEventListener('click', closeGameModal);
-
-
-
-  document.addEventListener('keydown', (e) => {
-
-    if (e.key === 'Escape' && gameModal && gameModal.classList.contains('open')) {
-
-      closeGameModal();
-
-    }
-
-  });
-  // ==========================================================================
-  // 8. Passkey Authentication (WebAuthn) - 최종 통합 버전
-  // ==========================================================================
-  
+  // 9. Passkey Authentication (WebAuthn) with Non-Blocking Inline Status Notice
   const btnRegister = document.getElementById('btn-register-passkey');
   const btnLogin = document.getElementById('btn-login-passkey');
   const btnLogout = document.getElementById('btn-logout');
   const authGate = document.getElementById('auth-gate');
   const privateContent = document.getElementById('private-content-area');
+  const passkeyStatusMsg = document.getElementById('passkey-status-msg');
 
-  // [핵심 헬퍼 함수들] 스코프 에러를 막기 위해 가장 위에 선언합니다.
+  const showPasskeyNotice = (msg) => {
+    if (!passkeyStatusMsg) return;
+    passkeyStatusMsg.textContent = msg;
+    passkeyStatusMsg.classList.add('visible');
+  };
+
   const coerceToArrayBuffer = (input) => {
     if (!input) return new ArrayBuffer(0);
     if (input instanceof ArrayBuffer) return input;
@@ -974,9 +402,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return new ArrayBuffer(0);
   };
 
-  // 널리 쓰이는 alias 선언 (ReferenceError 원천 차단)
-  const base64URLToBuffer = coerceToArrayBuffer;
-
   const bufferToBase64URL = (buffer) => {
     const bytes = new Uint8Array(buffer);
     let binary = '';
@@ -989,31 +414,24 @@ document.addEventListener('DOMContentLoaded', () => {
       .replace(/=/g, '');
   };
 
-  // --- [카드 2] 패스키 등록 ---
   if (btnRegister) {
     btnRegister.addEventListener('click', async () => {
       try {
         const res = await fetch('/api/passkey-register-start', { method: 'POST' });
         if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.error || '등록 질문을 가져오지 못했습니다.');
+          throw new Error('등록 챌린지를 가져오지 못했습니다.');
         }
         const options = await res.json();
-
         options.challenge = coerceToArrayBuffer(options.challenge);
         if (options.user && options.user.id) {
           options.user.id = coerceToArrayBuffer(options.user.id);
         }
-
-        // 기존 등록 목록 내 ID들도 안전하게 변환
         if (options.excludeCredentials) {
-          options.excludeCredentials.forEach(cred => {
+          options.excludeCredentials.forEach((cred) => {
             cred.id = coerceToArrayBuffer(cred.id);
           });
         }
-
         const credential = await navigator.credentials.create({ publicKey: options });
-
         const verifyRes = await fetch('/api/passkey-register-finish', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1027,37 +445,30 @@ document.addEventListener('DOMContentLoaded', () => {
             },
           }),
         });
-
         if (verifyRes.ok) {
-          alert('패스키가 성공적으로 등록되었습니다!');
+          showPasskeyNotice('패스키가 성공적으로 등록되었습니다.');
         } else {
-          const errData = await verifyRes.json();
-          alert('패스키 등록 실패: ' + (errData.error || '알 수 없는 오류'));
+          showPasskeyNotice('패스키 등록 검증에 실패했습니다.');
         }
       } catch (error) {
-        console.error('등록 에러:', error);
-        alert('등록 에러: ' + error.message);
+        showPasskeyNotice('패스키 등록 안내: 서버리스 인증 엔드포인트 연결 환경에서 동작합니다.');
       }
     });
   }
 
-  // --- [카드 3] 패스키 로그인 ---
   if (btnLogin) {
     btnLogin.addEventListener('click', async () => {
       try {
         const res = await fetch('/api/passkey-login-start', { method: 'POST' });
-        if (!res.ok) throw new Error('로그인 질문을 가져오지 못했습니다.');
+        if (!res.ok) throw new Error('로그인 챌린지를 가져오지 못했습니다.');
         const options = await res.json();
-
         options.challenge = coerceToArrayBuffer(options.challenge);
         if (options.allowCredentials) {
-          options.allowCredentials.forEach(cred => {
+          options.allowCredentials.forEach((cred) => {
             cred.id = coerceToArrayBuffer(cred.id);
           });
         }
-
         const credential = await navigator.credentials.get({ publicKey: options });
-
         const verifyRes = await fetch('/api/passkey-login-finish', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1073,65 +484,24 @@ document.addEventListener('DOMContentLoaded', () => {
             },
           }),
         });
-
         if (verifyRes.ok) {
           if (authGate) authGate.style.display = 'none';
           if (privateContent) privateContent.style.display = 'block';
-          alert('인증 성공! 나만의 공간이 열렸습니다.');
+          showPasskeyNotice('인증 성공! 나만의 공간이 열렸습니다.');
         } else {
-          alert('인증에 실패했습니다. 등록된 기기인지 확인해주세요.');
+          showPasskeyNotice('인증에 실패했습니다. 등록된 기기인지 확인해주세요.');
         }
       } catch (error) {
-        console.error('로그인 에러:', error);
-        alert('로그인을 취소했거나 오류가 발생했습니다.');
+        showPasskeyNotice('패스키 로그인 안내: 등록된 보안 키 및 서버리스 API 연결이 필요합니다.');
       }
     });
   }
 
-  // --- 로그아웃 ---
   if (btnLogout) {
-    btnLogout.addEventListener('click', async () => {
+    btnLogout.addEventListener('click', () => {
       if (authGate) authGate.style.display = 'flex';
       if (privateContent) privateContent.style.display = 'none';
-      alert('로그아웃 되었습니다. 화면이 다시 잠깁니다.');
+      showPasskeyNotice('로그아웃 되었습니다. 화면이 다시 잠깁니다.');
     });
   }
 });
-
-
-
-// Navigation Projects Dropdown
-
-const navDropdown = document.getElementById('nav-dropdown');
-
-const navDropdownBtn = document.getElementById('nav-dropdown-btn');
-
-
-
-if (navDropdown && navDropdownBtn) {
-
-  navDropdownBtn.addEventListener('click', (e) => {
-
-    e.stopPropagation();
-
-    navDropdown.classList.toggle('open');
-
-    navDropdownBtn.setAttribute('aria-expanded', navDropdown.classList.contains('open'));
-
-  });
-
-
-
-  document.addEventListener('click', (e) => {
-
-    if (!navDropdown.contains(e.target)) {
-
-      navDropdown.classList.remove('open');
-
-      navDropdownBtn.setAttribute('aria-expanded', 'false');
-
-    }
-
-  });
-
-}

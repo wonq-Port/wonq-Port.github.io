@@ -5,333 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CYBER DEFENSE : TIC-TAC-TOE | 보안 방화벽 미니게임</title>
 
-  <!-- Google Fonts -->
+  <!-- Google Fonts: Barlow Condensed & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-  <style>
-    :root {
-      --font-barlow: 'Barlow Condensed', sans-serif;
-      --font-inter: 'Inter', sans-serif;
-      --color-bg: #0f172a;
-      --color-card-bg: #1e293b;
-      --color-text-main: #f8fafc;
-      --color-text-muted: #94a3b8;
-      --color-accent-green: #22c55e;
-      --color-accent-red: #ef4444;
-      --color-accent-blue: #38bdf8;
-      --color-border: #334155;
-      --color-cell-bg: #0f172a;
-      --color-cell-hover: #1e293b;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.001ms !important;
-        transition-duration: 0.001ms !important;
-      }
-    }
-
-    body.reduce-motion *,
-    body.reduce-motion *::before,
-    body.reduce-motion *::after {
-      animation-duration: 0.001ms !important;
-      transition-duration: 0.001ms !important;
-    }
-
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: var(--font-inter);
-      background-color: var(--color-bg);
-      color: var(--color-text-main);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
-      line-height: 1.5;
-      overflow-x: hidden;
-    }
-
-    .game-container {
-      width: 100%;
-      max-width: 680px;
-      background: var(--color-card-bg);
-      border: 1px solid var(--color-border);
-      border-radius: 8px;
-      padding: 1.5rem;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-    }
-
-    .game-nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--color-border);
-      padding-bottom: 0.75rem;
-      margin-bottom: 1rem;
-    }
-
-    .game-tag {
-      font-family: var(--font-barlow);
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--color-accent-blue);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .nav-actions {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .btn-small {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--color-text-muted);
-      background: #0f172a;
-      border: 1px solid var(--color-border);
-      padding: 4px 8px;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .btn-small:hover {
-      color: var(--color-text-main);
-      border-color: var(--color-accent-blue);
-    }
-
-    .btn-small[aria-pressed="true"] {
-      background: var(--color-accent-blue);
-      color: #0f172a;
-      border-color: var(--color-accent-blue);
-    }
-
-    .game-title {
-      font-family: var(--font-barlow);
-      font-size: clamp(24px, 4vw, 32px);
-      font-weight: 800;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      color: var(--color-text-main);
-      margin-bottom: 0.25rem;
-    }
-
-    .info-strip {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 0.5rem;
-      background: #0f172a;
-      border: 1px solid var(--color-border);
-      border-radius: 4px;
-      padding: 0.75rem;
-      margin-bottom: 1rem;
-      font-size: 12px;
-    }
-
-    @media (min-width: 600px) {
-      .info-strip {
-        grid-template-columns: 1.2fr 1fr;
-      }
-    }
-
-    .info-item strong {
-      color: var(--color-accent-blue);
-    }
-
-    .stats-row {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .stat-card {
-      background: #0f172a;
-      border: 1px solid var(--color-border);
-      border-radius: 4px;
-      padding: 0.5rem;
-      text-align: center;
-    }
-
-    .stat-label {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--color-text-muted);
-      display: block;
-    }
-
-    .stat-val {
-      font-family: var(--font-barlow);
-      font-size: 22px;
-      font-weight: 700;
-      line-height: 1.1;
-    }
-
-    .val-timer { color: var(--color-accent-blue); }
-    .val-win { color: var(--color-accent-green); }
-    .val-loss { color: var(--color-accent-red); }
-    .val-draw { color: var(--color-text-muted); }
-
-    .status-banner {
-      background: #0f172a;
-      border: 1px solid var(--color-border);
-      border-radius: 4px;
-      padding: 0.5rem;
-      text-align: center;
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 1rem;
-      min-height: 38px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .status-banner.win {
-      background: rgba(34, 197, 94, 0.15);
-      border-color: var(--color-accent-green);
-      color: var(--color-accent-green);
-    }
-
-    .status-banner.loss {
-      background: rgba(239, 68, 68, 0.15);
-      border-color: var(--color-accent-red);
-      color: var(--color-accent-red);
-    }
-
-    .status-banner.paused {
-      background: rgba(56, 189, 248, 0.15);
-      border-color: var(--color-accent-blue);
-      color: var(--color-accent-blue);
-    }
-
-    .board-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      max-width: 320px;
-      margin: 0 auto 1.25rem auto;
-      background: var(--color-border);
-      padding: 8px;
-      border-radius: 6px;
-    }
-
-    .cell-btn {
-      aspect-ratio: 1 / 1;
-      background: var(--color-cell-bg);
-      border: 1px solid transparent;
-      border-radius: 4px;
-      font-family: var(--font-barlow);
-      font-size: 2.5rem;
-      font-weight: 800;
-      color: var(--color-text-main);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: background 0.15s ease, transform 0.1s ease;
-    }
-
-    .cell-btn:hover:not(:disabled) {
-      background: var(--color-cell-hover);
-      border-color: var(--color-accent-blue);
-    }
-
-    .cell-btn:focus-visible {
-      outline: 3px solid var(--color-accent-blue);
-      outline-offset: 2px;
-    }
-
-    .cell-btn.cell-o { color: var(--color-accent-green); }
-    .cell-btn.cell-x { color: var(--color-accent-red); }
-
-    .cell-btn.winning-cell {
-      background: #1e3a8a;
-      border-color: var(--color-accent-blue);
-    }
-
-    .cell-btn:disabled {
-      cursor: not-allowed;
-      opacity: 0.95;
-    }
-
-    .controls-row {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 0.75rem;
-    }
-
-    .btn-main {
-      font-family: var(--font-inter);
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      padding: 0.6rem 1.25rem;
-      border-radius: 4px;
-      border: 1px solid transparent;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .btn-primary {
-      background: var(--color-accent-blue);
-      color: #0f172a;
-    }
-
-    .btn-primary:hover {
-      background: #7dd3fc;
-    }
-
-    .btn-secondary {
-      background: transparent;
-      border-color: var(--color-border);
-      color: var(--color-text-main);
-    }
-
-    .btn-secondary:hover {
-      background: #0f172a;
-      border-color: var(--color-text-muted);
-    }
-
-    .game-footer {
-      margin-top: 1rem;
-      text-align: center;
-      border-top: 1px solid var(--color-border);
-      padding-top: 0.75rem;
-      font-size: 12px;
-      color: var(--color-text-muted);
-    }
-
-    .game-footer a {
-      color: var(--color-accent-blue);
-      text-decoration: underline;
-    }
-  </style>
+  <!-- Game Stylesheet -->
+  <link rel="stylesheet" href="css/game.css" />
 </head>
 <body>
-  <main class="game-container" role="region" aria-label="사이버 방화벽 틱택토 게임 영역">
-    <header class="game-nav">
-      <div class="game-tag">
-        <span aria-hidden="true">🛡️</span>
-        <span>SECURITY CORE // DEFENSE GRID</span>
-      </div>
+  <!-- Sticky Top Navigation Matching index.html -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo" aria-label="메인 포트폴리오로 이동">
+        <span>이혜원</span>
+        <span class="nav-badge">DEFENSE GAME</span>
+      </a>
       <div class="nav-actions">
+        <a href="index.html" class="nav-back-btn">← 포트폴리오 메인</a>
         <button type="button" id="btn-sound-toggle" class="btn-small" aria-pressed="false" aria-label="효과음 음소거 토글">
           🔊 소리: 켜짐
         </button>
@@ -339,65 +30,76 @@
           ⚡ 모션: 일반
         </button>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <h1 class="game-title">CYBER DEFENSE : TIC-TAC-TOE</h1>
-
-    <section class="info-strip" aria-label="게임 규칙 및 핵심 조작">
-      <div class="info-item">
-        <strong>게임 규칙:</strong> 30초 내에 AI 침입자(⚔️ X)보다 먼저 3개의 방어 노드(🛡️ O)를 연결하면 방어 성공! 시간 초과 또는 공격자 연결 시 침해 발생(실패).
+  <main class="game-page-shell">
+    <section class="game-container" role="region" aria-label="사이버 방화벽 틱택토 게임 영역">
+      <div class="game-eyebrow-row">
+        <span class="game-tag">SECURITY CORE // DEFENSE GRID</span>
       </div>
-      <div class="info-item">
-        <strong>핵심 조작:</strong> 노드 클릭 또는 [Tab] 이동 후 [Enter/Space]. [P]키로 일시정지, [R]키로 새 판 시작.
+
+      <h1 class="game-title">CYBER DEFENSE : TIC-TAC-TOE</h1>
+      <div class="red-line"></div>
+
+      <section class="info-strip" aria-label="게임 규칙 및 핵심 조작">
+        <div class="info-item">
+          <strong>방어 규칙:</strong> 30초 내에 AI 침입자(⚔️ X)보다 먼저 3개의 방어 노드(🛡️ O)를 연결하면 방어 성공! 시간 초과 또는 공격자 연결 시 침해 발생.
+        </div>
+        <div class="info-item">
+          <strong>단축키 조작:</strong> 노드 클릭 또는 [Tab] 이동 후 [Enter/Space] · [P] 일시정지 · [R] 새 게임 시작
+        </div>
+      </section>
+
+      <section class="stats-row" aria-label="점수 및 제한시간">
+        <div class="stat-card">
+          <span class="stat-label">남은 시간</span>
+          <span class="stat-val val-timer" id="timer-val">30.0s</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">방어 성공 (승)</span>
+          <span class="stat-val val-win" id="stat-wins">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">침해 발생 (패)</span>
+          <span class="stat-val val-loss" id="stat-losses">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">무승부</span>
+          <span class="stat-val val-draw" id="stat-draws">0</span>
+        </div>
+      </section>
+
+      <div id="game-status" class="status-banner" aria-live="polite">
+        당신의 턴입니다 (🛡️ O). 비어 있는 방어 노드를 선택하세요.
+      </div>
+
+      <div class="board-grid" id="board-grid" role="grid" aria-label="3x3 방어 격자판">
+        <button type="button" class="cell-btn" data-index="0" aria-label="1행 1열 노드"></button>
+        <button type="button" class="cell-btn" data-index="1" aria-label="1행 2열 노드"></button>
+        <button type="button" class="cell-btn" data-index="2" aria-label="1행 3열 노드"></button>
+        <button type="button" class="cell-btn" data-index="3" aria-label="2행 1열 노드"></button>
+        <button type="button" class="cell-btn" data-index="4" aria-label="2행 2열 노드"></button>
+        <button type="button" class="cell-btn" data-index="5" aria-label="2행 3열 노드"></button>
+        <button type="button" class="cell-btn" data-index="6" aria-label="3행 1열 노드"></button>
+        <button type="button" class="cell-btn" data-index="7" aria-label="3행 2열 노드"></button>
+        <button type="button" class="cell-btn" data-index="8" aria-label="3행 3열 노드"></button>
+      </div>
+
+      <div class="controls-row">
+        <button type="button" id="btn-restart" class="btn-main btn-primary">새 게임 시작 (R)</button>
+        <button type="button" id="btn-pause" class="btn-main btn-secondary">일시정지 (P)</button>
+        <button type="button" id="btn-reset-storage" class="btn-main btn-secondary" title="누적 전적 및 저장소 초기화">전적 초기화</button>
       </div>
     </section>
-
-    <section class="stats-row" aria-label="점수 및 제한시간">
-      <div class="stat-card">
-        <span class="stat-label">남은 시간</span>
-        <span class="stat-val val-timer" id="timer-val">30.0s</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-label">방어 성공 (승)</span>
-        <span class="stat-val val-win" id="stat-wins">0</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-label">침해 발생 (패)</span>
-        <span class="stat-val val-loss" id="stat-losses">0</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-label">무승부</span>
-        <span class="stat-val val-draw" id="stat-draws">0</span>
-      </div>
-    </section>
-
-    <div id="game-status" class="status-banner" aria-live="polite">
-      당신의 턴입니다 (🛡️ O). 비어 있는 방어 노드를 선택하세요.
-    </div>
-
-    <div class="board-grid" id="board-grid" role="grid" aria-label="3x3 방어 격자판">
-      <button type="button" class="cell-btn" data-index="0" aria-label="1행 1열 노드"></button>
-      <button type="button" class="cell-btn" data-index="1" aria-label="1행 2열 노드"></button>
-      <button type="button" class="cell-btn" data-index="2" aria-label="1행 3열 노드"></button>
-      <button type="button" class="cell-btn" data-index="3" aria-label="2행 1열 노드"></button>
-      <button type="button" class="cell-btn" data-index="4" aria-label="2행 2열 노드"></button>
-      <button type="button" class="cell-btn" data-index="5" aria-label="2행 3열 노드"></button>
-      <button type="button" class="cell-btn" data-index="6" aria-label="3행 1열 노드"></button>
-      <button type="button" class="cell-btn" data-index="7" aria-label="3행 2열 노드"></button>
-      <button type="button" class="cell-btn" data-index="8" aria-label="3행 3열 노드"></button>
-    </div>
-
-    <div class="controls-row">
-      <button type="button" id="btn-restart" class="btn-main btn-primary">새 게임 시작 (R)</button>
-      <button type="button" id="btn-pause" class="btn-main btn-secondary">일시정지 (P)</button>
-      <button type="button" id="btn-reset-storage" class="btn-main btn-secondary" title="누적 전적 및 저장소 초기화">전적 초기화</button>
-    </div>
-
-    <footer class="game-footer">
-      <span>포트폴리오로 돌아가기: </span>
-      <a href="index.html">메인 페이지로 이동</a>
-    </footer>
   </main>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <span>© 2026 이혜원 (Lee Hye-won) · CYBER DEFENSE GRID</span>
+      <span>EDITORIAL SECURITY UTILITY</span>
+    </div>
+  </footer>
 
   <script src="js/game.js"></script>
 </body>
