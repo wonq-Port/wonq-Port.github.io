@@ -24,7 +24,7 @@
   --color-border: rgba(0, 0, 0, 0.11);
   --color-border-darker: rgba(0, 0, 0, 0.22);
   --color-hover-bg: #f8f9fa;
-  --max-width: 72rem;
+  --max-width: 78rem;
   --btn-height-sm: 34px;
   --btn-height-md: 38px;
   --btn-radius: 4px;
@@ -295,15 +295,15 @@ body.dark-theme .theme-icon.icon-sun {
 @media (min-width: 1024px) {
   .section-grid {
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: 3.5rem;
+    gap: 2.5rem;
   }
 
   .grid-left {
-    grid-column: span 3 / span 3;
+    grid-column: span 2 / span 2;
   }
 
   .grid-right {
-    grid-column: span 9 / span 9;
+    grid-column: span 10 / span 10;
   }
 }
 
@@ -693,7 +693,7 @@ body.dark-theme .navbar {
   text-transform: uppercase;
   letter-spacing: -0.02em;
   color: var(--color-text-main);
-  font-size: clamp(52px, 3.5vw, 116px);
+  font-size: clamp(52px, 8.5vw, 116px);
 }
 
 .red-line {
@@ -719,7 +719,7 @@ body.dark-theme .navbar {
   font-weight: 400;
   color: var(--color-text-secondary);
   line-height: 1.7;
-  max-width: 42rem;
+  max-width: 56rem;
   font-size: clamp(14.5px, 1.4vw, 16.5px);
 }
 
@@ -727,7 +727,7 @@ body.dark-theme .navbar {
   font-size: 13px;
   line-height: 1.65;
   color: var(--color-text-muted);
-  max-width: 44rem;
+  max-width: 58rem;
   margin-top: 1rem;
   padding: 0.75rem 1rem;
   background: var(--color-surface);
@@ -744,7 +744,7 @@ body.dark-theme .navbar {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.85rem;
-  max-width: 60rem;
+  max-width: 100%;
 }
 
 @media (min-width: 768px) {
@@ -1876,4 +1876,85 @@ body.dark-theme .cell-btn {
 body.dark-theme .footer {
   background-color: #090a0d !important;
   border-top-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* ==========================================================================
+   Precision Button Dimension Equality & Expanded Card Layout
+   ========================================================================== */
+/* 1. Exactly Identical Dimensions for Overview and Projects Buttons */
+.nav-btn-overview,
+.nav-btn-projects {
+  width: 104px !important;
+  min-width: 104px !important;
+  max-width: 104px !important;
+  height: 36px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  font-family: var(--font-inter, 'Inter', sans-serif) !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  box-sizing: border-box !important;
+}
+
+.nav-home-btn {
+  height: 36px !important;
+  padding: 0 14px !important;
+  font-size: 11.5px !important;
+}
+
+.theme-toggle-btn {
+  width: 36px !important;
+  height: 36px !important;
+}
+
+.motion-btn {
+  height: 36px !important;
+}
+
+/* 2. Expanded Card Width & Natural Hero Alignment (Removing narrow squeezed feeling) */
+.container {
+  max-width: 78rem !important;
+}
+
+.hero-highlights-strip {
+  max-width: 100% !important;
+}
+
+.compact-projects-grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 1.5rem !important;
+  width: 100% !important;
+}
+
+@media (min-width: 860px) {
+  .compact-projects-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 1.5rem !important;
+  }
+}
+
+.compact-project-card {
+  padding: 1.75rem 1.6rem !important;
+  min-height: 290px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+@media (min-width: 1024px) {
+  .section-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+    gap: 2.5rem !important;
+  }
+  .grid-left {
+    grid-column: span 2 / span 2 !important;
+  }
+  .grid-right {
+    grid-column: span 10 / span 10 !important;
+  }
 }

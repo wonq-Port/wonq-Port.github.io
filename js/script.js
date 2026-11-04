@@ -48,55 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('scroll', handleScroll, { passive: true });
   handleScroll();
 
-  // 2. Dual Dropdown Navigation
-  const closeAllDropdowns = () => {
-    if (overviewDropdown) {
-      overviewDropdown.classList.remove('open');
-      if (overviewBtn) overviewBtn.setAttribute('aria-expanded', 'false');
-    }
-    if (projectsDropdown) {
-      projectsDropdown.classList.remove('open');
-      if (projectsBtn) projectsBtn.setAttribute('aria-expanded', 'false');
-    }
-  };
-
-  if (overviewBtn && overviewDropdown) {
-    overviewBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isOpen = overviewDropdown.classList.contains('open');
-      closeAllDropdowns();
-      if (!isOpen) {
-        overviewDropdown.classList.add('open');
-        overviewBtn.setAttribute('aria-expanded', 'true');
-      }
-    });
-  }
-
-  if (projectsBtn && projectsDropdown) {
-    projectsBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isOpen = projectsDropdown.classList.contains('open');
-      closeAllDropdowns();
-      if (!isOpen) {
-        projectsDropdown.classList.add('open');
-        projectsBtn.setAttribute('aria-expanded', 'true');
-      }
-    });
-  }
-
-  document.querySelectorAll('.dropdown-item').forEach((item) => {
-    item.addEventListener('click', () => {
-      closeAllDropdowns();
-    });
-  });
-
-  document.addEventListener('click', (e) => {
-    if (overviewDropdown && projectsDropdown) {
-      if (!overviewDropdown.contains(e.target) && !projectsDropdown.contains(e.target)) {
-        closeAllDropdowns();
-      }
-    }
-  });
+  // (Dropdown listeners unified in Master Navigation Controller below)
 
   // 3. Smooth Scroll Navigation
   if (logoBtn) {
