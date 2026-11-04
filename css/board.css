@@ -1405,6 +1405,49 @@ button {
   pointer-events: auto !important;
 }
 
+/* Enforce uniform fixed width and center alignment on all badges, guaranteeing identical spacing */
+.dropdown-item {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 10px !important;
+  padding: 8px 10px !important;
+  border-radius: 4px !important;
+  text-decoration: none !important;
+  transition: background-color 0.15s ease, transform 0.15s ease !important;
+  color: var(--color-text-main) !important;
+}
+
+.dropdown-item .item-badge {
+  width: 42px !important;
+  min-width: 42px !important;
+  max-width: 42px !important;
+  height: 20px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  padding: 0 !important;
+  font-family: var(--font-barlow, 'Barlow Condensed', sans-serif) !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+  border-radius: 3px !important;
+  margin-top: 2px !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.dropdown-item .item-text {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  text-align: left !important;
+}
+
+.dropdown-item .item-title {
+  line-height: 1.35 !important;
+}
+
 @media (max-width: 640px) {
   #nav-projects-dropdown .nav-dropdown-menu {
     left: auto !important;
