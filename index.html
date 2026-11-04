@@ -17,16 +17,16 @@
   <!-- Scroll Progress Bar -->
   <div id="scroll-progress" class="scroll-progress" aria-hidden="true"></div>
 
-  <!-- Navigation -->
-  <header id="navbar" class="navbar">
+  <!-- Unified Top Navigation Bar (100% Identical Across All Pages) -->
+  <header id="navbar" class="navbar scrolled">
     <div class="nav-container">
-      <a href="#hero" class="nav-logo" id="logo-btn" aria-label="이혜원 포트폴리오 최상단으로 이동">
+      <a href="#hero" class="nav-logo" id="logo-btn" aria-label="이혜원 포트폴리오 메인으로 이동">
         <span>이혜원</span>
         <span class="nav-logo-badge">PORTFOLIO</span>
       </a>
 
-      <!-- Unified Navigation & Motion Controls -->
       <div class="nav-extra">
+        
         <nav class="nav-menu" aria-label="주요 내비게이션">
           <!-- 1. 포트폴리오 섹션 드롭다운 (Overview) -->
           <div class="nav-dropdown" id="nav-overview-dropdown">
@@ -98,14 +98,14 @@
                 <span class="item-badge">PDS</span>
                 <div class="item-text">
                   <span class="item-title">플랜두씨 다이어리</span>
-                  <span class="item-desc">Plan · Do · See 실행 관리</span>
+                  <span class="item-desc">Plan → Do → See 라이프 다이어리</span>
                 </div>
               </a>
               <a href="studio.html" class="dropdown-item" role="menuitem">
                 <span class="item-badge">APP</span>
                 <div class="item-text">
                   <span class="item-title">짤·카드 스튜디오</span>
-                  <span class="item-desc">EXIF 제거 카드뉴스 생성기</span>
+                  <span class="item-desc">EXIF 제거 카드뉴스 &amp; 밈 생성기</span>
                 </div>
               </a>
               <a href="game.html" class="dropdown-item" role="menuitem">
@@ -118,7 +118,7 @@
             </div>
           </div>
         </nav>
-
+        
         <button type="button" id="motion-toggle-btn" class="motion-btn" aria-pressed="false" aria-label="화면 모션 애니메이션 줄이기 토글">
           모션 줄이기: OFF
         </button>

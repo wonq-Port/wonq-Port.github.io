@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>짤·카드 스튜디오 | Meme &amp; Card Studio</title>
+  <title>짤·카드 스튜디오 | Meme &amp; Card News Studio</title>
 
   <!-- Google Fonts: Barlow Condensed & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -14,186 +14,294 @@
   <link rel="stylesheet" href="css/studio.css" />
 </head>
 <body>
-  <!-- Navigation Bar -->
-  <header class="navbar">
+  <!-- Scroll Progress Bar -->
+  <div id="scroll-progress" class="scroll-progress" aria-hidden="true"></div>
+
+  <!-- Unified Top Navigation Bar (100% Identical Across All Pages) -->
+  <header id="navbar" class="navbar scrolled">
     <div class="nav-container">
-      <a href="index.html" class="nav-logo" aria-label="메인 포트폴리오로 이동">
+      <a href="index.html" class="nav-logo" id="logo-btn" aria-label="이혜원 포트폴리오 메인으로 이동">
         <span>이혜원</span>
-        <span class="nav-badge">STUDIO</span>
+        <span class="nav-logo-badge">STUDIO</span>
       </a>
 
-      <nav class="nav-menu" aria-label="도구 내비게이션">
-        <a href="index.html" class="nav-link">Portfolio</a>
-        <a href="game.html" class="nav-link">Mini Game</a>
-        <a href="studio.html" class="nav-link active">Studio</a>
-      </nav>
+      <div class="nav-extra">
+        <a href="index.html" class="btn-editorial nav-home-btn" title="메인 포트폴리오로 이동">← Portfolio</a>
+        <nav class="nav-menu" aria-label="주요 내비게이션">
+          <!-- 1. 포트폴리오 섹션 드롭다운 (Overview) -->
+          <div class="nav-dropdown" id="nav-overview-dropdown">
+            <button type="button" class="nav-dropdown-btn nav-btn-overview" id="nav-overview-btn" aria-haspopup="true" aria-expanded="false" aria-label="섹션 메뉴 열기">
+              <span>Overview</span>
+              <span class="dropdown-caret" aria-hidden="true">▾</span>
+            </button>
+            <div class="nav-dropdown-menu" id="nav-overview-menu" role="menu">
+              <a href="index.html#metrics" class="dropdown-item" role="menuitem">
+                <span class="item-badge new">01</span>
+                <div class="item-text">
+                  <span class="item-title">Numbers</span>
+                  <span class="item-desc">핵심 정량 지표</span>
+                </div>
+              </a>
+              <a href="index.html#skills" class="dropdown-item" role="menuitem">
+                <span class="item-badge">02</span>
+                <div class="item-text">
+                  <span class="item-title">Skills &amp; Certs</span>
+                  <span class="item-desc">기술 스택 &amp; 자격 사항</span>
+                </div>
+              </a>
+              <a href="index.html#work" class="dropdown-item" role="menuitem">
+                <span class="item-badge new">03</span>
+                <div class="item-text">
+                  <span class="item-title">Work</span>
+                  <span class="item-desc">대표 보안 프로젝트 3선</span>
+                </div>
+              </a>
+              <a href="index.html#contact" class="dropdown-item" role="menuitem">
+                <span class="item-badge">04</span>
+                <div class="item-text">
+                  <span class="item-title">Contact</span>
+                  <span class="item-desc">협업 및 연락처</span>
+                </div>
+              </a>
+              <a href="index.html#private" class="dropdown-item" role="menuitem">
+                <span class="item-badge">05</span>
+                <div class="item-text">
+                  <span class="item-title">Private</span>
+                  <span class="item-desc">패스키(WebAuthn) 인증</span>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- 2. 서브 앱/프로젝트 드롭다운 (Projects) -->
+          <div class="nav-dropdown" id="nav-projects-dropdown">
+            <button type="button" class="nav-dropdown-btn nav-btn-projects" id="nav-projects-btn" aria-haspopup="true" aria-expanded="false" aria-label="프로젝트 메뉴 열기">
+              <span>Projects</span>
+              <span class="dropdown-caret" aria-hidden="true">▾</span>
+            </button>
+            <div class="nav-dropdown-menu" id="nav-projects-menu" role="menu">
+              <a href="phishing-detector.html" class="dropdown-item" role="menuitem">
+                <span class="item-badge new">SEC</span>
+                <div class="item-text">
+                  <span class="item-title">피싱 URL 사전 진단기</span>
+                  <span class="item-desc">11만 건 논문 기반 어휘적 탐지 웹</span>
+                </div>
+              </a>
+              <a href="board.html" class="dropdown-item" role="menuitem">
+                <span class="item-badge">LIVE</span>
+                <div class="item-text">
+                  <span class="item-title">오늘의 진짜 정보판</span>
+                  <span class="item-desc">실시간 환율 &amp; 5종 장애 복원 보드</span>
+                </div>
+              </a>
+              <a href="plando.html" class="dropdown-item" role="menuitem">
+                <span class="item-badge">PDS</span>
+                <div class="item-text">
+                  <span class="item-title">플랜두씨 다이어리</span>
+                  <span class="item-desc">Plan → Do → See 라이프 다이어리</span>
+                </div>
+              </a>
+              <a href="studio.html" class="dropdown-item active-project" role="menuitem">
+                <span class="item-badge">APP</span>
+                <div class="item-text">
+                  <span class="item-title">짤·카드 스튜디오</span>
+                  <span class="item-desc">EXIF 제거 카드뉴스 &amp; 밈 생성기</span>
+                </div>
+              </a>
+              <a href="game.html" class="dropdown-item" role="menuitem">
+                <span class="item-badge">GAME</span>
+                <div class="item-text">
+                  <span class="item-title">보안 방화벽 미니게임</span>
+                  <span class="item-desc">Cyber Defense Tic-Tac-Toe</span>
+                </div>
+              </a>
+            </div>
+          </div>
+        </nav>
+        
+        <button type="button" id="btn-motion-toggle" class="motion-btn" aria-pressed="false" aria-label="화면 모션 애니메이션 줄이기 토글">
+          모션 줄이기: OFF
+        </button>
+      </div>
     </div>
   </header>
 
   <main class="studio-main">
-    <header class="studio-header">
-      <span class="studio-tagline">Meme, Card News &amp; Social Image Creator</span>
-      <h1 class="studio-title">짤·카드 스튜디오</h1>
+    <!-- Compact Editorial Header -->
+    <header class="studio-header animate-fade-up">
+      <div class="studio-header-top">
+        <div>
+          <span class="section-tag">04 // MEME, CARD NEWS &amp; SOCIAL IMAGE CREATOR</span>
+          <h1 class="studio-title">짤·카드 스튜디오 <span class="studio-title-en">CARD NEWS STUDIO</span></h1>
+          <div class="red-line"></div>
+        </div>
+        <div class="studio-header-badges">
+          <span class="exif-safe-pill">EXIF 메타데이터 자동 제거 · 100% 로컬 렌더링</span>
+        </div>
+      </div>
       <p class="studio-desc">
-        이미지와 한글 문구를 조합하여 1:1, 4:5, 9:16 비율의 고해상도 카드뉴스와 밈을 제작하고 메타데이터가 정제된 안전한 파일(PNG/JPEG)로 내려받습니다.
+        이미지와 한글 문구를 조합해 <span class="point-ink">1:1 · 4:5 · 9:16 고해상도 카드뉴스</span>를 한 화면에서 즉시 편집하고, <span class="point-red">위치·기기 메타데이터(EXIF)가 제거된 안전한 PNG/JPEG</span>로 내려받습니다.
       </p>
     </header>
 
-    <!-- 2-Column Split: Tools & Live Preview (T03-C03) -->
+    <!-- Single-Screen 2-Column Workspace Grid (한 화면에 모든 도구와 미리보기 표시) -->
     <div class="studio-grid">
-      <!-- Left Panel: Editing Tools -->
-      <div class="tools-panel">
-        
-        <!-- 01 이미지 업로드 (T03-C04, T03-C05, T03-C09, T03-C10) -->
-        <section class="tool-section" aria-labelledby="section-img-title">
-          <h2 id="section-img-title" class="tool-section-title">01 — 이미지 불러오기 (PNG / JPEG)</h2>
-          
-          <input type="file" id="image-upload" accept="image/png, image/jpeg, .png, .jpg, .jpeg" style="display: none;" />
-          <div class="upload-dropzone" id="upload-dropzone" role="button" tabindex="0" aria-label="이미지 파일 업로드 드롭존">
-            <span class="upload-icon" aria-hidden="true" style="font-family:var(--font-barlow);font-weight:800;font-size:1.2rem;">[FILE]</span>
-            <p class="upload-hint">클릭하거나 이미지를 여기로 드래그하세요</p>
-            <p class="upload-subhint">지원 형식: PNG, JPEG (.jpg, .jpeg) · 지원하지 않는 파일은 자동 거부</p>
-          </div>
-
-          <div class="sample-presets-row">
-            <span class="sample-label">샘플 배경:</span>
-            <button type="button" class="btn-chip btn-sample-preset" data-preset="cyber">사이버 실드</button>
-            <button type="button" class="btn-chip btn-sample-preset" data-preset="editorial">에디토리얼</button>
-            <button type="button" class="btn-chip btn-sample-preset" data-preset="security">블루 서버</button>
-          </div>
-        </section>
-
-        <!-- 02 화면비 선택 (T03-C11, T03-C12, T03-C13: 1:1, 4:5, 9:16) -->
-        <section class="tool-section" aria-labelledby="section-ratio-title">
-          <h2 id="section-ratio-title" class="tool-section-title">02 — 화면비 선택 (세 가지 비율)</h2>
-          <div class="ratio-selector-grid">
-            <button type="button" class="ratio-btn active" data-ratio="1:1" aria-label="1:1 정방형 비율 선택">
-              <span class="ratio-val">1:1</span>
-              <span class="ratio-name">정방형 (1080×1080)</span>
-            </button>
-            <button type="button" class="ratio-btn" data-ratio="4:5" aria-label="4:5 피드형 비율 선택">
-              <span class="ratio-val">4:5</span>
-              <span class="ratio-name">피드형 (1080×1350)</span>
-            </button>
-            <button type="button" class="ratio-btn" data-ratio="9:16" aria-label="9:16 스토리형 비율 선택">
-              <span class="ratio-val">9:16</span>
-              <span class="ratio-name">스토리형 (1080×1920)</span>
-            </button>
-          </div>
-        </section>
-
-        <!-- 03 문구 편집 (T03-C06, T03-C07, T03-C08, T03-C14) -->
-        <section class="tool-section" aria-labelledby="section-text-title">
-          <h2 id="section-text-title" class="tool-section-title">03 — 문구 편집 및 스타일</h2>
-          
-          <div class="control-group">
-            <div class="control-label-row">
-              <label for="text-input">텍스트 내용 (줄바꿈 및 이모지 지원)</label>
+      <!-- Left Panel: Compact Bento Editing Tools -->
+      <div class="tools-panel animate-fade-up delay-1">
+        <!-- Top Sub-Grid: 01 이미지 불러오기 + 02 화면비 선택 나란히 배치 -->
+        <div class="tools-top-subgrid">
+          <!-- 01 이미지 업로드 및 샘플 프리셋 -->
+          <section class="tool-section compact-card" aria-labelledby="section-img-title">
+            <div class="card-head-inline">
+              <h2 id="section-img-title" class="tool-section-title">01 · 이미지 &amp; 샘플 배경</h2>
+              <span class="mini-tag">PNG / JPEG</span>
             </div>
-            <textarea id="text-input" class="text-input-area" rows="3" placeholder="문구를 입력하세요...">사이버 보안 수칙
+
+            <input type="file" id="image-upload" accept="image/png, image/jpeg, .png, .jpg, .jpeg" style="display: none;" />
+            <div class="upload-dropzone" id="upload-dropzone" role="button" tabindex="0" aria-label="이미지 파일 업로드 드롭존">
+              <span class="upload-icon" aria-hidden="true">UPLOAD</span>
+              <div class="upload-text-wrap">
+                <p class="upload-hint">클릭 또는 이미지 드래그</p>
+                <p class="upload-subhint">PNG, JPG 지원 (비정상 포맷 자동 차단)</p>
+              </div>
+            </div>
+
+            <div class="sample-presets-row">
+              <span class="sample-label">배경 프리셋:</span>
+              <button type="button" class="btn-chip btn-sample-preset preset-cyber" data-preset="cyber">사이버 실드</button>
+              <button type="button" class="btn-chip btn-sample-preset preset-editorial" data-preset="editorial">에디토리얼</button>
+              <button type="button" class="btn-chip btn-sample-preset preset-security" data-preset="security">블루 서버</button>
+            </div>
+          </section>
+
+          <!-- 02 화면비 선택 (1:1, 4:5, 9:16) -->
+          <section class="tool-section compact-card" aria-labelledby="section-ratio-title">
+            <div class="card-head-inline">
+              <h2 id="section-ratio-title" class="tool-section-title">02 · 캔버스 화면비 선택</h2>
+              <span class="mini-tag">3 RATIOS</span>
+            </div>
+            <p class="ratio-helper-text">비율 변경 시 캔버스 해상도와 미리보기가 즉시 동기화됩니다.</p>
+            <div class="ratio-selector-grid">
+              <button type="button" class="ratio-btn active" data-ratio="1:1" aria-label="1:1 정방형 비율 선택">
+                <span class="ratio-val">1:1</span>
+                <span class="ratio-name">정방형 (1080²)</span>
+              </button>
+              <button type="button" class="ratio-btn" data-ratio="4:5" aria-label="4:5 피드형 비율 선택">
+                <span class="ratio-val">4:5</span>
+                <span class="ratio-name">피드 (1080×1350)</span>
+              </button>
+              <button type="button" class="ratio-btn" data-ratio="9:16" aria-label="9:16 스토리형 비율 선택">
+                <span class="ratio-val">9:16</span>
+                <span class="ratio-name">스토리 (1080×1920)</span>
+              </button>
+            </div>
+          </section>
+        </div>
+
+        <!-- 03 문구 편집 및 스타일 (컴팩트 2열 내부 그리드) -->
+        <section class="tool-section compact-card" aria-labelledby="section-text-title">
+          <div class="card-head-inline">
+            <h2 id="section-text-title" class="tool-section-title">03 · 문구 편집 및 타이포그래피 스타일</h2>
+            <span class="mini-tag">TYPOGRAPHY</span>
+          </div>
+
+          <div class="text-editor-bento">
+            <!-- 좌측: 문구 입력 + 정렬 -->
+            <div class="text-editor-col">
+              <div class="control-group">
+                <div class="control-label-row">
+                  <label for="text-input">텍스트 내용 (줄바꿈 지원)</label>
+                </div>
+                <textarea id="text-input" class="text-input-area" rows="2" placeholder="문구를 입력하세요...">사이버 보안 수칙
 출처 불분명한 링크 클릭 금지</textarea>
-          </div>
+              </div>
 
-          <div class="control-group">
-            <div class="control-label-row">
-              <label for="font-size-input">글자 크기</label>
-              <span id="font-size-val">54px</span>
+              <div class="control-group">
+                <div class="control-label-row">
+                  <label>문구 정렬 방향</label>
+                </div>
+                <div class="align-button-group">
+                  <button type="button" class="btn-align" data-align="left">왼쪽</button>
+                  <button type="button" class="btn-align active" data-align="center">가운데</button>
+                  <button type="button" class="btn-align" data-align="right">오른쪽</button>
+                </div>
+              </div>
             </div>
-            <input type="range" id="font-size-input" class="slider-input" min="24" max="110" value="54" />
-          </div>
 
-          <div class="control-group">
-            <div class="control-label-row">
-              <label for="pos-y-input">세로 위치 (Y축)</label>
-              <span id="pos-y-val">75%</span>
-            </div>
-            <input type="range" id="pos-y-input" class="slider-input" min="10" max="90" value="75" />
-          </div>
+            <!-- 우측: 크기/위치 슬라이더 + 색상/외곽선 -->
+            <div class="text-editor-col">
+              <div class="sliders-dual-row">
+                <div class="control-group">
+                  <div class="control-label-row">
+                    <label for="font-size-input">글자 크기</label>
+                    <span id="font-size-val" class="val-pill">54px</span>
+                  </div>
+                  <input type="range" id="font-size-input" class="slider-input" min="24" max="110" value="54" />
+                </div>
 
-          <div class="control-group">
-            <div class="control-label-row">
-              <label>문구 정렬</label>
-            </div>
-            <div class="align-button-group">
-              <button type="button" class="btn-align" data-align="left">왼쪽 정렬</button>
-              <button type="button" class="btn-align active" data-align="center">가운데 정렬</button>
-              <button type="button" class="btn-align" data-align="right">오른쪽 정렬</button>
-            </div>
-          </div>
+                <div class="control-group">
+                  <div class="control-label-row">
+                    <label for="pos-y-input">세로 위치 (Y축)</label>
+                    <span id="pos-y-val" class="val-pill">75%</span>
+                  </div>
+                  <input type="range" id="pos-y-input" class="slider-input" min="10" max="90" value="75" />
+                </div>
+              </div>
 
-          <div class="control-group">
-            <div class="control-label-row">
-              <label for="text-color-input">글자 색상 및 프리셋</label>
-            </div>
-            <div class="color-controls-row">
-              <input type="color" id="text-color-input" class="color-picker-native" value="#ffffff" aria-label="글자 색상 선택기" />
-              <div class="color-chips">
-                <button type="button" class="color-dot" data-color="#ffffff" style="background:#ffffff;" aria-label="흰색"></button>
-                <button type="button" class="color-dot" data-color="#0a0a0a" style="background:#0a0a0a;" aria-label="검은색"></button>
-                <button type="button" class="color-dot" data-color="#b91c1c" style="background:#b91c1c;" aria-label="보안 레드"></button>
-                <button type="button" class="color-dot" data-color="#38bdf8" style="background:#38bdf8;" aria-label="사이버 블루"></button>
-                <button type="button" class="color-dot" data-color="#f59e0b" style="background:#f59e0b;" aria-label="경고 앰버"></button>
+              <div class="color-stroke-bar">
+                <div class="color-group-inline">
+                  <span class="mini-label">글자색</span>
+                  <input type="color" id="text-color-input" class="color-picker-native" value="#ffffff" aria-label="글자 색상 선택기" />
+                  <div class="color-chips">
+                    <button type="button" class="color-dot" data-color="#ffffff" style="background:#ffffff;" aria-label="흰색"></button>
+                    <button type="button" class="color-dot" data-color="#0a0a0a" style="background:#0a0a0a;" aria-label="검은색"></button>
+                    <button type="button" class="color-dot" data-color="#b91c1c" style="background:#b91c1c;" aria-label="보안 레드"></button>
+                    <button type="button" class="color-dot" data-color="#38bdf8" style="background:#38bdf8;" aria-label="사이버 블루"></button>
+                    <button type="button" class="color-dot" data-color="#f59e0b" style="background:#f59e0b;" aria-label="경고 앰버"></button>
+                  </div>
+                </div>
+
+                <div class="stroke-group-inline">
+                  <label for="text-stroke-toggle" class="stroke-check-label">
+                    <input type="checkbox" id="text-stroke-toggle" checked />
+                    <span>외곽선</span>
+                  </label>
+                  <input type="color" id="stroke-color-input" class="color-picker-native" value="#000000" aria-label="외곽선 색상 선택기" />
+                </div>
               </div>
             </div>
           </div>
-
-          <div class="control-group">
-            <div class="control-label-row">
-              <label for="text-stroke-toggle">가독성 외곽선 테두리</label>
-              <input type="checkbox" id="text-stroke-toggle" checked />
-            </div>
-            <div class="color-controls-row" style="margin-top:0.25rem;">
-              <input type="color" id="stroke-color-input" class="color-picker-native" value="#000000" aria-label="외곽선 색상 선택기" />
-              <span style="font-size:12px;color:var(--color-text-muted);">외곽선 색상 선택</span>
-            </div>
-          </div>
         </section>
 
-        <!-- 04 파일 다운로드 (T03-C11~T03-C13, T03-C28) -->
-        <section class="tool-section" aria-labelledby="section-download-title">
-          <h2 id="section-download-title" class="tool-section-title">04 — 파일 내려받기 (EXIF 메타데이터 제거)</h2>
-          <div class="download-actions-grid">
-            <button type="button" id="btn-download-png" class="btn-download btn-png">
-              <span aria-hidden="true">⬇</span>
-              <span>PNG 다운로드</span>
-            </button>
-            <button type="button" id="btn-download-jpeg" class="btn-download btn-jpeg">
-              <span aria-hidden="true">⬇</span>
-              <span>JPEG 다운로드</span>
-            </button>
+        <!-- 04 템플릿 관리 CRUD & JSON 백업 (한 줄 툴바 + 컴팩트 리스트) -->
+        <section class="tool-section compact-card" aria-labelledby="section-tpl-title">
+          <div class="card-head-inline">
+            <h2 id="section-tpl-title" class="tool-section-title">04 · 템플릿 관리 (CRUD &amp; JSON 백업)</h2>
+            <div class="json-actions-row">
+              <button type="button" id="btn-export-json" class="btn-chip">JSON 내보내기</button>
+              <button type="button" id="btn-import-json-trigger" class="btn-chip">JSON 가져오기</button>
+              <input type="file" id="json-upload" accept=".json,application/json" style="display:none;" />
+            </div>
           </div>
-        </section>
 
-        <!-- 05 템플릿 관리 CRUD & JSON (T03-C17 ~ T03-C24) -->
-        <section class="tool-section" aria-labelledby="section-tpl-title">
-          <h2 id="section-tpl-title" class="tool-section-title">05 — 템플릿 관리 (CRUD &amp; JSON 백업)</h2>
-          
           <div class="template-input-row">
-            <input type="text" id="template-name-input" class="template-name-input" placeholder="새 템플릿 이름 입력..." />
-            <button type="button" id="btn-save-template" class="btn-save-tpl">템플릿 저장</button>
+            <input type="text" id="template-name-input" class="template-name-input" placeholder="현재 설정을 저장할 템플릿 이름 입력..." />
+            <button type="button" id="btn-save-template" class="btn-save-tpl">+ 템플릿 저장</button>
           </div>
 
           <div class="template-list-container" id="template-list" aria-label="저장된 템플릿 목록">
             <!-- Dynamic Template Cards -->
           </div>
-
-          <div class="json-actions-row">
-            <button type="button" id="btn-export-json" class="btn-chip">JSON 백업 내보내기</button>
-            <button type="button" id="btn-import-json-trigger" class="btn-chip">JSON 복원 가져오기</button>
-            <input type="file" id="json-upload" accept=".json,application/json" style="display:none;" />
-          </div>
         </section>
-
       </div>
 
-      <!-- Right Panel: Live Preview Canvas (T03-C03, T03-C11 ~ T03-C13) -->
-      <div class="preview-panel">
-        <!-- Error & Notification Banner (T03-C10, T03-C23, T03-C24) -->
+      <!-- Right Panel: Live Preview Canvas + Direct Download Bar -->
+      <div class="preview-panel animate-fade-up delay-2">
         <div id="notice-banner" class="notice-banner" role="alert" aria-live="assertive"></div>
 
         <div class="preview-frame">
           <div class="preview-header-meta">
-            <span class="preview-badge">LIVE PREVIEW</span>
+            <span class="preview-badge">05 · LIVE CANVAS PREVIEW</span>
             <span class="resolution-badge" id="resolution-badge">1080 × 1080 (1:1)</span>
           </div>
 
@@ -201,8 +309,18 @@
             <canvas id="studio-canvas" width="1080" height="1080"></canvas>
           </div>
 
+          <!-- 다운로드 버튼을 미리보기 카드 하단에 바로 배치하여 스크롤 없이 즉시 저장 -->
+          <div class="download-actions-grid">
+            <button type="button" id="btn-download-png" class="btn-download btn-png">
+              <span>PNG 고화질 다운로드</span>
+            </button>
+            <button type="button" id="btn-download-jpeg" class="btn-download btn-jpeg">
+              <span>JPEG 다운로드</span>
+            </button>
+          </div>
+
           <p class="preview-caption">
-            * 미리보기 화면과 다운로드 파일의 이미지 잘림·문구 위치·줄바꿈이 100% 일치합니다.
+            미리보기 화면과 다운로드 이미지가 100% 일치하며, 캔버스 재인코딩으로 EXIF 메타데이터가 자동 제거됩니다.
           </p>
         </div>
       </div>
@@ -211,8 +329,8 @@
 
   <footer class="footer">
     <div class="footer-container">
-      <span>© 2026 이혜원 (Lee Hye-won) · MEME &amp; CARD STUDIO</span>
-      <span>SECURE IMAGE GENERATOR — ZERO EXIF METADATA</span>
+      <span>© 2026 이혜원 (Lee Hye-won) · 짤·카드 스튜디오</span>
+      <a href="index.html" style="text-decoration:underline;">포트폴리오 메인으로 이동</a>
     </div>
   </footer>
 

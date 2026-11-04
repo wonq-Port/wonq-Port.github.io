@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PLAN · DO · SEE | 플랜두씨 실행 다이어리</title>
+  <title>플랜두씨 다이어리 | PLAN · DO · SEE</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -12,37 +12,117 @@
 </head>
 <body>
 
-<!-- Unified Top Navigation Bar -->
-<header class="navbar">
-  <div class="nav-container">
-    <a href="index.html" class="nav-logo" aria-label="메인 포트폴리오로 이동">
-      <span>이혜원</span>
-      <span class="nav-badge">PLAN · DO · SEE</span>
-    </a>
+  <!-- Scroll Progress Bar -->
+  <div id="scroll-progress" class="scroll-progress" aria-hidden="true"></div>
 
-    <nav class="nav-menu" aria-label="도구 내비게이션">
-      <a href="index.html" class="nav-link">Portfolio</a>
-      <div class="nav-dropdown" id="nav-projects-dropdown">
-        <button type="button" class="nav-dropdown-btn" id="nav-projects-btn" aria-expanded="false" aria-haspopup="true">
-          <span>Projects</span>
-          <svg class="dropdown-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
-            <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+  <!-- Unified Top Navigation Bar (100% Identical Across All Pages) -->
+  <header id="navbar" class="navbar scrolled">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo" id="logo-btn" aria-label="이혜원 포트폴리오 메인으로 이동">
+        <span>이혜원</span>
+        <span class="nav-logo-badge">PLAN · DO · SEE</span>
+      </a>
+
+      <div class="nav-extra">
+        <a href="index.html" class="btn-editorial nav-home-btn" title="메인 포트폴리오로 이동">← Portfolio</a>
+        <nav class="nav-menu" aria-label="주요 내비게이션">
+          <!-- 1. 포트폴리오 섹션 드롭다운 (Overview) -->
+          <div class="nav-dropdown" id="nav-overview-dropdown">
+            <button type="button" class="nav-dropdown-btn nav-btn-overview" id="nav-overview-btn" aria-haspopup="true" aria-expanded="false" aria-label="섹션 메뉴 열기">
+              <span>Overview</span>
+              <span class="dropdown-caret" aria-hidden="true">▾</span>
+            </button>
+            <div class="nav-dropdown-menu" id="nav-overview-menu" role="menu">
+              <a href="index.html#metrics" class="dropdown-item" role="menuitem">
+                <span class="item-badge new">01</span>
+                <div class="item-text">
+                  <span class="item-title">Numbers</span>
+                  <span class="item-desc">핵심 정량 지표</span>
+                </div>
+              </a>
+              <a href="index.html#skills" class="dropdown-item" role="menuitem">
+                <span class="item-badge">02</span>
+                <div class="item-text">
+                  <span class="item-title">Skills &amp; Certs</span>
+                  <span class="item-desc">기술 스택 &amp; 자격 사항</span>
+                </div>
+              </a>
+              <a href="index.html#work" class="dropdown-item" role="menuitem">
+                <span class="item-badge new">03</span>
+                <div class="item-text">
+                  <span class="item-title">Work</span>
+                  <span class="item-desc">대표 보안 프로젝트 3선</span>
+                </div>
+              </a>
+              <a href="index.html#contact" class="dropdown-item" role="menuitem">
+                <span class="item-badge">04</span>
+                <div class="item-text">
+                  <span class="item-title">Contact</span>
+                  <span class="item-desc">협업 및 연락처</span>
+                </div>
+              </a>
+              <a href="index.html#private" class="dropdown-item" role="menuitem">
+                <span class="item-badge">05</span>
+                <div class="item-text">
+                  <span class="item-title">Private</span>
+                  <span class="item-desc">패스키(WebAuthn) 인증</span>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- 2. 서브 앱/프로젝트 드롭다운 (Projects) -->
+          <div class="nav-dropdown" id="nav-projects-dropdown">
+            <button type="button" class="nav-dropdown-btn nav-btn-projects" id="nav-projects-btn" aria-haspopup="true" aria-expanded="false" aria-label="프로젝트 메뉴 열기">
+              <span>Projects</span>
+              <span class="dropdown-caret" aria-hidden="true">▾</span>
+            </button>
+            <div class="nav-dropdown-menu" id="nav-projects-menu" role="menu">
+              <a href="phishing-detector.html" class="dropdown-item" role="menuitem">
+                <span class="item-badge new">SEC</span>
+                <div class="item-text">
+                  <span class="item-title">피싱 URL 사전 진단기</span>
+                  <span class="item-desc">11만 건 논문 기반 어휘적 탐지 웹</span>
+                </div>
+              </a>
+              <a href="board.html" class="dropdown-item" role="menuitem">
+                <span class="item-badge">LIVE</span>
+                <div class="item-text">
+                  <span class="item-title">오늘의 진짜 정보판</span>
+                  <span class="item-desc">실시간 환율 &amp; 5종 장애 복원 보드</span>
+                </div>
+              </a>
+              <a href="plando.html" class="dropdown-item active-project" role="menuitem">
+                <span class="item-badge">PDS</span>
+                <div class="item-text">
+                  <span class="item-title">플랜두씨 다이어리</span>
+                  <span class="item-desc">Plan → Do → See 라이프 다이어리</span>
+                </div>
+              </a>
+              <a href="studio.html" class="dropdown-item" role="menuitem">
+                <span class="item-badge">APP</span>
+                <div class="item-text">
+                  <span class="item-title">짤·카드 스튜디오</span>
+                  <span class="item-desc">EXIF 제거 카드뉴스 &amp; 밈 생성기</span>
+                </div>
+              </a>
+              <a href="game.html" class="dropdown-item" role="menuitem">
+                <span class="item-badge">GAME</span>
+                <div class="item-text">
+                  <span class="item-title">보안 방화벽 미니게임</span>
+                  <span class="item-desc">Cyber Defense Tic-Tac-Toe</span>
+                </div>
+              </a>
+            </div>
+          </div>
+        </nav>
+        
+        <button type="button" id="btn-motion-toggle" class="motion-btn" aria-pressed="false" aria-label="화면 모션 애니메이션 줄이기 토글">
+          모션 줄이기: OFF
         </button>
-        <div class="dropdown-menu" id="nav-projects-menu" role="menu">
-          <div class="dropdown-group-label">보안 및 웹 프로젝트</div>
-          <a href="phishing-detector.html" class="dropdown-item" role="menuitem">피싱 URL 사전 진단기</a>
-          <a href="board.html" class="dropdown-item" role="menuitem">오늘의 진짜 정보판</a>
-          <a href="plando.html" class="dropdown-item active" role="menuitem">플랜두씨 다이어리</a>
-          <div class="dropdown-divider"></div>
-          <div class="dropdown-group-label">인터랙티브 툴</div>
-          <a href="game.html" class="dropdown-item" role="menuitem">보안 틱택토 미니게임</a>
-          <a href="studio.html" class="dropdown-item" role="menuitem">의미 있는 한 줄 스튜디오</a>
-        </div>
       </div>
-    </nav>
-  </div>
-</header>
+    </div>
+  </header>
 
 <!-- Login / Signup Gate Overlay (테스트 계정 제거 완료 · 즉시 회원가입 지원) -->
 <div id="login-gate" class="login-gate-overlay">
@@ -98,22 +178,26 @@
   </div>
 </div>
 
-<!-- App Header -->
-<div id="header">
-  <div class="header-brand-group">
-    <div id="logo">PLAN · DO · <span>SEE</span></div>
-    <span class="header-ko-badge">플랜두씨</span>
-    <div class="header-tagline">계획에서 실행으로, 하루를 차곡차곡 기록하는 워크스페이스</div>
+<!-- App Header Matching index.html -->
+<div id="header" class="animate-fade-up">
+  <div class="header-main-left">
+    <span class="section-tag">03 // PLAN · DO · SEE WORKSPACE</span>
+    <div class="header-brand-group">
+      <div id="logo">플랜두씨 <span>다이어리</span></div>
+      <span class="header-ko-badge">PLAN · DO · SEE</span>
+    </div>
+    <div class="red-line"></div>
+    <div class="header-tagline">계획(Plan)을 세우고, 실행(Do)을 기록하며, 하루를 돌아보는(See) 개인 실행 다이어리</div>
   </div>
   <div class="header-spacer"></div>
 
-  <!-- 로그인한 사용자 정보 및 로그아웃 버튼 -->
-  <div id="header-user-area">
-    <span id="header-user-email" style="display:none;"></span>
-    <button type="button" class="btn-sm" id="header-logout-btn" style="display:none;color:var(--accent);border-color:rgba(185,28,28,0.3);" onclick="gateSignOut()">로그아웃</button>
+  <div class="header-actions-right">
+    <div id="header-user-area">
+      <span id="header-user-email" style="display:none;"></span>
+      <button type="button" class="btn-sm" id="header-logout-btn" style="display:none;color:var(--accent);border-color:rgba(185,28,28,0.3);" onclick="gateSignOut()">로그아웃</button>
+    </div>
+    <button id="export-btn" title="전체 데이터 JSON 내보내기">JSON 백업 내보내기</button>
   </div>
-
-  <button id="export-btn" title="전체 데이터 JSON 내보내기">JSON 내보내기</button>
 </div>
 
 <!-- DB Status Bar -->
