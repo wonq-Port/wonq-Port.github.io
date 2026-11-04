@@ -1,7 +1,7 @@
 /**
  * Portfolio Interactive Scripts (js/script.js)
- * Pure Vanilla JavaScript — Smooth Scroll Reveal, Metric Counter,
- * Unified Dual Dropdown, Accordion & Lightbox Modal
+ * Pure Vanilla JavaScript — Compact Project Modal, Metric Counter,
+ * Dual Dropdown Navigation & Smooth Interactions
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -15,12 +15,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const projectsDropdown = document.getElementById('nav-projects-dropdown');
   const projectsBtn = document.getElementById('nav-projects-btn');
 
-  const modal = document.getElementById('image-modal');
-  const modalTitle = document.getElementById('modal-title');
-  const modalDesc = document.getElementById('modal-desc');
-  const modalCode = document.getElementById('modal-code');
-  const modalClose = document.getElementById('modal-close');
-  const modalBackdrop = document.getElementById('modal-backdrop');
+  const modal = document.getElementById('detail-modal');
+  const modalTag = document.getElementById('modal-project-tag');
+  const modalTitle = document.getElementById('modal-project-title');
+  const modalSarS = document.getElementById('modal-sar-s');
+  const modalSarA = document.getElementById('modal-sar-a');
+  const modalSarR = document.getElementById('modal-sar-r');
+  const modalSpecs = document.getElementById('modal-specs-block');
+  const modalActions = document.getElementById('modal-actions-row');
+  const modalClose = document.getElementById('detail-modal-close');
+  const modalBackdrop = document.getElementById('detail-modal-backdrop');
   let lastActiveElement = null;
 
   // 1. Scroll Progress & Navbar Elevation
@@ -141,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 5. Smooth Scroll Reveal & Metric Count-Up Animation
+  // 5. Scroll Reveal & Metric Count-Up Animation
   const animateMetricValue = (el) => {
     if (el.dataset.animated === 'true') return;
     el.dataset.animated = 'true';
@@ -155,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const duration = 900;
+    const duration = 850;
     const startTime = performance.now();
 
     const step = (now) => {
@@ -191,140 +195,116 @@ document.addEventListener('DOMContentLoaded', () => {
     revealElements.forEach((el) => el.classList.add('is-visible'));
   }
 
-  // 6. Project Accordion Expand/Collapse
-  const projectItems = document.querySelectorAll('.project-item');
-  projectItems.forEach((item) => {
-    const toggleBtn = item.querySelector('.project-toggle-btn');
-    const toggleText = item.querySelector('.toggle-text');
-    const arrow = item.querySelector('.project-toggle-btn .arrow-icon');
-
-    const toggleProject = (e) => {
-      if (e.target.closest('a') || e.target.closest('.open-evidence-btn')) return;
-
-      const isExpanded = item.classList.contains('is-expanded');
-      item.classList.toggle('is-expanded');
-      item.setAttribute('aria-expanded', String(!isExpanded));
-
-      if (toggleText) {
-        toggleText.textContent = !isExpanded ? '세부 분석 과정 닫기' : '세부 분석 과정 펼치기';
-      }
-      if (arrow) {
-        arrow.textContent = !isExpanded ? '↑' : '↓';
-      }
-    };
-
-    if (toggleBtn) {
-      toggleBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleProject(e);
-      });
-    }
-
-    item.addEventListener('click', toggleProject);
-    item.addEventListener('keydown', (e) => {
-      if (e.target === item && (e.key === 'Enter' || e.key === ' ')) {
-        e.preventDefault();
-        toggleProject(e);
-      }
-    });
-  });
-
-  // 7. Story Accordion Expand/Collapse
-  const storyItems = document.querySelectorAll('.story-accordion-item');
-  const btnToggleAllStory = document.getElementById('btn-story-toggle-all');
-
-  const updateToggleAllBtnLabel = () => {
-    if (!btnToggleAllStory) return;
-    const anyCollapsed = Array.from(storyItems).some((item) => !item.classList.contains('is-expanded'));
-    btnToggleAllStory.textContent = anyCollapsed ? '전체 펼치기' : '전체 접기';
-  };
-
-  storyItems.forEach((item) => {
-    const toggleText = item.querySelector('.story-toggle-text');
-    const arrow = item.querySelector('.story-toggle-indicator .arrow-icon');
-
-    const toggleStory = (e) => {
-      if (e.target.closest('a') || e.target.closest('button')) return;
-
-      const isExpanded = item.classList.contains('is-expanded');
-      item.classList.toggle('is-expanded');
-      item.setAttribute('aria-expanded', String(!isExpanded));
-
-      if (toggleText) {
-        toggleText.textContent = !isExpanded ? '본문 닫기' : '본문 보기';
-      }
-      if (arrow) {
-        arrow.textContent = !isExpanded ? '↑' : '↓';
-      }
-      updateToggleAllBtnLabel();
-    };
-
-    item.addEventListener('click', toggleStory);
-    item.addEventListener('keydown', (e) => {
-      if (e.target === item && (e.key === 'Enter' || e.key === ' ')) {
-        e.preventDefault();
-        toggleStory(e);
-      }
-    });
-  });
-
-  if (btnToggleAllStory) {
-    btnToggleAllStory.addEventListener('click', () => {
-      const anyCollapsed = Array.from(storyItems).some((item) => !item.classList.contains('is-expanded'));
-
-      storyItems.forEach((item) => {
-        const toggleText = item.querySelector('.story-toggle-text');
-        const arrow = item.querySelector('.story-toggle-indicator .arrow-icon');
-        if (anyCollapsed) {
-          item.classList.add('is-expanded');
-          item.setAttribute('aria-expanded', 'true');
-          if (toggleText) toggleText.textContent = '본문 닫기';
-          if (arrow) arrow.textContent = '↑';
-        } else {
-          item.classList.remove('is-expanded');
-          item.setAttribute('aria-expanded', 'false');
-          if (toggleText) toggleText.textContent = '본문 보기';
-          if (arrow) arrow.textContent = '↓';
-        }
-      });
-
-      updateToggleAllBtnLabel();
-    });
-  }
-
-  // 8. Evidence Lightbox Modal Interaction
-  const evidenceData = {
-    evidence1: {
-      title: "Snort & Suricata 기반 침입 탐지(IDS) 룰셋 및 탐지 검증 보고서",
-      desc: "Kali Linux 발 SYN Flag Scanning 및 비정상 패킷 공격 시나리오에 대해 Snort 및 Suricata 침입 탐지 엔진의 룰셋을 작성하고 실시간 알림 로그를 검증한 실증 결과입니다.",
-      code: "[Snort Rule 명세]\nalert tcp any any -> $HOME_NET any (msg:\"SYN Flag Scanning Detected\"; flags:S; threshold:type threshold, track by_src, count 5, seconds 3; sid:1000005; rev:1;)\nalert icmp any any -> $HOME_NET any (msg:\"ICMP Echo Request Detected\"; itype:8; sid:1000001; rev:1;)\n\n[검증 결과]\n- Kali 발 포트 스캔 유입 시 alert 파일 내 timestamp, src IP, dst port 정확 매칭\n- 오탐 방지: 내부 DNS/NTP 통신 포트 예외 처리 완료"
+  // 6. 3대 대표 프로젝트 상세 데이터 (모달 팝업용 데이터)
+  const projectDetailsData = {
+    ztna: {
+      tag: "PROJECT 01 · ZTNA & XDR SECURITY SUITE",
+      title: "ZTNA·XDR 통합 보안 앱 및 22단계 실전 방어전 완주",
+      s: "<strong>상황 (Situation):</strong> 단순 로그인 인증만으로는 비인가 디바이스 접근, 무차별 대입(Brute-force) 공격 및 권한 우회 API 호출을 방어하기 어려워, 신원과 기기를 모두 검증하는 제로트러스트(ZTNA) 및 침해 탐지·대응(XDR) 아키텍처가 필요했습니다.",
+      a: "<strong>행동 (Action):</strong> Supabase Auth JWKS 비대칭 키 서명 검증, 디바이스 고유 인가(/api/device), 허용 엔드포인트 화이트리스트 라우팅, 실시간 로그인 실패 횟수 기반 공격 차단 및 SAMPLE_NOTE_1 무결성 마커를 통한 안전한 복원(/api/restore) 파이프라인을 구축했습니다.",
+      r: "<strong>결과 (Result):</strong> ALEPH 실전 방어전 22단계 전 과정 통과 및 XDR 판정 패키지 승인 달성(커밋 1e37639f9ddb), 마스터 승인 대표 작업물로 등재되었습니다.",
+      specs: `[ZTNA & XDR 아키텍처 핵심 명세]
+• 인증/인가: Supabase /.well-known/jwks.json 기반 JWT 서명 & audience: "authenticated" 검증
+• 디바이스 제어: 등록된 인가 기기 식별자에 한해 세션 발급 (/api/device)
+• 접근 통제: POST /api/login, POST /api/device, /api/memos, POST /api/restore 외 비인가 경로 100% 차단
+• XDR 위협 완화: 비정상 무차별 대입 공격 실시간 IP 차단 및 데이터 변조 시 원클릭 무결성 복구`,
+      actions: [
+        { label: "배포 웹 애플리케이션 열기 ↗", url: "https://choi-bujang-secret-vault-one-phi.vercel.app/", primary: true },
+        { label: "GitHub 저장소 ↗", url: "https://github.com/wonq-Port/choi-bujang-secret-vault", primary: false }
+      ]
     },
-    evidence2: {
-      title: "GNS3 가상 토폴로지 구축 및 Cisco ASAv 방화벽 망 분리 설계서",
-      desc: "GNS3 환경에서 라우터 이중화(HSRP)와 Cisco ASAv 방화벽을 배치하여 내부망(Inside), DMZ 웹 서버망, 인터넷 구간을 격리하고 인터페이스별 보안 레벨 정책을 적용한 보고서입니다.",
-      code: "[Cisco ASAv 방화벽 인터페이스 보안 레벨]\ninterface GigabitEthernet0/0 -> nameif inside, security-level 100\ninterface GigabitEthernet0/1 -> nameif dmz, security-level 50\ninterface GigabitEthernet0/2 -> nameif outside, security-level 0\n\n[ACL 패킷 필터링 정책]\naccess-list DMZ_IN extended permit tcp any host 192.168.20.10 eq 80\naccess-list DMZ_IN extended permit tcp any host 192.168.20.10 eq 23\naccess-list DMZ_IN extended deny ip any any"
+
+    phishing: {
+      tag: "PROJECT 02 · RESEARCH PAPER & LIVE WEB APP",
+      title: "피싱 URL 형태학 분석 연구 논문 & 사전 진단기 웹앱",
+      s: "<strong>상황 (Situation):</strong> 웹페이지 본문에 직접 접속하여 분석하는 방식은 악성코드 감염 위험과 네트워크 지연이 발생하므로, 브라우저가 통신하기 전 URL 어휘적 특징만으로 위험도를 사전 판별할 통계적 근거와 경량 도구가 필요했습니다.",
+      a: "<strong>행동 (Action):</strong> 110,077건 대규모 다중 보안 데이터셋에 대해 Welch t-검정을 수행해 호스트네임 내부 하이픈(NumDashInHostname)과 URL 길이의 강력한 피싱 상관관계를 규명하여 단독 학술 논문을 완성했습니다. 이어 이 통계 임계치를 외부 통신 없이 브라우저 내부에서 계산하는 순수 Vanilla JS 사전 진단기(단일 검사, A/B 대조, 500줄 일괄 진단, 퀴즈, 통계)를 구현하고 CSV Injection 방어 처리를 적용했습니다.",
+      r: "<strong>결과 (Result):</strong> 정상 대비 피싱 URL 호스트 하이픈 3.88배, 길이 2.82배 통계적 유의성(p<0.001) 입증 및 마스터 승인 대표 작업물 정식 배포를 달성했습니다.",
+      specs: `[연구 논문 통계 & 웹앱 진단 명세]
+• 분석 표본: web-page-phishing.csv (100,077건) + dataset6.csv (10,000건)
+• 가설 정교화: 검색엔진(SEO) 경로 하이픈 왜곡을 제거하고 '호스트네임 내부 하이픈' 분리 측정
+• 진단 알고리즘: URL 길이 29자 임계점, 호스트 하이픈 빈도, 위험 문자(@, =, .) 종합 가중합 점수화
+• 클라이언트 보안: 제로 네트워크(Zero-Network) 브라우저 독립 분석 및 악성 수식 실행 차단(CSV 이스케이프)`,
+      actions: [
+        { label: "피싱 URL 사전 진단기 웹앱 실행 →", url: "phishing-detector.html", primary: true },
+        { label: "논문 파일 원문 다운로드/열람 ↗", url: "https://drive.google.com/file/d/1JIYAKJRQSLqqQi_LWV_2zgnzysrBoxuY/view?usp=drivesdk", primary: false }
+      ]
     },
-    evidence3: {
-      title: "OSSEC(HIDS) 및 Zabbix 기반 호스트 관제 체계 구축 명세서",
-      desc: "Ubuntu 중앙 관제 서버에 OSSEC HIDS 서버를 구축하고 Windows 및 Rocky Linux 노드에 Agent를 연동하여 파일 무결성 및 시스템 가용성을 실시간 모니터링한 구성 문서입니다.",
-      code: "[OSSEC HIDS 에이전트 연동 상태]\n- Server: Ubuntu 22.04 LTS (IP: 192.168.10.50)\n- Agent 001: Windows 10 (IP: 192.168.10.101) - Status: Active\n- Agent 002: Rocky Linux 9 (IP: 192.168.10.102) - Status: Active\n\n[Syscheck 무결성 감시]\n- 감시 대상: /etc/passwd, /etc/shadow, C:\\Windows\\System32\\drivers\\etc\\hosts\n- Zabbix 연동: CPU 점유율 85% 초과 또는 Agent Unreachable 시 즉시 대시보드 경보"
+
+    infra: {
+      tag: "PROJECT 03 · NETWORK INFRASTRUCTURE & MONITORING",
+      title: "Cisco ASAv 망 분리 & Snort 침입 탐지·통합 관제 체계 구축",
+      s: "<strong>상황 (Situation):</strong> 내부 업무망(Inside)과 외부 웹망(DMZ), 인터넷 경계 구간에서 비인가 트래픽 유입 및 단일 장애점(SPOF)으로 인한 서비스 중단 위협이 존재하며, 엔드포인트 시스템 파일 변조와 침입 시도를 통합 감시할 방안이 필요했습니다.",
+      a: "<strong>행동 (Action):</strong> GNS3 환경에서 라우터 이중화(HSRP)와 Cisco ASAv 방화벽을 직렬 배치해 인터페이스별 보안 레벨(Inside 100, DMZ 50, Outside 0)과 ACL 정책을 수립했습니다. 이어 Snort/Suricata 맞춤형 탐지 룰(SYN Scan, DDoS)을 작성하고, Ubuntu 중앙 관제 서버에 OSSEC HIDS 및 Zabbix 에이전트를 연동해 무결성과 자원을 실시간 모니터링했습니다.",
+      r: "<strong>결과 (Result):</strong> 비인가 트래픽 100% 차단 검증, 모의 공격 트래픽 실시간 경보 발생률 100% 달성 및 파일 변경·시스템 과부하를 즉시 식별하는 통합 관제 파이프라인을 완성했습니다.",
+      specs: `[네트워크 인프라 & 침입 탐지 명세]
+• Cisco ASAv 인터페이스: Inside(보안레벨 100) -> DMZ(50, HTTP 80/Telnet 23 허용) -> Deny Any Any
+• HSRP 라우터 이중화: Active-Standby 절체 시간 1초 내 서비스 무중단 검증
+• Snort 맞춤 룰: alert tcp any any -> $HOME_NET any (flags:S; threshold:type threshold, count 5, seconds 3;)
+• 호스트 무결성(Syscheck): /etc/passwd, /etc/shadow 등 주요 시스템 파일 해시 주기적 비교 감시`,
+      actions: [
+        { label: "공개 범위 및 보안 점검표 확인", url: "#", primary: true, isScope: true }
+      ]
     },
+
     scope: {
+      tag: "SECURITY CHECKLIST · DISCLOSURE SCOPE",
       title: "공개 범위 및 보안 점검표 (Disclosure Scope Checklist)",
-      desc: "정보보안 전문가로서 개인정보보호법 준수 및 자산 침해사고 예방을 위해 공개/비공개 범위를 명확히 규정합니다.",
-      code: "[대상 및 목적]\n- 대상: 정보보안 직무 채용 담당자 및 IT 실무진\n- 목적: 보안 엔지니어 이혜원의 ZTNA·XDR 아키텍처 구현 역량과 실무 문제 해결 경험 전달\n\n[공개 정보 (4개)]\n1. 이름 및 전문 지향점: 이혜원 / AI 보안 에이전트 및 ZTNA·XDR 엔지니어\n2. 보유 기술 스택: ZTNA/XDR, WebAuthn/JWKS, Snort/Suricata, GNS3/ASAv, Linux, Python\n3. 공식 채용 소통 이메일: three78945@naver.com\n4. 실무 산출물: 비식별화된 S-A-R 침입 탐지 룰셋, 연구 논문 및 보안 웹앱\n\n[비공개 정보 (3개)]\n1. 주민등록번호, 생년월일 등 고유식별정보 (사유: 개인정보보호법 준수 및 도용 방지)\n2. 개인 휴대전화번호 및 상세 거주지 주소 (사유: 사생활 보호 및 스팸 방지)\n3. 시스템 계정 비밀번호, API Secret 토큰 원문 (사유: 침해사고 예방 및 보안 윤리)"
+      s: "<strong>대상 및 목적:</strong> 정보보안·네트워크 인프라 직무 채용 담당자와 IT 실무진에게 보안 엔지니어 이혜원의 실무 역량을 투명하게 전달합니다.",
+      a: "<strong>보안 원칙:</strong> 개인정보보호법을 준수하고 실무 시스템 자산 침해사고를 예방하기 위해 포트폴리오 공개/비공개 범위를 명확히 분리합니다.",
+      r: "<strong>결과:</strong> 민감정보 노출 없는 안전한 공개 포트폴리오를 유지합니다.",
+      specs: `[공개 정보 (4개 항목)]
+1. 성명 및 지원 직무: 이혜원 / 정보보안 엔지니어, 네트워크 인프라, 보안관제
+2. 보유 기술 스택: ZTNA/XDR, WebAuthn/JWKS, Cisco ASAv, Snort/Suricata, Linux, Python
+3. 공식 채용 소통 이메일: three78945@naver.com
+4. 실무 산출물: 비식별화된 침입 탐지 룰셋, 네트워크 토폴로지 보고서, 실증 연구 논문
+
+[비공개 정보 (3개 항목)]
+1. 주민등록번호, 생년월일 등 고유식별정보 (사유: 개인정보보호법 준수 및 도용 방지)
+2. 개인 휴대전화번호 및 상세 거주지 주소 (사유: 사생활 보호 및 스팸 방지)
+3. 시스템 계정 비밀번호, API Secret 키 및 토큰 원문 (사유: 침해사고 예방 및 보안 윤리)`,
+      actions: []
     }
   };
 
-  const openModal = (key) => {
+  const openProjectModal = (key) => {
     if (!modal) return;
-    const data = evidenceData[key];
+    const data = projectDetailsData[key];
     if (!data) return;
 
     lastActiveElement = document.activeElement;
+    if (modalTag) modalTag.textContent = data.tag;
     if (modalTitle) modalTitle.textContent = data.title;
-    if (modalDesc) modalDesc.textContent = data.desc;
-    if (modalCode) modalCode.textContent = data.code;
+    if (modalSarS) modalSarS.innerHTML = data.s;
+    if (modalSarA) modalSarA.innerHTML = data.a;
+    if (modalSarR) modalSarR.innerHTML = data.r;
+    if (modalSpecs) modalSpecs.textContent = data.specs;
+
+    if (modalActions) {
+      modalActions.innerHTML = "";
+      if (data.actions && data.actions.length > 0) {
+        data.actions.forEach((act) => {
+          if (act.isScope) {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "btn-editorial btn-editorial-primary";
+            btn.textContent = act.label;
+            btn.addEventListener("click", () => openProjectModal("scope"));
+            modalActions.appendChild(btn);
+          } else {
+            const a = document.createElement("a");
+            a.href = act.url;
+            a.className = act.primary ? "btn-editorial btn-editorial-primary" : "btn-editorial";
+            a.textContent = act.label;
+            if (act.url.startsWith("http")) {
+              a.target = "_blank";
+              a.rel = "noopener noreferrer";
+            }
+            modalActions.appendChild(a);
+          }
+        });
+      }
+    }
 
     modal.classList.add('open');
     modal.setAttribute('aria-hidden', 'false');
@@ -333,7 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (modalClose) modalClose.focus();
   };
 
-  const closeModal = () => {
+  const closeProjectModal = () => {
     if (!modal) return;
     modal.classList.remove('open');
     modal.setAttribute('aria-hidden', 'true');
@@ -344,27 +324,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  document.querySelectorAll('.open-evidence-btn').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const key = btn.dataset.evidence;
-      openModal(key);
+  document.querySelectorAll('.compact-project-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      const key = card.dataset.projectKey;
+      openProjectModal(key);
+    });
+
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const key = card.dataset.projectKey;
+        openProjectModal(key);
+      }
     });
   });
 
-  if (modalClose) modalClose.addEventListener('click', closeModal);
-  if (modalBackdrop) modalBackdrop.addEventListener('click', closeModal);
+  const btnOpenScope = document.getElementById('btn-open-scope-modal');
+  if (btnOpenScope) {
+    btnOpenScope.addEventListener('click', () => {
+      openProjectModal('scope');
+    });
+  }
+
+  if (modalClose) modalClose.addEventListener('click', closeProjectModal);
+  if (modalBackdrop) modalBackdrop.addEventListener('click', closeProjectModal);
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       closeAllDropdowns();
       if (modal && modal.classList.contains('open')) {
-        closeModal();
+        closeProjectModal();
       }
     }
   });
 
-  // 9. Passkey Authentication (WebAuthn) with Non-Blocking Inline Status Notice
+  // 7. Passkey Authentication (WebAuthn)
   const btnRegister = document.getElementById('btn-register-passkey');
   const btnLogin = document.getElementById('btn-login-passkey');
   const btnLogout = document.getElementById('btn-logout');
@@ -409,8 +403,8 @@ document.addEventListener('DOMContentLoaded', () => {
       binary += String.fromCharCode(bytes[i]);
     }
     return window.btoa(binary)
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
+      .replace(/\\+/g, '-')
+      .replace(/\\//g, '_')
       .replace(/=/g, '');
   };
 
@@ -418,14 +412,10 @@ document.addEventListener('DOMContentLoaded', () => {
     btnRegister.addEventListener('click', async () => {
       try {
         const res = await fetch('/api/passkey-register-start', { method: 'POST' });
-        if (!res.ok) {
-          throw new Error('등록 챌린지를 가져오지 못했습니다.');
-        }
+        if (!res.ok) throw new Error('등록 챌린지를 가져오지 못했습니다.');
         const options = await res.json();
         options.challenge = coerceToArrayBuffer(options.challenge);
-        if (options.user && options.user.id) {
-          options.user.id = coerceToArrayBuffer(options.user.id);
-        }
+        if (options.user && options.user.id) options.user.id = coerceToArrayBuffer(options.user.id);
         if (options.excludeCredentials) {
           options.excludeCredentials.forEach((cred) => {
             cred.id = coerceToArrayBuffer(cred.id);
