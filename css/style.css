@@ -570,7 +570,7 @@ body.reduce-motion .reveal-on-scroll {
   text-transform: uppercase;
   letter-spacing: -0.02em;
   color: var(--color-text-main);
-  font-size: clamp(52px, 3.5vw, 116px);
+  font-size: clamp(52px, 8.5vw, 116px);
 }
 
 .red-line {
@@ -1440,7 +1440,6 @@ body.reduce-motion .reveal-on-scroll {
   margin-bottom: 0.2rem;
 }
 
-
 /* ==========================================================================
    Precision Dropdown Positioning: Centered Under Button with Pointer Arrow
    ========================================================================== */
@@ -1461,7 +1460,7 @@ body.reduce-motion .reveal-on-scroll {
   width: 270px !important;
   max-width: calc(100vw - 1.5rem) !important;
   background: #ffffff !important;
-  border: 1px solid rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid rgba(0, 0, 0, 0.22) !important;
   border-radius: 8px !important;
   box-shadow: 0 14px 34px -6px rgba(0, 0, 0, 0.16), 0 6px 14px -4px rgba(0, 0, 0, 0.08) !important;
   padding: 8px 6px 6px 6px !important;
@@ -1469,12 +1468,11 @@ body.reduce-motion .reveal-on-scroll {
   display: flex !important;
   flex-direction: column !important;
   gap: 3px !important;
-  transition: opacity 0.2s var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)),
-              transform 0.2s var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)),
+  transition: opacity 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
               visibility 0.2s !important;
 }
 
-/* Pointer Arrow pointing directly to the clicked button */
 .nav-dropdown-menu::before {
   content: "";
   position: absolute;
@@ -1484,8 +1482,8 @@ body.reduce-motion .reveal-on-scroll {
   width: 10px;
   height: 10px;
   background: #ffffff;
-  border-left: 1px solid rgba(0, 0, 0, 0.2);
-  border-top: 1px solid rgba(0, 0, 0, 0.2);
+  border-left: 1px solid rgba(0, 0, 0, 0.22);
+  border-top: 1px solid rgba(0, 0, 0, 0.22);
   z-index: 1;
 }
 
@@ -1496,7 +1494,6 @@ body.reduce-motion .reveal-on-scroll {
   pointer-events: auto !important;
 }
 
-/* Mobile responsive fallback so dropdown stays within screen boundary */
 @media (max-width: 640px) {
   #nav-projects-dropdown .nav-dropdown-menu {
     left: auto !important;

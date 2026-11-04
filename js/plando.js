@@ -1346,16 +1346,11 @@ async function hashPassword(plainText) {
   return (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0');
 }
 
-
-
-
-
-
 // ============================================================================
 // Unified Portfolio Navigation (Overview & Projects Dropdowns + Scroll Progress + Motion Toggle)
 // ============================================================================
 (function() {
-  document.addEventListener('DOMContentLoaded', function() {
+  function initNav() {
     var scrollProgress = document.getElementById('scroll-progress');
     var navbar = document.getElementById('navbar');
     var overviewDropdown = document.getElementById('nav-overview-dropdown');
@@ -1363,6 +1358,9 @@ async function hashPassword(plainText) {
     var projectsDropdown = document.getElementById('nav-projects-dropdown');
     var projectsBtn = document.getElementById('nav-projects-btn');
     var motionBtn = document.getElementById('btn-motion-toggle') || document.getElementById('motion-toggle-btn');
+
+    if (projectsBtn && projectsBtn.dataset.navBound === 'true') return;
+    if (projectsBtn) projectsBtn.dataset.navBound = 'true';
 
     // 1. Scroll progress bar
     var updateScroll = function() {
@@ -1435,7 +1433,7 @@ async function hashPassword(plainText) {
       }
     });
 
-    // 3. Motion Toggle (if not already bound by page script)
+    // 3. Motion Toggle
     if (motionBtn && !motionBtn.dataset.boundUnified) {
       motionBtn.dataset.boundUnified = 'true';
       motionBtn.addEventListener('click', function() {
@@ -1444,5 +1442,11 @@ async function hashPassword(plainText) {
         motionBtn.textContent = reduced ? '모션 줄이기: ON' : '모션 줄이기: OFF';
       });
     }
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initNav);
+  } else {
+    initNav();
+  }
 })();
