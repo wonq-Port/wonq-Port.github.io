@@ -570,7 +570,7 @@ body.reduce-motion .reveal-on-scroll {
   text-transform: uppercase;
   letter-spacing: -0.02em;
   color: var(--color-text-main);
-  font-size: clamp(52px, 8.5vw, 116px);
+  font-size: clamp(52px, 3.5vw, 116px);
 }
 
 .red-line {
