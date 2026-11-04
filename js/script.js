@@ -496,6 +496,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// ============================================================================
+// Master Unified Navigation & Dark/Light Theme Controller (Wonq Portfolio)
+// ============================================================================
 (function() {
   var THEME_KEY = 'wonq_portfolio_theme';
 
@@ -508,23 +511,145 @@ document.addEventListener('DOMContentLoaded', () => {
       document.documentElement.removeAttribute('data-theme');
       document.body.classList.remove('dark-theme');
     }
+    var toggleBtn = document.getElementById('btn-theme-toggle');
+    if (toggleBtn) {
+      toggleBtn.setAttribute('aria-label', isDark ? '라이트 모드로 전환' : '다크 모드로 전환');
+      toggleBtn.setAttribute('title', isDark ? '라이트 모드로 전환' : '다크 모드로 전환');
+    }
   }
 
-  function initThemeToggle() {
+  function getPreferredTheme() {
     var saved = localStorage.getItem(THEME_KEY);
-    var current = (saved === 'dark' || saved === 'light') ? saved :
-      (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    if (saved === 'dark' || saved === 'light') return saved;
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    return 'light';
+  }
+
+  function initApp() {
+    // 1. Theme initialization
+    var current = getPreferredTheme();
     applyTheme(current);
 
     var toggleBtn = document.getElementById('btn-theme-toggle');
-    if (toggleBtn) {
+    if (toggleBtn && !toggleBtn.dataset.themeBound) {
+      toggleBtn.dataset.themeBound = 'true';
       toggleBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        var next = document.body.classList.contains('dark-theme') ? 'light' : 'dark';
+        var next = (document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-theme')) ? 'light' : 'dark';
         applyTheme(next);
         localStorage.setItem(THEME_KEY, next);
+        window.dispatchEvent(new CustomEvent('wonqThemeChange', { detail: { theme: next } }));
+      });
+    }
+
+    window.addEventListener('storage', function(e) {
+      if (e.key === THEME_KEY && e.newValue) {
+        applyTheme(e.newValue);
+      }
+    });
+
+    window.addEventListener('wonqThemeChange', function(e) {
+      if (e.detail && e.detail.theme) {
+        applyTheme(e.detail.theme);
+      }
+    });
+
+    // 2. Navigation Dropdowns & Scroll
+    var scrollProgress = document.getElementById('scroll-progress');
+    var navbar = document.getElementById('navbar');
+    var overviewDropdown = document.getElementById('nav-overview-dropdown');
+    var overviewBtn = document.getElementById('nav-overview-btn');
+    var projectsDropdown = document.getElementById('nav-projects-dropdown');
+    var projectsBtn = document.getElementById('nav-projects-btn');
+    var motionBtn = document.getElementById('btn-motion-toggle') || document.getElementById('motion-toggle-btn');
+
+    if (projectsBtn && projectsBtn.dataset.navBound === 'true') return;
+    if (projectsBtn) projectsBtn.dataset.navBound = 'true';
+
+    var updateScroll = function() {
+      var scrollY = window.scrollY || window.pageYOffset;
+      if (navbar) {
+        navbar.classList.toggle('scrolled', scrollY > 10);
+      }
+      if (scrollProgress) {
+        var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        var pct = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+        scrollProgress.style.width = Math.min(100, Math.max(0, pct)) + '%';
+      }
+    };
+    window.addEventListener('scroll', updateScroll, { passive: true });
+    updateScroll();
+
+    var closeAllDropdowns = function() {
+      if (overviewDropdown) {
+        overviewDropdown.classList.remove('open');
+        if (overviewBtn) overviewBtn.setAttribute('aria-expanded', 'false');
+      }
+      if (projectsDropdown) {
+        projectsDropdown.classList.remove('open');
+        if (projectsBtn) projectsBtn.setAttribute('aria-expanded', 'false');
+      }
+    };
+
+    if (overviewBtn && overviewDropdown) {
+      overviewBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var isOpen = overviewDropdown.classList.contains('open');
+        closeAllDropdowns();
+        if (!isOpen) {
+          overviewDropdown.classList.add('open');
+          overviewBtn.setAttribute('aria-expanded', 'true');
+        }
+      });
+    }
+
+    if (projectsBtn && projectsDropdown) {
+      projectsBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var isOpen = projectsDropdown.classList.contains('open');
+        closeAllDropdowns();
+        if (!isOpen) {
+          projectsDropdown.classList.add('open');
+          projectsBtn.setAttribute('aria-expanded', 'true');
+        }
+      });
+    }
+
+    document.querySelectorAll('.dropdown-item').forEach(function(item) {
+      item.addEventListener('click', function() {
+        closeAllDropdowns();
+      });
+    });
+
+    document.addEventListener('click', function(e) {
+      var inOverview = overviewDropdown && overviewDropdown.contains(e.target);
+      var inProjects = projectsDropdown && projectsDropdown.contains(e.target);
+      if (!inOverview && !inProjects) {
+        closeAllDropdowns();
+      }
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeAllDropdowns();
+      }
+    });
+
+    if (motionBtn && !motionBtn.dataset.boundUnified) {
+      motionBtn.dataset.boundUnified = 'true';
+      motionBtn.addEventListener('click', function() {
+        var reduced = document.body.classList.toggle('reduce-motion');
+        motionBtn.setAttribute('aria-pressed', String(reduced));
+        motionBtn.textContent = reduced ? '모션 줄이기: ON' : '모션 줄이기: OFF';
       });
     }
   }
-  document.addEventListener('DOMContentLoaded', initThemeToggle);
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+  } else {
+    initApp();
+  }
 })();

@@ -483,10 +483,66 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ============================================================================
-// Unified Portfolio Navigation (Overview & Projects Dropdowns + Scroll Progress + Motion Toggle)
+// Master Unified Navigation & Dark/Light Theme Controller (Wonq Portfolio)
 // ============================================================================
 (function() {
-  function initNav() {
+  var THEME_KEY = 'wonq_portfolio_theme';
+
+  function applyTheme(theme) {
+    var isDark = theme === 'dark';
+    if (isDark) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.body.classList.add('dark-theme');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      document.body.classList.remove('dark-theme');
+    }
+    var toggleBtn = document.getElementById('btn-theme-toggle');
+    if (toggleBtn) {
+      toggleBtn.setAttribute('aria-label', isDark ? '라이트 모드로 전환' : '다크 모드로 전환');
+      toggleBtn.setAttribute('title', isDark ? '라이트 모드로 전환' : '다크 모드로 전환');
+    }
+  }
+
+  function getPreferredTheme() {
+    var saved = localStorage.getItem(THEME_KEY);
+    if (saved === 'dark' || saved === 'light') return saved;
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    return 'light';
+  }
+
+  function initApp() {
+    // 1. Theme initialization
+    var current = getPreferredTheme();
+    applyTheme(current);
+
+    var toggleBtn = document.getElementById('btn-theme-toggle');
+    if (toggleBtn && !toggleBtn.dataset.themeBound) {
+      toggleBtn.dataset.themeBound = 'true';
+      toggleBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        var next = (document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-theme')) ? 'light' : 'dark';
+        applyTheme(next);
+        localStorage.setItem(THEME_KEY, next);
+        window.dispatchEvent(new CustomEvent('wonqThemeChange', { detail: { theme: next } }));
+      });
+    }
+
+    window.addEventListener('storage', function(e) {
+      if (e.key === THEME_KEY && e.newValue) {
+        applyTheme(e.newValue);
+      }
+    });
+
+    window.addEventListener('wonqThemeChange', function(e) {
+      if (e.detail && e.detail.theme) {
+        applyTheme(e.detail.theme);
+      }
+    });
+
+    // 2. Navigation Dropdowns & Scroll
     var scrollProgress = document.getElementById('scroll-progress');
     var navbar = document.getElementById('navbar');
     var overviewDropdown = document.getElementById('nav-overview-dropdown');
@@ -498,7 +554,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (projectsBtn && projectsBtn.dataset.navBound === 'true') return;
     if (projectsBtn) projectsBtn.dataset.navBound = 'true';
 
-    // 1. Scroll progress bar
     var updateScroll = function() {
       var scrollY = window.scrollY || window.pageYOffset;
       if (navbar) {
@@ -513,7 +568,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('scroll', updateScroll, { passive: true });
     updateScroll();
 
-    // 2. Dual Dropdowns (Overview & Projects)
     var closeAllDropdowns = function() {
       if (overviewDropdown) {
         overviewDropdown.classList.remove('open');
@@ -569,7 +623,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // 3. Motion Toggle
     if (motionBtn && !motionBtn.dataset.boundUnified) {
       motionBtn.dataset.boundUnified = 'true';
       motionBtn.addEventListener('click', function() {
@@ -581,41 +634,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initNav);
+    document.addEventListener('DOMContentLoaded', initApp);
   } else {
-    initNav();
+    initApp();
   }
-})();
-
-(function() {
-  var THEME_KEY = 'wonq_portfolio_theme';
-
-  function applyTheme(theme) {
-    var isDark = theme === 'dark';
-    if (isDark) {
-      document.documentElement.setAttribute('data-theme', 'dark');
-      document.body.classList.add('dark-theme');
-    } else {
-      document.documentElement.removeAttribute('data-theme');
-      document.body.classList.remove('dark-theme');
-    }
-  }
-
-  function initThemeToggle() {
-    var saved = localStorage.getItem(THEME_KEY);
-    var current = (saved === 'dark' || saved === 'light') ? saved :
-      (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    applyTheme(current);
-
-    var toggleBtn = document.getElementById('btn-theme-toggle');
-    if (toggleBtn) {
-      toggleBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        var next = document.body.classList.contains('dark-theme') ? 'light' : 'dark';
-        applyTheme(next);
-        localStorage.setItem(THEME_KEY, next);
-      });
-    }
-  }
-  document.addEventListener('DOMContentLoaded', initThemeToggle);
 })();
