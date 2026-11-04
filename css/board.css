@@ -1476,3 +1476,32 @@ button {
     transform: translateY(0) !important;
   }
 }
+
+/* 기본 상태 (라이트 모드): 달 보임 / 해 숨김 */
+.theme-icon.icon-moon { display: block; }
+.theme-icon.icon-sun { display: none; }
+
+/* 다크 모드 상태: 달 숨김 / 해 보임 */
+[data-theme="dark"] .theme-icon.icon-moon,
+body.dark-theme .theme-icon.icon-moon {
+  display: none !important;
+}
+[data-theme="dark"] .theme-icon.icon-sun,
+body.dark-theme .theme-icon.icon-sun {
+  display: block !important;
+  stroke: #fbbf24;
+}
+
+/* 다크 테마 색상 변수 */
+[data-theme="dark"], body.dark-theme {
+  --color-bg: #0d0f12;
+  --color-surface: #15181d;
+  --color-surface-alt: #1c2026;
+  --color-text-main: #f3f4f6;
+  --color-text-secondary: #e2e8f0;
+  --color-accent-red: #f87171;
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-border-darker: rgba(255, 255, 255, 0.22);
+  background-color: var(--color-bg) !important;
+  color: var(--color-text-main) !important;
+}

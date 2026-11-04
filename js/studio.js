@@ -855,3 +855,36 @@ document.addEventListener('DOMContentLoaded', () => {
     initNav();
   }
 })();
+
+(function() {
+  var THEME_KEY = 'wonq_portfolio_theme';
+
+  function applyTheme(theme) {
+    var isDark = theme === 'dark';
+    if (isDark) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.body.classList.add('dark-theme');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      document.body.classList.remove('dark-theme');
+    }
+  }
+
+  function initThemeToggle() {
+    var saved = localStorage.getItem(THEME_KEY);
+    var current = (saved === 'dark' || saved === 'light') ? saved :
+      (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    applyTheme(current);
+
+    var toggleBtn = document.getElementById('btn-theme-toggle');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        var next = document.body.classList.contains('dark-theme') ? 'light' : 'dark';
+        applyTheme(next);
+        localStorage.setItem(THEME_KEY, next);
+      });
+    }
+  }
+  document.addEventListener('DOMContentLoaded', initThemeToggle);
+})();
