@@ -1,5 +1,5 @@
 // ===== CONSTANTS & STORAGE KEYS =====
-const LS = {
+const BASE_LS = {
   plans: 'pds2_plans',
   planVers: 'pds2_plan_versions',
   tasks: 'pds2_tasks',
@@ -9,46 +9,44 @@ const LS = {
   sbKey: 'pds2_sb_key',
 };
 
-let testMode = sessionStorage.getItem('pds_test_session') === 'active';
-const TEST_STORAGE_KEYS = ['plans', 'planVers', 'tasks', 'execs', 'sees'];
-if (testMode) TEST_STORAGE_KEYS.forEach(function(key) { LS[key] += '_test'; });
+const LS = Object.assign({}, BASE_LS);
+const ACCOUNTS_STORAGE_KEY = 'pds_accounts_v2';
 
 function readSessionUser() {
-  if (testMode) return { username: 'admin', test_mode: true };
-  try { return JSON.parse(localStorage.getItem('pds_user')); } catch(e) { return null; }
+  try {
+    var raw = localStorage.getItem('pds_user');
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
 }
 
-function seedTestData() {
-  if (localStorage.getItem('pds_test_seeded_v1')) return;
-  if (TEST_STORAGE_KEYS.some(function(key) { return lsLoad(LS[key]).length > 0; })) return;
-  var today = kstToday();
-  var dateOffset = function(days) {
-    var date = new Date(today + 'T12:00:00Z');
-    date.setUTCDate(date.getUTCDate() + days);
-    return date.toISOString().slice(0, 10);
-  };
-  var created = new Date().toISOString();
-  var plans = [
-    { id: uuid(), title: '흐트러진 일상을 정돈하는 한 주', priority: 'high', period_start: today, period_end: dateOffset(6), estimated_minutes: 180, success_criteria: '매일 가장 중요한 할 일 3개를 정하고 실행하기', notes: '완벽한 하루보다, 꾸준한 작은 실천에 집중해요.', created_at: created },
-    { id: uuid(), title: '새 프로젝트, 첫 번째 마일스톤', priority: 'medium', period_start: today, period_end: dateOffset(13), estimated_minutes: 360, success_criteria: '기획 초안과 참고 자료를 정리하고 피드백 받기', notes: '생각을 구체적인 결과물로 만드는 시간.', created_at: created },
-    { id: uuid(), title: '매일 20분, 나를 위한 독서', priority: 'low', period_start: today, period_end: dateOffset(20), estimated_minutes: 420, success_criteria: '한 권을 읽고 인상 깊은 문장 5개 기록하기', notes: '하루의 끝에 짧은 여유를 만들어보세요.', created_at: created },
-  ];
-  var tasks = [
-    { id: uuid(), plan_id: plans[0].id, title: '이번 주 일정과 우선순위 정리하기', status: 'done', priority: 'high', due_date: today, estimated_minutes: 30, tags: '루틴,주간계획', notes: '', completed_at: created, created_at: created },
-    { id: uuid(), plan_id: plans[0].id, title: '오늘의 가장 중요한 할 일 3개 정하기', status: 'in_progress', priority: 'high', due_date: today, estimated_minutes: 15, tags: '루틴', notes: '급한 일보다 중요한 일부터 시작해요.', completed_at: null, created_at: created },
-    { id: uuid(), plan_id: plans[1].id, title: '프로젝트 기획 초안 작성하기', status: 'todo', priority: 'high', due_date: dateOffset(3), estimated_minutes: 90, tags: '프로젝트,기획', notes: '', completed_at: null, created_at: created },
-    { id: uuid(), plan_id: plans[1].id, title: '참고 자료 수집하고 핵심 내용 정리하기', status: 'todo', priority: 'medium', due_date: dateOffset(1), estimated_minutes: 45, tags: '프로젝트,리서치', notes: '', completed_at: null, created_at: created },
-    { id: uuid(), plan_id: plans[2].id, title: '책 20분 읽고 한 문장 기록하기', status: 'todo', priority: 'low', due_date: today, estimated_minutes: 20, tags: '독서,루틴', notes: '', completed_at: null, created_at: created },
-  ];
-  lsSave(LS.plans, plans);
-  lsSave(LS.tasks, tasks);
-  localStorage.setItem('pds_test_seeded_v1', 'true');
+function applyUserStorageScope(username) {
+  var clean = (username || '').trim().toLowerCase().replace(/[^a-z0-9가-힣_-]/g, '_');
+  ['plans', 'planVers', 'tasks', 'execs', 'sees'].forEach(function(key) {
+    LS[key] = clean ? (BASE_LS[key] + '_' + clean) : BASE_LS[key];
+  });
 }
 
-async function startTestLogin() {
-  document.getElementById('auth-username').value = 'admin';
-  document.getElementById('gate-password').value = 'admin1234';
-  await handleSignIn();
+var initialUser = readSessionUser();
+if (initialUser && initialUser.username) {
+  applyUserStorageScope(initialUser.username);
+}
+
+function loadLocalAccounts() {
+  try {
+    var raw = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
+    var parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveLocalAccounts(accounts) {
+  try {
+    localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(accounts));
+  } catch (e) {}
 }
 
 // ===== STATE =====
@@ -972,16 +970,14 @@ function renderAll() {
 }
 
 // ==============================================================================
-// ===== SUPABASE DB 연결 및 AUTH =====
+// ===== SUPABASE DB 연결 및 하이브리드 AUTH (로컬 계정 + 선택적 Supabase 동기화) =====
 // ==============================================================================
 
 // 1. Supabase 클라이언트 초기화 함수
 async function initSupabaseClient() {
-  if (testMode) { SB = null; return false; }
   if (SB) return true;
   if (typeof window === 'undefined' || !window.supabase) return false;
 
-  // LocalStorage 확인
   try {
     var lsUrl = localStorage.getItem(LS.sbUrl);
     var lsKey = localStorage.getItem(LS.sbKey);
@@ -989,40 +985,27 @@ async function initSupabaseClient() {
       SB = window.supabase.createClient(lsUrl, lsKey);
       return true;
     }
-  } catch(e) {}
-
-  // /api/config 확인
-  try {
-    var res = await fetch('/api/config');
-    if (res.ok) {
-      var cfg = await res.json();
-      if (cfg.supabaseUrl && cfg.supabaseAnonKey) {
-        SB = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
-        localStorage.setItem(LS.sbUrl, cfg.supabaseUrl);
-        localStorage.setItem(LS.sbKey, cfg.supabaseAnonKey);
-        return true;
-      }
-    }
-  } catch(e) {}
+  } catch (e) {}
 
   return false;
 }
 
-// 2. 메시지 알림 헬퍼 (alert와 화면 표시 동시 지원)
+// 2. 인라인 상태 메시지 알림 헬퍼 (에러 팝업 없이 깔끔한 배너 피드백 제공)
 function notifyUser(msg, isError) {
   var gateErr = document.getElementById('gate-error-msg');
   var authErr = document.getElementById('auth-error-msg');
-  if (gateErr) {
-    gateErr.innerHTML = msg;
-    gateErr.style.display = 'block';
-    gateErr.style.color = isError ? 'var(--accent)' : 'var(--green)';
-  }
-  if (authErr) {
-    authErr.innerHTML = msg;
-    authErr.style.display = 'block';
-    authErr.style.color = isError ? 'var(--accent)' : 'var(--green)';
-  }
-  alert(msg.replace(/<br>/g, '\n').replace(/<\/?[^>]+(>|$)/g, ''));
+  [gateErr, authErr].forEach(function(el) {
+    if (!el) return;
+    el.innerHTML = msg;
+    el.style.display = 'block';
+    if (isError) {
+      el.classList.remove('success');
+      el.style.color = 'var(--accent)';
+    } else {
+      el.classList.add('success');
+      el.style.color = 'var(--green)';
+    }
+  });
 }
 
 // 3. DB 연결 모달 열기
@@ -1034,28 +1017,23 @@ function openDbModal() {
   openModal('modal-db');
 }
 
-// 4. DB 연결 실행 (HTML: onclick="connectSupabase()" 및 onclick="saveManualDbAndConnect()")
+// 4. DB 연결 실행
 async function connectSupabase() {
-  if (testMode) { notifyUser('테스트 모드에서는 DB에 연결하지 않습니다. 로그아웃 후 실제 계정으로 연결해 주세요.', true); return; }
   var url = getVal(['manual-sb-url', 'sb-url']);
   var key = getVal(['manual-sb-key', 'sb-key']);
 
   if (!url || !key) {
-    alert('Supabase Project URL과 Anon Key를 모두 입력해 주세요.');
+    notifyUser('Supabase Project URL과 Anon Key를 모두 입력해 주세요.', true);
     return;
   }
 
   if (!window.supabase) {
-    alert('Supabase 라이브러리를 불러오지 못했습니다. 페이지를 새로고침 해주세요.');
+    notifyUser('Supabase 라이브러리를 불러오지 못했습니다.', true);
     return;
   }
 
   try {
     var client = window.supabase.createClient(url, key);
-    var testRes = await client.from('plans').select('id').limit(1);
-    if (testRes.error && testRes.error.code !== 'PGRST116') {
-      console.warn('DB 테스트 응답:', testRes.error);
-    }
     SB = client;
     localStorage.setItem(LS.sbUrl, url);
     localStorage.setItem(LS.sbKey, key);
@@ -1067,22 +1045,20 @@ async function connectSupabase() {
 
     await DB.loadAll();
     renderAll();
-    alert('Supabase 데이터베이스에 성공적으로 연결되었습니다!\n이제 로그인 또는 회원가입을 진행할 수 있습니다.');
-  } catch(e) {
-    alert('데이터베이스 연결 실패: ' + e.message);
+    notifyUser('Supabase 데이터베이스가 연결되었습니다.', false);
+  } catch (e) {
+    notifyUser('데이터베이스 연결 실패: ' + e.message, true);
   }
 }
 const saveManualDbAndConnect = connectSupabase;
 
 // 5. DB 연결 해제
 function disconnectSupabase() {
-  if (!confirm('데이터베이스 연결을 해제하고 로컬 저장소 모드로 전환하시겠습니까?')) return;
   SB = null;
   localStorage.removeItem(LS.sbUrl);
   localStorage.removeItem(LS.sbKey);
   updateDbStatus();
   closeModal('modal-db');
-  alert('데이터베이스 연결이 해제되었습니다. 로컬 저장소를 사용합니다.');
 }
 
 // 6. DB 상태바 갱신
@@ -1090,18 +1066,15 @@ function updateDbStatus() {
   var dot = document.getElementById('db-dot');
   var txt = document.getElementById('db-status-text');
   var url = localStorage.getItem(LS.sbUrl) || '';
-  if (testMode) {
-    if (dot) dot.classList.remove('connected');
-    if (txt) txt.textContent = '테스트 모드 · 브라우저 로컬 저장';
-    return;
-  }
+  var savedUser = readSessionUser();
+  var userPrefix = (savedUser && savedUser.username) ? ('[' + savedUser.username + '] ') : '';
   if (SB || url) {
     if (dot) dot.classList.add('connected');
     var shortUrl = url.replace('https://', '').split('.')[0];
-    if (txt) txt.textContent = 'Supabase 연결됨: ' + (shortUrl || 'DB');
+    if (txt) txt.textContent = userPrefix + 'Supabase 동기화 활성 (' + (shortUrl || 'DB') + ')';
   } else {
-    if (dot) dot.classList.remove('connected');
-    if (txt) txt.textContent = '로컬 저장소 사용 중';
+    if (dot) dot.classList.add('connected');
+    if (txt) txt.textContent = userPrefix + '로컬 보안 스토리지 활성';
   }
 }
 
@@ -1112,122 +1085,144 @@ function openAuthModal() {
   openModal('modal-auth');
 }
 
-// 8. 로그인 (HTML: onclick="handleSignIn()" 및 onclick="gateSignIn()")
+// 8. 로그인 (로컬 계정 스토리지 + 선택적 Supabase app_users 연동)
 async function handleSignIn() {
-  var username = (document.getElementById('auth-username') || {}).value;
-  var password = (document.getElementById('gate-password') || {}).value;
-
-  username = (username || '').trim();
-  password = (password || '').trim();
+  var username = getVal(['auth-username', 'auth-email']);
+  var password = getVal(['gate-password', 'auth-password']);
 
   if (!username || !password) {
     notifyUser('아이디와 비밀번호를 모두 입력해 주세요.', true);
     return;
   }
 
-  if (username === 'admin') {
-    if (password !== 'admin1234') {
-      var error = document.getElementById('gate-error-msg');
-      error.textContent = '테스트 계정의 비밀번호는 admin1234입니다.';
-      error.style.display = 'block';
-      return;
-    }
-    if (!testMode) TEST_STORAGE_KEYS.forEach(function(key) { LS[key] += '_test'; });
-    testMode = true;
-    SB = null;
-    sessionStorage.setItem('pds_test_session', 'active');
-    seedTestData();
-    await DB.loadAll();
-    renderAll();
-    await checkAuthSession();
-    return;
-  }
-
-  await initSupabaseClient(true);
-  if (!SB) {
-    notifyUser('데이터베이스 연결이 필요합니다.', true);
-    return;
-  }
-
   try {
     var pwHash = await hashPassword(password);
-    var res = await SB.from('app_users')
-      .select('id, username')
-      .eq('username', username)
-      .eq('password_hash', pwHash)
-      .maybeSingle();
+    var accounts = loadLocalAccounts();
+    var matchedUser = accounts.find(function(acc) {
+      return acc.username.toLowerCase() === username.toLowerCase() && acc.password_hash === pwHash;
+    });
 
-    if (res.error || !res.data) {
-      notifyUser('아이디 또는 비밀번호가 일치하지 않습니다.', true);
+    // 로컬에 없으면 Supabase가 연결된 경우 원격 테이블도 확인
+    if (!matchedUser) {
+      await initSupabaseClient();
+      if (SB) {
+        try {
+          var res = await SB.from('app_users')
+            .select('id, username, password_hash')
+            .eq('username', username)
+            .eq('password_hash', pwHash)
+            .maybeSingle();
+          if (!res.error && res.data) {
+            matchedUser = res.data;
+            accounts.push(matchedUser);
+            saveLocalAccounts(accounts);
+          }
+        } catch (sbErr) {}
+      }
+    }
+
+    if (!matchedUser) {
+      var existsUsername = accounts.some(function(acc) {
+        return acc.username.toLowerCase() === username.toLowerCase();
+      });
+      if (!existsUsername) {
+        notifyUser('등록되지 않은 아이디입니다. [회원가입] 버튼을 눌러 먼저 계정을 생성해 주세요.', true);
+      } else {
+        notifyUser('비밀번호가 일치하지 않습니다. 다시 확인해 주세요.', true);
+      }
       return;
     }
 
-    // 세션 정보 로컬 저장 (로그인 유지)
-    localStorage.setItem('pds_user', JSON.stringify(res.data));
-    notifyUser(res.data.username + '님 환영합니다!', false);
+    var sessionData = { id: matchedUser.id, username: matchedUser.username };
+    localStorage.setItem('pds_user', JSON.stringify(sessionData));
+    applyUserStorageScope(matchedUser.username);
+    notifyUser(matchedUser.username + '님, 환영합니다!', false);
     closeModal('modal-auth');
 
     await checkAuthSession();
     await DB.loadAll();
     renderAll();
-  } catch(e) {
-    notifyUser('로그인 처리 중 오류: ' + e.message, true);
+  } catch (e) {
+    notifyUser('로그인 처리 중 오류가 발생했습니다: ' + e.message, true);
   }
 }
 const gateSignIn = handleSignIn;
 
-// 9. 회원가입 (HTML: onclick="handleSignUp()" 및 onclick="gateSignUp()")
+// 9. 회원가입 (DB 미연결 상태에서도 즉시 가입 및 자동 로그인 처리)
 async function handleSignUp() {
-  var username = (document.getElementById('auth-username') || {}).value;
-  var password = (document.getElementById('gate-password') || {}).value;
-
-  username = (username || '').trim();
-  password = (password || '').trim();
+  var username = getVal(['auth-username', 'auth-email']);
+  var password = getVal(['gate-password', 'auth-password']);
 
   if (!username || !password) {
     notifyUser('아이디와 비밀번호를 모두 입력해 주세요.', true);
     return;
   }
-  if (password.length < 4) {
-    notifyUser('비밀번호는 최소 4자 이상이어야 합니다.', true);
+  if (username.length < 2) {
+    notifyUser('아이디는 최소 2자 이상 입력해 주세요.', true);
     return;
   }
-
-  await initSupabaseClient(true);
-  if (!SB) {
-    notifyUser('데이터베이스 연결이 필요합니다.', true);
+  if (password.length < 4) {
+    notifyUser('비밀번호는 최소 4자 이상 입력해 주세요.', true);
     return;
   }
 
   try {
-    // 1. 아이디 중복 검사
-    var checkRes = await SB.from('app_users').select('id').eq('username', username);
-    if (checkRes.data && checkRes.data.length > 0) {
-      notifyUser('이미 존재하는 아이디입니다.', true);
+    var accounts = loadLocalAccounts();
+    var duplicate = accounts.some(function(acc) {
+      return acc.username.toLowerCase() === username.toLowerCase();
+    });
+
+    if (duplicate) {
+      notifyUser('이미 등록된 아이디입니다. [로그인] 버튼을 눌러 접속해 주세요.', true);
       return;
     }
 
-    // 2. 비밀번호 암호화 후 등록
     var pwHash = await hashPassword(password);
-    var insertRes = await SB.from('app_users').insert([{ username: username, password_hash: pwHash }]);
+    var newUser = {
+      id: uuid(),
+      username: username,
+      password_hash: pwHash,
+      created_at: new Date().toISOString()
+    };
 
-    if (insertRes.error) {
-      notifyUser('회원가입 실패: ' + insertRes.error.message, true);
-    } else {
-      notifyUser('회원가입 완료! 생성한 계정으로 로그인해 주세요.', false);
+    // 1) 로컬 계정 저장소에 즉시 보존
+    accounts.push(newUser);
+    saveLocalAccounts(accounts);
+
+    // 2) Supabase 연결 시 비차단 동기화 시도 (테이블 미생성 환경에서도 에러 없이 통과)
+    await initSupabaseClient();
+    if (SB) {
+      try {
+        await SB.from('app_users').insert([{ username: username, password_hash: pwHash }]);
+      } catch (sbErr) {}
     }
-  } catch(e) {
-    notifyUser('회원가입 처리 중 오류: ' + e.message, true);
+
+    // 3) 가입 즉시 로그인 세션 활성화 및 워크스페이스 진입
+    var sessionData = { id: newUser.id, username: newUser.username };
+    localStorage.setItem('pds_user', JSON.stringify(sessionData));
+    applyUserStorageScope(newUser.username);
+    notifyUser('회원가입이 완료되어 워크스페이스로 이동합니다.', false);
+    closeModal('modal-auth');
+
+    await checkAuthSession();
+    await DB.loadAll();
+    renderAll();
+  } catch (e) {
+    notifyUser('회원가입 처리 중 오류가 발생했습니다: ' + e.message, true);
   }
 }
 const gateSignUp = handleSignUp;
 
-// 10. 로그아웃 (HTML: onclick="handleSignOut()" 및 onclick="gateSignOut()")
+// 10. 로그아웃
 async function handleSignOut() {
-  if (!confirm('로그아웃 하시겠습니까?')) return;
-  if (testMode) sessionStorage.removeItem('pds_test_session');
-  else localStorage.removeItem('pds_user');
-  location.reload();
+  localStorage.removeItem('pds_user');
+  applyUserStorageScope('');
+  var userInput = document.getElementById('auth-username');
+  var passInput = document.getElementById('gate-password');
+  var errEl = document.getElementById('gate-error-msg');
+  if (passInput) passInput.value = '';
+  if (errEl) errEl.style.display = 'none';
+  await checkAuthSession();
 }
 const gateSignOut = handleSignOut;
 
@@ -1235,20 +1230,17 @@ const gateSignOut = handleSignOut;
 async function checkAuthSession() {
   var gate = document.getElementById('login-gate');
   await initSupabaseClient();
-  updateDbStatus();
 
   var savedUser = readSessionUser();
-  var testBanner = document.getElementById('test-mode-banner');
-  if (testBanner) testBanner.hidden = !testMode;
-
   if (savedUser && savedUser.username) {
+    applyUserStorageScope(savedUser.username);
     if (gate) gate.style.display = 'none';
     var userEmailEl = document.getElementById('header-user-email') || document.getElementById('user-email-display');
     var logoutBtnEl = document.getElementById('header-logout-btn') || document.getElementById('btn-sign-out');
     var loginBtnEl = document.getElementById('btn-open-auth-modal');
 
     if (userEmailEl) {
-      userEmailEl.textContent = savedUser.username + (testMode ? ' · 테스트 계정' : '');
+      userEmailEl.textContent = savedUser.username + ' 계정';
       userEmailEl.style.display = 'inline-block';
     }
     if (logoutBtnEl) logoutBtnEl.style.display = 'inline-block';
@@ -1256,6 +1248,7 @@ async function checkAuthSession() {
   } else {
     if (gate) gate.style.display = 'flex';
   }
+  updateDbStatus();
 }
 const checkGateAuth = checkAuthSession;
 
@@ -1330,9 +1323,55 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 async function hashPassword(plainText) {
-  var encoder = new TextEncoder();
-  var data = encoder.encode(plainText);
-  var hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  var hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  var str = String(plainText || '');
+  try {
+    if (typeof crypto !== 'undefined' && crypto.subtle && typeof TextEncoder !== 'undefined') {
+      var encoder = new TextEncoder();
+      var data = encoder.encode(str);
+      var hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      var hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+    }
+  } catch (e) {}
+  // Pure JS deterministic fallback hash
+  var h1 = 0xdeadbeef ^ str.length;
+  var h2 = 0x41c6ce57 ^ str.length;
+  for (var i = 0, ch; i < str.length; i++) {
+    ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0');
 }
+
+
+// Unified Top Navbar Dropdown Handler
+(function() {
+  document.addEventListener('DOMContentLoaded', function() {
+    var dropdown = document.getElementById('nav-projects-dropdown');
+    var btn = document.getElementById('nav-projects-btn');
+    if (btn && dropdown) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var isOpen = dropdown.classList.contains('open');
+        dropdown.classList.toggle('open', !isOpen);
+        btn.setAttribute('aria-expanded', String(!isOpen));
+      });
+      document.addEventListener('click', function(e) {
+        if (!dropdown.contains(e.target)) {
+          dropdown.classList.remove('open');
+          btn.setAttribute('aria-expanded', 'false');
+        }
+      });
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          dropdown.classList.remove('open');
+          btn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+  });
+})();
+

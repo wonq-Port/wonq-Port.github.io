@@ -760,7 +760,7 @@
       } else if (answeredCount < QUIZ_ITEMS.length) {
         verdictEl.textContent = '진행 중: ' + answeredCount + '/' + QUIZ_ITEMS.length + '문항 완료';
       } else {
-        var gradeText = correctCount === 5 ? '★ 보안 분석 전문가 수준 (만점!)' : correctCount >= 4 ? '우수: 어휘적 피싱 패턴을 잘 식별합니다.' : '보통: 형태적 위험 신호 복습을 권장합니다.';
+        var gradeText = correctCount === 5 ? '[VERIFIED] 보안 분석 전문가 수준 (만점)' : correctCount >= 4 ? '우수: 어휘적 피싱 패턴을 잘 식별합니다.' : '보통: 형태적 위험 신호 복습을 권장합니다.';
         verdictEl.textContent = '훈련 완료! ' + gradeText;
       }
     }
@@ -779,7 +779,7 @@
       if (isAnswered) {
         feedbackHtml = '<div class="quiz-feedback-box ' + (isCorrect ? 'correct' : 'incorrect') + '">' +
           '<div class="quiz-feedback-verdict">' +
-            '<strong>' + (isCorrect ? '✓ 정답입니다!' : '✕ 오답입니다.') + ' (실제 분류: ' + (q.answer === 'safe' ? '정상' : '피싱 의심') + ')</strong>' +
+            '<strong>' + (isCorrect ? '[PASS] 정답입니다' : '[FAIL] 오답입니다') + ' (실제 분류: ' + (q.answer === 'safe' ? '정상' : '피싱 의심') + ')</strong>' +
             '<button type="button" class="btn-quick-action" data-quiz-send="' + escapeHtml(q.url) + '">01 검사 탭에서 정밀 분석 →</button>' +
           '</div>' +
           '<p class="quiz-feedback-desc">' + escapeHtml(q.explanation) + '</p>' +
@@ -1666,5 +1666,34 @@
     }
 
     renderAll();
+  });
+})();
+
+
+// Unified Top Navbar Dropdown Handler
+(function() {
+  document.addEventListener('DOMContentLoaded', function() {
+    var dropdown = document.getElementById('nav-projects-dropdown');
+    var btn = document.getElementById('nav-projects-btn');
+    if (btn && dropdown) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var isOpen = dropdown.classList.contains('open');
+        dropdown.classList.toggle('open', !isOpen);
+        btn.setAttribute('aria-expanded', String(!isOpen));
+      });
+      document.addEventListener('click', function(e) {
+        if (!dropdown.contains(e.target)) {
+          dropdown.classList.remove('open');
+          btn.setAttribute('aria-expanded', 'false');
+        }
+      });
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          dropdown.classList.remove('open');
+          btn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
   });
 })();

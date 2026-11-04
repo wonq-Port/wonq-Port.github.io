@@ -146,11 +146,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const applySettingsUI = () => {
     if (btnSoundToggle) {
       btnSoundToggle.setAttribute('aria-pressed', String(settings.muted));
-      btnSoundToggle.textContent = settings.muted ? '🔇 소리: 음소거' : '🔊 소리: 켜짐';
+      btnSoundToggle.textContent = settings.muted ? '소리: 음소거' : '소리: 켜짐';
     }
     if (btnMotionToggle) {
       btnMotionToggle.setAttribute('aria-pressed', String(settings.reducedMotion));
-      btnMotionToggle.textContent = settings.reducedMotion ? '⚡ 모션: 줄임' : '⚡ 모션: 일반';
+      btnMotionToggle.textContent = settings.reducedMotion ? '모션: 줄임' : '모션: 일반';
     }
     if (settings.reducedMotion) {
       document.body.classList.add('reduce-motion');
@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
       playSoundEvent('win');
       if (gameStatus) {
         gameStatus.className = 'status-banner win';
-        gameStatus.textContent = '🎉 방어 성공! 침입자의 공격 라인을 완전히 차단했습니다.';
+        gameStatus.textContent = '[DEFENSE SUCCESS] 방어 성공! 침입자의 공격 라인을 완전히 차단했습니다.';
       }
       if (result.line) {
         result.line.forEach(i => cellButtons[i].classList.add('winning-cell'));
@@ -241,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
       playSoundEvent('loss');
       if (gameStatus) {
         gameStatus.className = 'status-banner loss';
-        gameStatus.textContent = '⚠️ 침해 발생! AI 침입자에게 방화벽 노드가 점령당했습니다.';
+        gameStatus.textContent = '[BREACH DETECTED] 침해 발생! AI 침입자에게 방화벽 노드가 점령당했습니다.';
       }
       if (result.line) {
         result.line.forEach(i => cellButtons[i].classList.add('winning-cell'));
@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
       playSoundEvent('draw');
       if (gameStatus) {
         gameStatus.className = 'status-banner';
-        gameStatus.textContent = '🤝 무승부! 시스템 방어 상태가 팽팽하게 유지되었습니다.';
+        gameStatus.textContent = '[DRAW] 무승부! 시스템 방어 상태가 팽팽하게 유지되었습니다.';
       }
     }
 
@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (gameStatus) {
       gameStatus.className = 'status-banner';
-      gameStatus.textContent = '당신의 턴입니다 (🛡️ O). 비어 있는 방어 노드를 선택하세요.';
+      gameStatus.textContent = '당신의 턴입니다 (방어 노드 O). 비어 있는 방어 노드를 선택하세요.';
     }
 
     updateTimerDisplay();
@@ -294,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
     isAiThinking = true;
     if (gameStatus) {
       gameStatus.className = 'status-banner';
-      gameStatus.textContent = 'AI 침입자가 취약점 경로를 분석 중입니다... (⚔️ X)';
+      gameStatus.textContent = 'AI 침입자가 취약점 경로를 분석 중입니다... (침입자 X)';
     }
     renderBoard();
 
@@ -332,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
               if (gameStatus) {
                 gameStatus.className = 'status-banner';
-                gameStatus.textContent = '당신의 턴입니다 (🛡️ O). 비어 있는 방어 노드를 선택하세요.';
+                gameStatus.textContent = '당신의 턴입니다 (방어 노드 O). 비어 있는 방어 노드를 선택하세요.';
               }
               renderBoard();
             }
@@ -368,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         if (gameStatus) {
           gameStatus.className = 'status-banner';
-          gameStatus.textContent = '당신의 턴입니다 (🛡️ O). 비어 있는 방어 노드를 선택하세요.';
+          gameStatus.textContent = '당신의 턴입니다 (방어 노드 O). 비어 있는 방어 노드를 선택하세요.';
         }
         renderBoard();
       }
@@ -417,8 +417,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (gameStatus) {
         gameStatus.className = 'status-banner';
         gameStatus.textContent = isAiThinking
-          ? 'AI 침입자가 취약점 경로를 분석 중입니다... (⚔️ X)'
-          : '당신의 턴입니다 (🛡️ O). 비어 있는 방어 노드를 선택하세요.';
+          ? 'AI 침입자가 취약점 경로를 분석 중입니다... (침입자 X)'
+          : '당신의 턴입니다 (방어 노드 O). 비어 있는 방어 노드를 선택하세요.';
       }
       renderBoard();
       if (isAiThinking) {

@@ -1191,6 +1191,10 @@ body.reduce-motion .reveal-on-scroll {
   align-items: center;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+.footer-text {
+  font-family: var(--font-inter);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -1343,4 +1347,95 @@ body.reduce-motion .reveal-on-scroll {
   gap: 0.6rem;
   padding-top: 1rem;
   border-top: 1px solid var(--color-border);
+}
+
+
+/* Point Typography & Compact Bullet List Refinements */
+.point-red {
+  color: var(--color-accent-red);
+  font-weight: 700;
+}
+
+.point-ink {
+  color: var(--color-text-main);
+  font-weight: 700;
+  background: rgba(10, 10, 10, 0.05);
+  padding: 0.05rem 0.35rem;
+  border-radius: 2px;
+}
+
+.compact-bullet-list {
+  list-style: none;
+  margin: 0.65rem 0 1rem 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.compact-bullet-list li {
+  position: relative;
+  padding-left: 0.85rem;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+
+.compact-bullet-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55rem;
+  width: 4px;
+  height: 4px;
+  background-color: var(--color-accent-red);
+  border-radius: 1px;
+}
+
+.cert-inline-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .cert-inline-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cert-inline-card {
+  border: 1px solid var(--color-border-darker);
+  border-radius: 4px;
+  padding: 1.1rem 1.25rem;
+  background: #ffffff;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cert-inline-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-accent-red);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+}
+
+.cert-inline-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.cert-status-tag {
+  display: inline-block;
+  align-self: flex-start;
+  font-family: var(--font-inter);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-accent-red);
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 2px 7px;
+  border-radius: 2px;
+  margin-bottom: 0.2rem;
 }

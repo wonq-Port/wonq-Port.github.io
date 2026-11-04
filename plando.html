@@ -1,107 +1,144 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>플랜두씨</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- plando.html의 <head> 내부 -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PLAN · DO · SEE | 플랜두씨 실행 다이어리</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="css/plando.css">
+  <link rel="stylesheet" href="css/plando.css" />
 </head>
 <body>
 
-<!-- plando.html의 <body> 바로 아래 교체 -->
+<!-- Unified Top Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="index.html" class="nav-logo" aria-label="메인 포트폴리오로 이동">
+      <span>이혜원</span>
+      <span class="nav-badge">PLAN · DO · SEE</span>
+    </a>
+
+    <nav class="nav-menu" aria-label="도구 내비게이션">
+      <a href="index.html" class="nav-link">Portfolio</a>
+      <div class="nav-dropdown" id="nav-projects-dropdown">
+        <button type="button" class="nav-dropdown-btn" id="nav-projects-btn" aria-expanded="false" aria-haspopup="true">
+          <span>Projects</span>
+          <svg class="dropdown-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
+            <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="dropdown-menu" id="nav-projects-menu" role="menu">
+          <div class="dropdown-group-label">보안 및 웹 프로젝트</div>
+          <a href="phishing-detector.html" class="dropdown-item" role="menuitem">피싱 URL 사전 진단기</a>
+          <a href="board.html" class="dropdown-item" role="menuitem">오늘의 진짜 정보판</a>
+          <a href="plando.html" class="dropdown-item active" role="menuitem">플랜두씨 다이어리</a>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-group-label">인터랙티브 툴</div>
+          <a href="game.html" class="dropdown-item" role="menuitem">보안 틱택토 미니게임</a>
+          <a href="studio.html" class="dropdown-item" role="menuitem">의미 있는 한 줄 스튜디오</a>
+        </div>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<!-- Login / Signup Gate Overlay (테스트 계정 제거 완료 · 즉시 회원가입 지원) -->
 <div id="login-gate" class="login-gate-overlay">
   <div class="login-gate-card">
-    <div class="login-gate-logo">플랜<span>두씨</span></div>
-    <div class="gate-eyebrow">PLAN · DO · SEE</div>
-    <p class="login-gate-desc">계획을 세우고, 실행하고, 돌아보세요.<br>나의 하루를 만드는 작은 시작.</p>
-    
-    <div class="form-group">
-      <label for="auth-username">아이디</label>
-      <input type="text" id="auth-username" placeholder="아이디 입력 (영문/숫자)" autocomplete="username" />
-    </div>
-    
-    <div class="form-group" style="margin-bottom:14px;">
-      <label for="gate-password">비밀번호 (6자 이상)</label>
-      <input type="password" id="gate-password" placeholder="비밀번호 입력" autocomplete="current-password">
-    </div>
+    <div class="gate-eyebrow">PLAN · DO · SEE WORKSPACE</div>
+    <h1 class="login-gate-logo">PLAN · DO · <span>SEE</span></h1>
+    <p class="login-gate- subtitle-ko">플랜두씨 실행 다이어리</p>
+    <p class="login-gate-desc">
+      계획(Plan)을 세우고, 실행(Do)을 기록하며, 하루를 돌아보는(See) 개인 워크스페이스입니다.<br />
+      처음 방문하셨다면 아이디와 비밀번호를 입력한 뒤 <strong class="point-red">[회원가입]</strong>을 눌러 바로 시작하세요.
+    </p>
 
-    <!-- 상태 및 에러 메시지 출력 영역 -->
-    <div id="gate-error-msg" class="gate-error" role="alert" style="display:none;"></div>
+    <form id="gate-auth-form" onsubmit="event.preventDefault(); gateSignIn();">
+      <div class="form-group">
+        <label for="auth-username">아이디 (Username)</label>
+        <input type="text" id="auth-username" placeholder="영문, 숫자 또는 한글 아이디 입력" autocomplete="username" />
+      </div>
 
-    <div style="display:flex; gap:8px; margin-top:14px;">
-      <button type="button" id="btn-gate-signup" class="btn-sm" style="padding:10px 16px; font-size:13px;" onclick="gateSignUp()">회원가입</button>
-      <button type="button" id="btn-gate-signin" class="btn-primary" style="flex:1; padding:10px; font-size:13px; justify-content:center;" onclick="gateSignIn()">로그인</button>
-    </div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label for="gate-password">비밀번호 (Password · 4자 이상)</label>
+        <input type="password" id="gate-password" placeholder="비밀번호 4자 이상 입력" autocomplete="current-password" />
+      </div>
 
-    <div class="test-login-panel">
-      <div class="test-login-heading"><span class="test-label">TEST MODE</span><strong>먼저 가볍게 둘러보세요</strong></div>
-      <p>아이디 <code>admin</code><span class="test-separator">/</span>비밀번호 <code>admin1234</code></p>
-      <button type="button" class="btn-test-login" onclick="startTestLogin()">테스트 계정으로 시작하기 <span aria-hidden="true">↗</span></button>
-      <small>예시 데이터 포함 · 이 브라우저에만 저장됩니다</small>
-    </div>
+      <!-- 상태 및 에러 메시지 출력 영역 -->
+      <div id="gate-error-msg" class="gate-error" role="alert" style="display:none;"></div>
 
-    <!-- DB 연결 설정 접기/펼치기 영역 -->
-    <div id="gate-manual-db" style="display:none; margin-top:16px; padding-top:14px; border-top:1px dashed var(--border); text-align:left;">
-      <div style="font-size:11.5px; font-weight:700; color:var(--accent); margin-bottom:8px;">⚠️ DB 정보 1회 등록 (브라우저 로컬 저장)</div>
+      <div class="gate-action-row">
+        <button type="button" id="btn-gate-signup" class="btn-sm gate-btn-signup" onclick="gateSignUp()">회원가입</button>
+        <button type="submit" id="btn-gate-signin" class="btn-primary gate-btn-signin">로그인</button>
+      </div>
+    </form>
+
+    <!-- 선택적 외부 Supabase DB 연결 설정 -->
+    <div id="gate-manual-db" style="display:none; margin-top:16px; padding-top:14px; border-top:1px dashed var(--border-md); text-align:left;">
+      <div style="font-size:11px; font-weight:700; color:var(--accent); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.08em;">
+        선택 사항: 외부 Supabase DB 직접 연결
+      </div>
       <div class="form-group" style="margin-bottom:8px;">
         <label style="font-size:11px;">Supabase Project URL</label>
-        <input type="text" id="manual-sb-url" placeholder="https://xxxx.supabase.co">
+        <input type="text" id="manual-sb-url" placeholder="https://xxxx.supabase.co" />
       </div>
       <div class="form-group" style="margin-bottom:10px;">
         <label style="font-size:11px;">Supabase Anon Key</label>
-        <input type="password" id="manual-sb-key" placeholder="eyJhbGciOi...">
+        <input type="password" id="manual-sb-key" placeholder="eyJhbGciOi..." />
       </div>
-      <button type="button" class="btn-sm" style="width:100%; padding:7px; font-weight:700;" onclick="saveManualDbAndConnect()">DB 연결 저장하기</button>
+      <button type="button" class="btn-sm" style="width:100%; padding:8px; font-weight:700;" onclick="saveManualDbAndConnect()">DB 연결 저장하기</button>
     </div>
 
-    <button type="button" class="gate-db-toggle" onclick="toggleManualDb()">⚙️ 데이터베이스 직접 연결 설정</button>
+    <div class="gate-footer-links">
+      <button type="button" class="gate-db-toggle" onclick="toggleManualDb()">외부 데이터베이스(Supabase) 연결 설정</button>
+      <a href="index.html" class="gate-back-link">← 포트폴리오 메인으로 돌아가기</a>
+    </div>
   </div>
 </div>
 
-<!-- Header -->
+<!-- App Header -->
 <div id="header">
-  <div id="logo">플랜두<span>씨</span></div>
-  <div class="header-tagline">계획에서 실행으로, 하루를 차곡차곡.</div>
+  <div class="header-brand-group">
+    <div id="logo">PLAN · DO · <span>SEE</span></div>
+    <span class="header-ko-badge">플랜두씨</span>
+    <div class="header-tagline">계획에서 실행으로, 하루를 차곡차곡 기록하는 워크스페이스</div>
+  </div>
   <div class="header-spacer"></div>
-  
+
   <!-- 로그인한 사용자 정보 및 로그아웃 버튼 -->
   <div id="header-user-area">
     <span id="header-user-email" style="display:none;"></span>
-    <button type="button" class="btn-sm" id="header-logout-btn" style="display:none;color:var(--accent);border-color:rgba(220,38,38,0.25);" onclick="gateSignOut()">로그아웃</button>
+    <button type="button" class="btn-sm" id="header-logout-btn" style="display:none;color:var(--accent);border-color:rgba(185,28,28,0.3);" onclick="gateSignOut()">로그아웃</button>
   </div>
 
   <button id="export-btn" title="전체 데이터 JSON 내보내기">JSON 내보내기</button>
 </div>
 
-<div id="test-mode-banner" class="test-mode-banner" hidden>
-  <span class="test-label">TEST MODE</span>
-  <span>테스트 공간입니다. 변경 사항은 이 브라우저에만 저장되며 실제 계정의 데이터에 영향을 주지 않습니다.</span>
-</div>
-
 <!-- DB Status Bar -->
 <div id="db-status-bar">
   <div id="db-dot"></div>
-  <div id="db-status-text">로컬 저장소 사용 중</div>
-  <button type="button" class="btn-sm" style="padding:2px 8px;font-size:11px;" onclick="openDbModal()">DB 설정</button>
+  <div id="db-status-text">로컬 계정 워크스페이스 활성</div>
+  <button type="button" class="btn-sm" style="padding:2px 8px;font-size:11px;min-height:26px;" onclick="openDbModal()">DB 설정</button>
 </div>
 
 <!-- Tab bar -->
 <div id="tab-bar">
-  <button class="tab-btn active" data-tab="plan" onclick="showTab('plan')">01 PLAN</button>
-  <button class="tab-btn" data-tab="tasks" onclick="showTab('tasks')">02 TASKS</button>
-  <button class="tab-btn" data-tab="do" onclick="showTab('do')">03 DO</button>
-  <button class="tab-btn" data-tab="see" onclick="showTab('see')">04 SEE</button>
+  <button class="tab-btn active" data-tab="plan" onclick="showTab('plan')">01 PLAN · 계획</button>
+  <button class="tab-btn" data-tab="tasks" onclick="showTab('tasks')">02 TASKS · 할 일</button>
+  <button class="tab-btn" data-tab="do" onclick="showTab('do')">03 DO · 실행 기록</button>
+  <button class="tab-btn" data-tab="see" onclick="showTab('see')">04 SEE · 돌아보기</button>
 </div>
 
 <!-- PLAN Tab -->
 <div class="tab-panel active" id="tab-plan">
   <div class="section-header">
-    <div><div class="section-eyebrow">YOUR NEXT CHAPTER</div><h2>계획<span class="heading-dot">.</span></h2><p class="section-description">하고 싶은 일을, 이룰 수 있는 계획으로.</p></div>
+    <div>
+      <div class="section-eyebrow">01 · STRATEGIC PLANNING</div>
+      <h2>계획<span class="heading-dot">.</span></h2>
+      <p class="section-description">목표 기간과 성공 기준을 명확히 정의하고 버전별 이력을 관리합니다.</p>
+    </div>
     <button class="btn-primary" onclick="openPlanModal()">+ 계획 추가</button>
   </div>
   <div id="plan-list"></div>
@@ -110,40 +147,47 @@
 <!-- TASKS Tab -->
 <div class="tab-panel" id="tab-tasks">
   <div class="section-header">
-    <div><div class="section-eyebrow">ONE STEP AT A TIME</div><h2>할 일<span class="heading-dot">.</span></h2><p class="section-description">작은 실행이 모여 계획을 완성합니다.</p></div>
+    <div>
+      <div class="section-eyebrow">02 · ACTIONABLE TASKS</div>
+      <h2>할 일<span class="heading-dot">.</span></h2>
+      <p class="section-description">계획을 달성하기 위한 세부 실행 단위를 우선순위별로 관리합니다.</p>
+    </div>
     <button class="btn-primary" onclick="openTaskModal()">+ 할 일 추가</button>
   </div>
   <div class="controls-row">
-    <label class="filter-field filter-search"><span>검색</span><input type="text" id="t-search" placeholder="제목 또는 태그 검색" oninput="S.tSearch=this.value;renderTasks()"></label>
+    <label class="filter-field filter-search"><span>검색</span><input type="text" id="t-search" placeholder="제목 또는 태그 검색" oninput="S.tSearch=this.value;renderTasks()" /></label>
     <label class="filter-field"><span>계획</span>
-    <select id="t-plan" onchange="S.tPlan=this.value;S.tDelayed=false;renderTasks()">
-      <option value="">모든 계획</option>
-    </select>
-    </label><label class="filter-field"><span>상태</span>
-    <select id="t-status" onchange="S.tStatus=this.value;renderTasks()">
-      <option value="">모든 상태</option>
-      <option value="todo">할 일</option>
-      <option value="in_progress">진행 중</option>
-      <option value="done">완료</option>
-    </select>
-    </label><label class="filter-field"><span>우선순위</span>
-    <select id="t-prio" onchange="S.tPrio=this.value;renderTasks()">
-      <option value="">모든 우선순위</option>
-      <option value="high">높음</option>
-      <option value="medium">보통</option>
-      <option value="low">낮음</option>
-    </select>
-    </label><label class="filter-field"><span>태그</span><input type="text" id="t-tag" placeholder="# 태그 입력" oninput="S.tTag=this.value;renderTasks()"></label>
+      <select id="t-plan" onchange="S.tPlan=this.value;S.tDelayed=false;renderTasks()">
+        <option value="">모든 계획</option>
+      </select>
+    </label>
+    <label class="filter-field"><span>상태</span>
+      <select id="t-status" onchange="S.tStatus=this.value;renderTasks()">
+        <option value="">모든 상태</option>
+        <option value="todo">할 일</option>
+        <option value="in_progress">진행 중</option>
+        <option value="done">완료</option>
+      </select>
+    </label>
+    <label class="filter-field"><span>우선순위</span>
+      <select id="t-prio" onchange="S.tPrio=this.value;renderTasks()">
+        <option value="">모든 우선순위</option>
+        <option value="high">높음</option>
+        <option value="medium">보통</option>
+        <option value="low">낮음</option>
+      </select>
+    </label>
+    <label class="filter-field"><span>태그</span><input type="text" id="t-tag" placeholder="# 태그 입력" oninput="S.tTag=this.value;renderTasks()" /></label>
     <label class="filter-field"><span>정렬 기준</span>
-    <select id="t-sort" onchange="S.tSort=this.value;renderTasks()">
-      <option value="priority">우선순위순</option>
-      <option value="due_date">마감일순</option>
-      <option value="created_at">생성일순</option>
-      <option value="title">제목순</option>
-    </select>
+      <select id="t-sort" onchange="S.tSort=this.value;renderTasks()">
+        <option value="priority">우선순위순</option>
+        <option value="due_date">마감일순</option>
+        <option value="created_at">생성일순</option>
+        <option value="title">제목순</option>
+      </select>
     </label>
     <button class="btn-sm" id="sort-dir-btn" title="정렬 방향 전환" aria-label="정렬 방향 전환">↑ 오름차순</button>
-    <button type="button" class="btn-sm" id="btn-filter-delayed" title="마감일 지난 지연된 할 일만 보기">⚠️ 지연된 일</button>
+    <button type="button" class="btn-sm" id="btn-filter-delayed" title="마감일 지난 지연된 할 일만 보기">[DELAYED] 지연된 일</button>
   </div>
   <div style="display:flex; justify-content:space-between; align-items:center; margin:8px 0 12px;">
     <div id="sort-label"></div>
@@ -156,13 +200,14 @@
 <div class="tab-panel" id="tab-do">
   <div class="section-header">
     <div>
-      <h2>실행 기록</h2>
+      <div class="section-eyebrow">03 · EXECUTION LOGS</div>
+      <h2>실행 기록<span class="heading-dot">.</span></h2>
       <div id="do-summary" style="font-size:12.5px; color:var(--muted); margin-top:4px;"></div>
     </div>
-    <button type="button" class="btn-sm" id="btn-filter-blocked">⚠️ 막힘 기록만 보기</button>
+    <button type="button" class="btn-sm" id="btn-filter-blocked">[BLOCKED] 막힘 기록만 보기</button>
   </div>
   <div class="exec-form">
-    <div style="font-family:var(--font-d);font-weight:800;font-size:18px;margin-bottom:16px;color:var(--primary);letter-spacing:0.3px;">실행 추가</div>
+    <div style="font-family:var(--font-d);font-weight:800;font-size:18px;margin-bottom:14px;color:var(--primary);letter-spacing:0.04em;text-transform:uppercase;">실행 시간 및 블로커 기록 추가</div>
     <div class="form-group">
       <label>할 일 선택</label>
       <select id="exec-task">
@@ -172,19 +217,19 @@
     <div class="exec-form-grid">
       <div class="form-group">
         <label>시작 시각</label>
-        <input type="datetime-local" id="exec-start" oninput="autoCalcMinutes()">
+        <input type="datetime-local" id="exec-start" oninput="autoCalcMinutes()" />
       </div>
       <div class="form-group">
         <label>종료 시각</label>
-        <input type="datetime-local" id="exec-end" oninput="autoCalcMinutes()">
+        <input type="datetime-local" id="exec-end" oninput="autoCalcMinutes()" />
       </div>
       <div class="form-group">
         <label>실제 소요 분</label>
-        <input type="number" id="exec-minutes" min="0" placeholder="분 단위">
+        <input type="number" id="exec-minutes" min="0" placeholder="분 단위" />
       </div>
       <div class="form-group">
         <label>막힌 이유 (선택)</label>
-        <input type="text" id="exec-blocker" placeholder="막혔던 이유를 적어주세요">
+        <input type="text" id="exec-blocker" placeholder="막혔던 원인을 기록하세요" />
       </div>
     </div>
     <button class="btn-primary" onclick="submitExec()">기록 추가</button>
@@ -195,10 +240,13 @@
 <!-- SEE Tab -->
 <div class="tab-panel" id="tab-see">
   <div class="section-header">
-    <h2>돌아보기</h2>
+    <div>
+      <div class="section-eyebrow">04 · DAILY RETROSPECTIVE</div>
+      <h2>돌아보기<span class="heading-dot">.</span></h2>
+    </div>
   </div>
   <div class="see-plan-select">
-    <label style="margin:0;">계획</label>
+    <label style="margin:0;">계획 필터</label>
     <select id="see-plan" onchange="S.seePlan=this.value;renderSee()">
       <option value="">모든 계획</option>
     </select>
@@ -215,16 +263,16 @@
     <div class="modal-title" id="modal-plan-title">계획 추가</div>
     <div class="form-group">
       <label>제목 *</label>
-      <input type="text" id="plan-title" placeholder="계획 제목">
+      <input type="text" id="plan-title" placeholder="계획 제목" />
     </div>
     <div class="form-row">
       <div class="form-group">
         <label>시작일</label>
-        <input type="date" id="plan-start">
+        <input type="date" id="plan-start" />
       </div>
       <div class="form-group">
         <label>종료일</label>
-        <input type="date" id="plan-end">
+        <input type="date" id="plan-end" />
       </div>
     </div>
     <div class="form-group">
@@ -241,7 +289,7 @@
     </div>
     <div class="form-group">
       <label>예상 소요 시간 (분)</label>
-      <input type="number" id="plan-minutes" min="0" placeholder="0">
+      <input type="number" id="plan-minutes" min="0" placeholder="0" />
     </div>
     <div class="form-group">
       <label>메모</label>
@@ -261,7 +309,7 @@
     <div class="modal-title" id="modal-task-title">할 일 추가</div>
     <div class="form-group">
       <label>제목 *</label>
-      <input type="text" id="task-title" placeholder="할 일 제목">
+      <input type="text" id="task-title" placeholder="할 일 제목" />
     </div>
     <div class="form-group">
       <label>계획 연결</label>
@@ -290,16 +338,16 @@
     <div class="form-row">
       <div class="form-group">
         <label>마감일</label>
-        <input type="date" id="task-due">
+        <input type="date" id="task-due" />
       </div>
       <div class="form-group">
         <label>예상 소요 시간 (분)</label>
-        <input type="number" id="task-minutes" min="0" placeholder="0">
+        <input type="number" id="task-minutes" min="0" placeholder="0" />
       </div>
     </div>
     <div class="form-group">
       <label>태그 (쉼표 구분)</label>
-      <input type="text" id="task-tags" placeholder="예: 코딩, 알고리즘">
+      <input type="text" id="task-tags" placeholder="예: 보안, 네트워크" />
     </div>
     <div class="form-group">
       <label>메모</label>
@@ -325,24 +373,35 @@
 <div class="modal-overlay" id="modal-db">
   <div class="modal-card wide">
     <button class="modal-close" onclick="closeModal('modal-db')">&#10005;</button>
-    <div class="modal-title">Supabase DB 연결</div>
+    <div class="modal-title">Supabase DB 연결 설정</div>
     <div class="form-group">
       <label>Supabase Project URL</label>
-      <input type="text" id="sb-url" placeholder="https://xxxx.supabase.co">
+      <input type="text" id="sb-url" placeholder="https://xxxx.supabase.co" />
     </div>
     <div class="form-group">
       <label>Supabase Anon Key</label>
-      <input type="text" id="sb-key" placeholder="eyJ...">
+      <input type="text" id="sb-key" placeholder="eyJ..." />
     </div>
     <div class="modal-footer" style="justify-content:flex-start;margin-bottom:12px;">
       <button class="btn-primary" onclick="connectSupabase()">연결하기</button>
-      <button class="btn-sm" style="color:var(--accent);border-color:rgba(220,38,38,0.3);" onclick="disconnectSupabase()">연결 해제</button>
+      <button class="btn-sm" style="color:var(--accent);border-color:rgba(185,28,28,0.3);" onclick="disconnectSupabase()">연결 해제</button>
     </div>
-    <hr class="divider">
-    <div style="font-family:var(--font-d);font-weight:700;font-size:16px;margin-bottom:8px;">DB 초기화 SQL</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Supabase SQL Editor에서 아래 SQL을 실행하세요.</div>
+    <hr class="divider" />
+    <div style="font-family:var(--font-d);font-weight:700;font-size:16px;margin-bottom:8px;">DB 초기화 SQL (app_users 포함)</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">외부 Supabase 연동 시 SQL Editor에서 아래 구문을 실행하세요. (미연결 시에도 브라우저 로컬 스토리지에서 모든 회원가입/로그인이 정상 동작합니다.)</div>
     <div class="sql-block">-- Enable UUID extension
 create extension if not exists "pgcrypto";
+
+-- app_users (회원가입 및 로그인 테이블)
+create table if not exists app_users (
+  id uuid primary key default gen_random_uuid(),
+  username text not null unique,
+  password_hash text not null,
+  created_at timestamptz default now()
+);
+alter table app_users enable row level security;
+create policy "public read app_users" on app_users for select using (true);
+create policy "public insert app_users" on app_users for insert with check (true);
 
 -- plans
 create table if not exists plans (
@@ -437,22 +496,21 @@ create policy "public delete sees" on sees for delete using (true);</div>
   </div>
 </div>
 
-
 <!-- Auth Modal -->
 <div id="modal-auth" class="modal-overlay">
   <div class="modal-card">
     <button class="modal-close" onclick="closeModal('modal-auth')">&#10005;</button>
     <div class="modal-title">계정 로그인 / 회원가입</div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5;">
-      Supabase Auth를 통해 로그인하여 나의 계획과 실행 다이어리를 안전하게 보관하세요.
+      아이디와 비밀번호를 입력해 계정을 생성하거나 로그인하세요.
     </p>
     <div class="form-group">
-      <label for="auth-email">이메일 주소</label>
-      <input type="email" id="auth-email" placeholder="example@email.com" autocomplete="email" />
+      <label for="auth-email">아이디 (Username)</label>
+      <input type="text" id="auth-email" placeholder="아이디 입력" autocomplete="username" />
     </div>
     <div class="form-group">
-      <label for="auth-password">비밀번호</label>
-      <input type="password" id="auth-password" placeholder="6자리 이상 비밀번호" autocomplete="current-password" />
+      <label for="auth-password">비밀번호 (4자 이상)</label>
+      <input type="password" id="auth-password" placeholder="비밀번호 4자 이상 입력" autocomplete="current-password" />
     </div>
     <div id="auth-error-msg" style="display:none;font-size:12px;color:var(--accent);margin-bottom:10px;"></div>
     <div class="modal-footer" style="justify-content:flex-end;gap:8px;">
@@ -461,6 +519,7 @@ create policy "public delete sees" on sees for delete using (true);</div>
     </div>
   </div>
 </div>
+
 <script src="js/plando.js"></script>
 </body>
 </html>

@@ -199,15 +199,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const projectDetailsData = {
     ztna: {
       tag: "PROJECT 01 · ZTNA & XDR SECURITY SUITE",
-      title: "ZTNA·XDR 통합 보안 앱 및 22단계 실전 방어전 완주",
-      s: "<strong>상황 (Situation):</strong> 단순 로그인 인증만으로는 비인가 디바이스 접근, 무차별 대입(Brute-force) 공격 및 권한 우회 API 호출을 방어하기 어려워, 신원과 기기를 모두 검증하는 제로트러스트(ZTNA) 및 침해 탐지·대응(XDR) 아키텍처가 필요했습니다.",
+      title: "ZTNA·XDR 통합 보안 웹 애플리케이션 아키텍처",
+      s: "<strong>상황 (Situation):</strong> 단순 계정 로그인만으로는 비인가 기기 접근, 무차별 대입(Brute-force) 공격 및 권한 우회 API 호출을 방어하기 어려워 신원과 디바이스를 동시에 검증하는 제로트러스트(ZTNA) 및 침해 탐지·대응(XDR) 체계가 필요했습니다.",
       a: "<strong>행동 (Action):</strong> Supabase Auth JWKS 비대칭 키 서명 검증, 디바이스 고유 인가(/api/device), 허용 엔드포인트 화이트리스트 라우팅, 실시간 로그인 실패 횟수 기반 공격 차단 및 SAMPLE_NOTE_1 무결성 마커를 통한 안전한 복원(/api/restore) 파이프라인을 구축했습니다.",
-      r: "<strong>결과 (Result):</strong> ALEPH 실전 방어전 22단계 전 과정 통과 및 XDR 판정 패키지 승인 달성(커밋 1e37639f9ddb), 마스터 승인 대표 작업물로 등재되었습니다.",
+      r: "<strong>결과 (Result):</strong> 비인가 경로 100% 차단과 공격 탐지·격리·데이터 무결성 복원 자동화를 검증하고 실제 클라우드 환경에 배포했습니다.",
       specs: `[ZTNA & XDR 아키텍처 핵심 명세]
 • 인증/인가: Supabase /.well-known/jwks.json 기반 JWT 서명 & audience: "authenticated" 검증
 • 디바이스 제어: 등록된 인가 기기 식별자에 한해 세션 발급 (/api/device)
 • 접근 통제: POST /api/login, POST /api/device, /api/memos, POST /api/restore 외 비인가 경로 100% 차단
-• XDR 위협 완화: 비정상 무차별 대입 공격 실시간 IP 차단 및 데이터 변조 시 원클릭 무결성 복구`,
+• XDR 위협 완화: 비정상 무차별 대입 공격 실시간 차단 및 데이터 변조 시 원클릭 무결성 복구`,
       actions: [
         { label: "배포 웹 애플리케이션 열기 ↗", url: "https://choi-bujang-secret-vault-one-phi.vercel.app/", primary: true },
         { label: "GitHub 저장소 ↗", url: "https://github.com/wonq-Port/choi-bujang-secret-vault", primary: false }
@@ -217,9 +217,9 @@ document.addEventListener('DOMContentLoaded', () => {
     phishing: {
       tag: "PROJECT 02 · RESEARCH PAPER & LIVE WEB APP",
       title: "피싱 URL 형태학 분석 연구 논문 & 사전 진단기 웹앱",
-      s: "<strong>상황 (Situation):</strong> 웹페이지 본문에 직접 접속하여 분석하는 방식은 악성코드 감염 위험과 네트워크 지연이 발생하므로, 브라우저가 통신하기 전 URL 어휘적 특징만으로 위험도를 사전 판별할 통계적 근거와 경량 도구가 필요했습니다.",
-      a: "<strong>행동 (Action):</strong> 110,077건 대규모 다중 보안 데이터셋에 대해 Welch t-검정을 수행해 호스트네임 내부 하이픈(NumDashInHostname)과 URL 길이의 강력한 피싱 상관관계를 규명하여 단독 학술 논문을 완성했습니다. 이어 이 통계 임계치를 외부 통신 없이 브라우저 내부에서 계산하는 순수 Vanilla JS 사전 진단기(단일 검사, A/B 대조, 500줄 일괄 진단, 퀴즈, 통계)를 구현하고 CSV Injection 방어 처리를 적용했습니다.",
-      r: "<strong>결과 (Result):</strong> 정상 대비 피싱 URL 호스트 하이픈 3.88배, 길이 2.82배 통계적 유의성(p<0.001) 입증 및 마스터 승인 대표 작업물 정식 배포를 달성했습니다.",
+      s: "<strong>상황 (Situation):</strong> 웹페이지 본문에 직접 접속해 분석하는 방식은 악성코드 감염 위험과 네트워크 지연이 발생하므로, 브라우저 접속 전 URL 문자열 구조만으로 위험도를 사전 판별할 통계적 근거와 진단 도구가 필요했습니다.",
+      a: "<strong>행동 (Action):</strong> 110,077건 공개 보안 데이터셋에 대해 Welch t-검정을 수행해 호스트네임 내부 하이픈(NumDashInHostname)과 URL 길이의 피싱 상관관계를 규명하여 단독 연구 논문을 작성했습니다. 이어 연구 임계치를 브라우저 내부에서 즉시 연산하는 무서버 Vanilla JS 사전 진단기(단일 검사, A/B 대조, 500줄 일괄 진단, 퀴즈, 누적 통계)를 구현하고 CSV Injection 방어 로직을 적용했습니다.",
+      r: "<strong>결과 (Result):</strong> 정상 대비 피싱 URL 호스트 하이픈 3.88배, 길이 2.82배 통계적 유의성(p<0.001) 입증 및 클라이언트 단독 실행 보안 웹앱 정식 배포를 완료했습니다.",
       specs: `[연구 논문 통계 & 웹앱 진단 명세]
 • 분석 표본: web-page-phishing.csv (100,077건) + dataset6.csv (10,000건)
 • 가설 정교화: 검색엔진(SEO) 경로 하이픈 왜곡을 제거하고 '호스트네임 내부 하이픈' 분리 측정
@@ -234,8 +234,8 @@ document.addEventListener('DOMContentLoaded', () => {
     infra: {
       tag: "PROJECT 03 · NETWORK INFRASTRUCTURE & MONITORING",
       title: "Cisco ASAv 망 분리 & Snort 침입 탐지·통합 관제 체계 구축",
-      s: "<strong>상황 (Situation):</strong> 내부 업무망(Inside)과 외부 웹망(DMZ), 인터넷 경계 구간에서 비인가 트래픽 유입 및 단일 장애점(SPOF)으로 인한 서비스 중단 위협이 존재하며, 엔드포인트 시스템 파일 변조와 침입 시도를 통합 감시할 방안이 필요했습니다.",
-      a: "<strong>행동 (Action):</strong> GNS3 환경에서 라우터 이중화(HSRP)와 Cisco ASAv 방화벽을 직렬 배치해 인터페이스별 보안 레벨(Inside 100, DMZ 50, Outside 0)과 ACL 정책을 수립했습니다. 이어 Snort/Suricata 맞춤형 탐지 룰(SYN Scan, DDoS)을 작성하고, Ubuntu 중앙 관제 서버에 OSSEC HIDS 및 Zabbix 에이전트를 연동해 무결성과 자원을 실시간 모니터링했습니다.",
+      s: "<strong>상황 (Situation):</strong> 내부 업무망(Inside)과 외부 공개망(DMZ), 인터넷 경계 구간에서 비인가 트래픽 유입 및 단일 장애점(SPOF) 위협이 존재하며, 엔드포인트 시스템 파일 변조와 침입 시도를 통합 감시할 아키텍처가 필요했습니다.",
+      a: "<strong>행동 (Action):</strong> GNS3 환경에서 라우터 이중화(HSRP)와 Cisco ASAv 방화벽을 배치해 인터페이스별 보안 레벨(Inside 100, DMZ 50, Outside 0)과 ACL 정책을 수립했습니다. 이어 Snort/Suricata 맞춤형 탐지 룰(SYN Scan, DDoS)을 작성하고, Ubuntu 관제 서버에 OSSEC HIDS 및 Zabbix 에이전트를 연동해 무결성과 시스템 자원을 실시간 모니터링했습니다.",
       r: "<strong>결과 (Result):</strong> 비인가 트래픽 100% 차단 검증, 모의 공격 트래픽 실시간 경보 발생률 100% 달성 및 파일 변경·시스템 과부하를 즉시 식별하는 통합 관제 파이프라인을 완성했습니다.",
       specs: `[네트워크 인프라 & 침입 탐지 명세]
 • Cisco ASAv 인터페이스: Inside(보안레벨 100) -> DMZ(50, HTTP 80/Telnet 23 허용) -> Deny Any Any
@@ -250,8 +250,8 @@ document.addEventListener('DOMContentLoaded', () => {
     scope: {
       tag: "SECURITY CHECKLIST · DISCLOSURE SCOPE",
       title: "공개 범위 및 보안 점검표 (Disclosure Scope Checklist)",
-      s: "<strong>대상 및 목적:</strong> 정보보안·네트워크 인프라 직무 채용 담당자와 IT 실무진에게 보안 엔지니어 이혜원의 실무 역량을 투명하게 전달합니다.",
-      a: "<strong>보안 원칙:</strong> 개인정보보호법을 준수하고 실무 시스템 자산 침해사고를 예방하기 위해 포트폴리오 공개/비공개 범위를 명확히 분리합니다.",
+      s: "<strong>대상 및 목적:</strong> 정보보안·네트워크 인프라 직무 채용 담당자와 IT 실무진에게 보안 엔지니어 이혜원의 기술 역량을 투명하게 전달합니다.",
+      a: "<strong>보안 원칙:</strong> 개인정보보호법을 준수하고 시스템 자산 침해사고를 예방하기 위해 포트폴리오 공개/비공개 범위를 명확히 분리합니다.",
       r: "<strong>결과:</strong> 민감정보 노출 없는 안전한 공개 포트폴리오를 유지합니다.",
       specs: `[공개 정보 (4개 항목)]
 1. 성명 및 지원 직무: 이혜원 / 정보보안 엔지니어, 네트워크 인프라, 보안관제
@@ -403,8 +403,8 @@ document.addEventListener('DOMContentLoaded', () => {
       binary += String.fromCharCode(bytes[i]);
     }
     return window.btoa(binary)
-      .replace(/\\+/g, '-')
-      .replace(/\\//g, '_')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
       .replace(/=/g, '');
   };
 

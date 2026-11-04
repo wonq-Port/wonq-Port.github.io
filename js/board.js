@@ -289,19 +289,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (state.freshness === 'fresh') {
       if (statusPillEl) {
         statusPillEl.className = 'status-pill fresh';
-        statusPillEl.innerHTML = '● 정상 (Fresh)';
+        statusPillEl.textContent = '정상 (FRESH)';
       }
       if (stalePillEl) stalePillEl.style.display = 'none';
       if (errorBoxEl) errorBoxEl.className = 'error-explanation-box';
     } else {
       if (statusPillEl) {
         statusPillEl.className = 'status-pill error';
-        statusPillEl.innerHTML = `● 장애 (${state.errorCode.toUpperCase()})`;
+        statusPillEl.textContent = `장애 (${state.errorCode.toUpperCase()})`;
       }
       if (stalePillEl) {
         stalePillEl.style.display = 'inline-flex';
         stalePillEl.className = 'status-pill stale';
-        stalePillEl.innerHTML = '⚠️ 오래된 값 (Stale)';
+        stalePillEl.textContent = '보존값 유지 (STALE)';
       }
       if (errorBoxEl && state.errorDetails) {
         errorBoxEl.className = 'error-explanation-box visible';
@@ -559,7 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ==========================================================================
-   🎯 환율 목표 알림 및 경보 모니터 로직 (Target Rate Alert Monitor)
+   환율 목표 알림 및 경보 모니터 로직 (Target Rate Alert Monitor)
    ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
     // 1. DOM 요소 선택
@@ -612,6 +612,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const errorMsg = validateThreshold(upperVal, lowerVal);
         if (errorMsg) {
+            validationMsg.style.color = '#b91c1c';
             validationMsg.textContent = errorMsg;
             validationMsg.classList.remove('hidden');
             return;
@@ -625,7 +626,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentRate = parseFloat(metricValEl.textContent.replace(/,/g, ''));
         if (!isNaN(currentRate)) evaluateRateAlert(currentRate);
         
-        alert('환율 알림 설정이 저장되었습니다.');
+        validationMsg.style.color = '#15803d'; validationMsg.textContent = '알림 기준이 저장되었습니다.'; validationMsg.classList.remove('hidden');
     });
 
     // 6. 설정 초기화 로직 [T06]
@@ -639,7 +640,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 상태 리셋 및 배너 숨김
         currentAlertState = 'NORMAL';
         hideBanner();
-        alert('알림 설정이 초기화되었습니다.');
+        validationMsg.style.color = '#525252'; validationMsg.textContent = '알림 기준이 초기화되었습니다.'; validationMsg.classList.remove('hidden');
     });
 
     // 7. 배너 제어 (시각적 렌더링 결합)
@@ -648,10 +649,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (type === 'UPPER') {
             alertBanner.classList.add('danger');
-            alertPill.textContent = '🚨 상한 돌파';
+            alertPill.textContent = 'UPPER LIMIT';
         } else if (type === 'LOWER') {
             alertBanner.classList.add('warning');
-            alertPill.textContent = '⚠️ 하한 미달';
+            alertPill.textContent = 'LOWER LIMIT';
         }
         
         alertMessage.textContent = `${message} (현재: ${rate.toLocaleString('ko-KR')}원)`;
@@ -691,7 +692,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         alertHistory.forEach(record => {
             const li = document.createElement('li');
-            const badge = record.type === 'UPPER' ? '🚨 상한' : '⚠️ 하한';
+            const badge = record.type === 'UPPER' ? '[UPPER] 상한' : '[LOWER] 하한';
             const color = record.type === 'UPPER' ? '#ef4444' : '#f59e0b';
             
             li.innerHTML = `
@@ -761,3 +762,32 @@ document.addEventListener('DOMContentLoaded', () => {
     // 모니터 시작
     initAlertMonitor();
 });
+
+
+// Unified Top Navbar Dropdown Handler
+(function() {
+  document.addEventListener('DOMContentLoaded', function() {
+    var dropdown = document.getElementById('nav-projects-dropdown');
+    var btn = document.getElementById('nav-projects-btn');
+    if (btn && dropdown) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var isOpen = dropdown.classList.contains('open');
+        dropdown.classList.toggle('open', !isOpen);
+        btn.setAttribute('aria-expanded', String(!isOpen));
+      });
+      document.addEventListener('click', function(e) {
+        if (!dropdown.contains(e.target)) {
+          dropdown.classList.remove('open');
+          btn.setAttribute('aria-expanded', 'false');
+        }
+      });
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          dropdown.classList.remove('open');
+          btn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+  });
+})();

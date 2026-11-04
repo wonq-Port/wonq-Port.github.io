@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Active Editor State
   let currentRatio = '1:1';
   let currentImage = null; // Image object
-  let currentText = "사이버 보안 수칙\n출처 불분명한 링크 클릭 금지 🛡️";
+  let currentText = "사이버 보안 수칙\n출처 불분명한 링크 클릭 금지";
   let currentFontSize = 54;
   let currentPosY = 75; // percentage 0% ~ 100%
   let currentAlign = 'center'; // 'left' | 'center' | 'right'
@@ -471,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
       id: 'tpl_default_1',
       name: '보안 침해 대응 (1:1 정방형)',
       ratio: '1:1',
-      text: '보안관제 24/7 대응 수칙\n이상 징후 포착 즉시 격리 및 보고 🚨',
+      text: '보안관제 24/7 대응 수칙\n이상 징후 포착 즉시 격리 및 보고',
       fontSize: 56,
       posY: 75,
       align: 'center',
@@ -497,7 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
       id: 'tpl_default_3',
       name: '시큐어 코딩 팁 (9:16 스토리)',
       ratio: '9:16',
-      text: 'SECURE CODING\nSQL 인젝션 방어는\nPreparedStatement 바인딩 필수 💻',
+      text: 'SECURE CODING\nSQL 인젝션 방어는\nPreparedStatement 바인딩 필수',
       fontSize: 60,
       posY: 80,
       align: 'center',
