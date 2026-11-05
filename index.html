@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>이혜원 | Information Security &amp; Network Infrastructure Portfolio</title>
 
-  <!-- Google Fonts: Barlow Condensed & Inter -->
+  <!-- Google Fonts: Barlow Condensed, Inter & Noto Sans KR -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
   <!-- Unified Editorial Stylesheet -->
   <link rel="stylesheet" href="css/style.css" />
@@ -26,9 +26,8 @@
       </a>
 
       <div class="nav-extra">
-        
         <nav class="nav-menu" aria-label="주요 내비게이션">
-          <!-- 1. 포트폴리오 섹션 드롭다운 (Overview) — 메인 화면에서만 노출 -->
+          <!-- 1. 포트폴리오 섹션 드롭다운 (Overview) -->
           <div class="nav-dropdown" id="nav-overview-dropdown">
             <button type="button" class="nav-dropdown-btn nav-btn-overview" id="nav-overview-btn" aria-haspopup="true" aria-expanded="false" aria-label="섹션 메뉴 열기">
               <span>Overview</span>
@@ -52,19 +51,26 @@
               <a href="#work" class="dropdown-item" role="menuitem">
                 <span class="item-badge new">03</span>
                 <div class="item-text">
-                  <span class="item-title">Work</span>
+                  <span class="item-title">Featured Work</span>
                   <span class="item-desc">대표 보안 프로젝트 3선</span>
                 </div>
               </a>
+              <a href="#topology-projects" class="dropdown-item" role="menuitem">
+                <span class="item-badge new">04</span>
+                <div class="item-text">
+                  <span class="item-title">Topology &amp; Labs</span>
+                  <span class="item-desc">단계별 토폴로지 &amp; 실무 프로젝트</span>
+                </div>
+              </a>
               <a href="#contact" class="dropdown-item" role="menuitem">
-                <span class="item-badge">04</span>
+                <span class="item-badge">05</span>
                 <div class="item-text">
                   <span class="item-title">Contact</span>
                   <span class="item-desc">협업 및 연락처</span>
                 </div>
               </a>
               <a href="#private" class="dropdown-item" role="menuitem">
-                <span class="item-badge">05</span>
+                <span class="item-badge">06</span>
                 <div class="item-text">
                   <span class="item-title">Private</span>
                   <span class="item-desc">패스키(WebAuthn) 인증</span>
@@ -72,6 +78,7 @@
               </a>
             </div>
           </div>
+
           <!-- 2. 서브 앱/프로젝트 드롭다운 (Projects) -->
           <div class="nav-dropdown" id="nav-projects-dropdown">
             <button type="button" class="nav-dropdown-btn nav-btn-projects" id="nav-projects-btn" aria-haspopup="true" aria-expanded="false" aria-label="프로젝트 메뉴 열기">
@@ -79,6 +86,13 @@
               <span class="dropdown-caret" aria-hidden="true">▾</span>
             </button>
             <div class="nav-dropdown-menu" id="nav-projects-menu" role="menu">
+              <a href="#topology-projects" class="dropdown-item" role="menuitem">
+                <span class="item-badge new">LABS</span>
+                <div class="item-text">
+                  <span class="item-title">단계별 보안 토폴로지 아카이브</span>
+                  <span class="item-desc">Phase 1~4 인프라·관제·모의해킹 상세</span>
+                </div>
+              </a>
               <a href="phishing-detector.html" class="dropdown-item" role="menuitem">
                 <span class="item-badge new">SEC</span>
                 <div class="item-text">
@@ -117,7 +131,7 @@
             </div>
           </div>
         </nav>
-        
+
         <button type="button" id="btn-theme-toggle" class="theme-toggle-btn btn-editorial" aria-label="다크 모드 및 라이트 모드 테마 전환" title="테마 전환 (다크/라이트)">
           <svg class="theme-icon icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
@@ -146,19 +160,22 @@
     <section id="hero" class="hero-section">
       <div class="container hero-container">
         <p class="hero-subtitle reveal-on-scroll is-visible">Information Security &amp; Network Infrastructure Engineer</p>
-        <h1 class="hero-title reveal-on-scroll is-visible">이혜원</h1>
+        <h1 class="hero-title reveal-on-scroll is-visible">
+          <span>이혜원</span>
+          <span class="hero-title-en">Lee Hye-Won · Security Specialist</span>
+        </h1>
         <div class="red-line reveal-on-scroll is-visible"></div>
 
         <p class="hero-lead reveal-on-scroll is-visible">
-          "어려운 문제 앞에서도 끝까지 책임을 다하고, 동료와 함께 협업하며 성장하는 사람"
+          "어려운 문제 앞에서도 끝까지 책임을 다하고, 동료와 함께 협업하며 성장하는 보안 엔지니어"
         </p>
         <p class="hero-desc reveal-on-scroll is-visible">
-          취약점을 사전에 식별하고 원인을 논리적으로 추적하여 견고한 방어선을 구축합니다.<br />
-          기본에 충실한 인프라 설계와 꼼꼼한 기록으로 안전한 네트워크 환경을 실현합니다.
+          취약점을 사전에 식별하고 원인을 논리적으로 추적하여 견고한 다층 방어선을 구축합니다.<br />
+          네트워크 토폴로지 설계부터 침입 탐지(IDS/WAF), SIEM 통합 관제, 웹·시스템 모의해킹까지 실무 전 과정을 기록합니다.
         </p>
 
         <p class="hero-target reveal-on-scroll is-visible">
-          <strong>[대상 및 목적]</strong> 정보보안·네트워크 인프라 직무 채용 담당자와 실무진에게 보안 엔지니어 이혜원의 보안 분석 역량과 실무 문제 해결 경험을 전달하기 위한 포트폴리오입니다.
+          <strong>[대상 및 목적]</strong> 정보보안·네트워크 인프라 직무 채용 담당자와 실무진에게 보안 엔지니어 이혜원의 보안 아키텍처 설계 역량과 실무 문제 해결 과정을 한눈에 전달하기 위한 통합 포트폴리오입니다.
         </p>
 
         <!-- Editorial First-View Quick Jump Highlights -->
@@ -166,7 +183,7 @@
           <a href="#metrics" class="highlight-item">
             <span class="highlight-tag">01 — NUMBERS</span>
             <div class="highlight-link">
-              <span>핵심 정량 기록</span>
+              <span>핵심 정량 지표</span>
               <span class="arrow-icon" aria-hidden="true">→</span>
             </div>
           </a>
@@ -180,12 +197,19 @@
           <a href="#work" class="highlight-item">
             <span class="highlight-tag">03 — WORK</span>
             <div class="highlight-link">
-              <span>대표 보안 프로젝트</span>
+              <span>대표 보안 앱·논문</span>
+              <span class="arrow-icon" aria-hidden="true">→</span>
+            </div>
+          </a>
+          <a href="#topology-projects" class="highlight-item">
+            <span class="highlight-tag">04 — TOPOLOGY</span>
+            <div class="highlight-link">
+              <span>토폴로지 &amp; 프로젝트</span>
               <span class="arrow-icon" aria-hidden="true">→</span>
             </div>
           </a>
           <a href="#contact" class="highlight-item">
-            <span class="highlight-tag">04 — CONTACT</span>
+            <span class="highlight-tag">05 — CONTACT</span>
             <div class="highlight-link">
               <span>소통 및 협업 채널</span>
               <span class="arrow-icon" aria-hidden="true">→</span>
@@ -195,7 +219,7 @@
       </div>
     </section>
 
-    <!-- 01 Numbers Section (핵심 기록 — 간결한 정량 지표와 포인트 컬러) -->
+    <!-- 01 Numbers Section -->
     <section id="metrics" class="section">
       <div class="container section-grid">
         <div class="grid-left reveal-on-scroll">
@@ -203,12 +227,11 @@
         </div>
         <div class="grid-right">
           <h2 class="section-heading reveal-on-scroll">핵심 기록 (Key Metrics)</h2>
-          <p class="body-text reveal-on-scroll" style="margin-bottom: 0.5rem;">
-            보안 데이터셋 분석, 네트워크 방화벽 검증 및 실무 교육 과정에서 축적된 <span class="point-red">정량적 지표</span>입니다.
+          <p class="body-text reveal-on-scroll">
+            보안 데이터셋 분석, 단계별 네트워크 토폴로지 검증 및 모의해킹·관제 실습에서 축적된 <span class="point-red">정량적 지표</span>입니다.
           </p>
 
           <div class="metrics-grid">
-            <!-- 지표 1: 110,077건 보안 데이터셋 실증 -->
             <div class="metric-card highlight reveal-on-scroll reveal-delay-1">
               <div>
                 <div class="metric-source">THREAT DATA ANALYSIS</div>
@@ -221,42 +244,39 @@
               </div>
             </div>
 
-            <!-- 지표 2: 네트워크 비인가 트래픽 차단 & 침입 탐지 -->
             <div class="metric-card reveal-on-scroll reveal-delay-2">
               <div>
                 <div class="metric-source">NETWORK &amp; IDS VERIFICATION</div>
                 <div class="metric-val" data-count-target="100" data-count-suffix="%">100%</div>
                 <div class="metric-label">비인가 트래픽 차단 · 공격 탐지</div>
-                <div class="metric-sub">Cisco ASAv 망 분리 및 Snort/Suricata 맞춤 룰 검증</div>
+                <div class="metric-sub">Cisco ASAv/Pfsense 망 분리 및 Snort/Suricata·ModSecurity 룰 검증</div>
               </div>
               <div class="metric-paired-badge neutral">
-                Inside(100) · DMZ(50) 격리 및 HSRP 라우터 1초 내 무중단 절체
+                Inside · DMZ · 관제망 3계층 격리 및 HSRP 무중단 절체
               </div>
             </div>
 
-            <!-- 지표 3: 5종 장애 복원 시뮬레이션 -->
             <div class="metric-card reveal-on-scroll reveal-delay-3">
               <div>
-                <div class="metric-source">RESILIENT ARCHITECTURE</div>
-                <div class="metric-val" data-count-target="5" data-count-suffix="종">5종</div>
-                <div class="metric-label">외부 API 장애 복원 상태 머신</div>
-                <div class="metric-sub">Timeout · 403 · 429 · Offline · 스키마 변조 방어</div>
+                <div class="metric-source">SECURITY ARCHITECTURE LABS</div>
+                <div class="metric-val" data-count-target="21" data-count-suffix="개 모듈">21개 모듈</div>
+                <div class="metric-label">4단계(Phase 1~4) 보안 프로젝트</div>
+                <div class="metric-sub">기초 망 구축 · 서버 통합 · 리버싱/웹 해킹 · 팀 커머스 관제</div>
               </div>
               <div class="metric-paired-badge neutral">
-                장애 시 마지막 정상값(LKG) 보존 및 Stale 경보 자동 전환
+                큼지막한 토폴로지 구조도 기반 상세 실습 과정 아카이빙
               </div>
             </div>
 
-            <!-- 지표 4: 13주 전 과정 & 과제 완수 -->
             <div class="metric-card reveal-on-scroll reveal-delay-4">
               <div>
-                <div class="metric-source">CONSISTENCY &amp; DELIVERY</div>
+                <div class="metric-source">RESILIENCE &amp; CONSISTENCY</div>
                 <div class="metric-val" data-count-target="13" data-count-suffix="건 / 13주">13건 / 13주</div>
                 <div class="metric-label">보안 실무 과제 전건 완수</div>
-                <div class="metric-sub">출석률 <strong class="point-ink">89.3%</strong> · 일일 기술 기록 <strong class="point-ink">53일</strong> 달성</div>
+                <div class="metric-sub">외부 API <strong class="point-ink">5종 장애 복원</strong> · 일일 기술 기록 <strong class="point-ink">53일</strong> 달성</div>
               </div>
               <div class="metric-paired-badge neutral">
-                제로트러스트 보안 앱 · 연구 논문 · 관제 파이프라인 구축
+                제로트러스트 보안 앱 · 연구 논문 · Splunk/Wazuh 관제 구축
               </div>
             </div>
           </div>
@@ -264,7 +284,7 @@
       </div>
     </section>
 
-    <!-- 02 Skills & Certifications Section (이모티콘 제거, 깔끔한 타이포그래피 & 포인트 컬러) -->
+    <!-- 02 Skills & Certifications Section -->
     <section id="skills" class="section">
       <div class="container section-grid">
         <div class="grid-left reveal-on-scroll">
@@ -272,61 +292,45 @@
         </div>
         <div class="grid-right">
           <h2 class="section-heading reveal-on-scroll">기술 스택 및 자격 사항</h2>
+          <p class="body-text reveal-on-scroll">
+            직접 실습하고 다뤄본 <span class="point-red">네트워크 인프라 보안(방화벽·ACL·IDS/IPS)</span>과 <span class="point-ink">AI 기반 업무 자동화 및 리눅스 환경</span>을 중심으로 정리했습니다.
+          </p>
 
-          <div class="skills-box-grid reveal-on-scroll">
-            <!-- 1. Network & Infrastructure Security -->
+          <div class="skills-box-grid two-cols reveal-on-scroll">
+            <!-- 1. Network & Infrastructure -->
             <div class="skill-category-card">
               <h3 class="category-title">01 / Network &amp; Infra</h3>
               <ul class="skill-list">
-                <li class="skill-item"><span class="bullet"></span><span><strong class="point-ink">Cisco ASAv</strong> 방화벽 망 분리 &amp; ACL 정책</span></li>
-                <li class="skill-item"><span class="bullet"></span><span><strong class="point-ink">GNS3</strong> 토폴로지 설계 &amp; HSRP 이중화</span></li>
-                <li class="skill-item"><span class="bullet"></span><span><strong class="point-red">Snort · Suricata</strong> 침입 탐지(IDS) 룰셋</span></li>
-                <li class="skill-item"><span class="bullet"></span><span><strong class="point-ink">OSSEC HIDS · Zabbix</strong> 서버 무결성 관제</span></li>
-                <li class="skill-item"><span class="bullet"></span><span><strong class="point-ink">Wireshark</strong> 패킷 분석 &amp; 오픈포트 진단</span></li>
+                <li class="skill-item"><span class="bullet"></span><span><strong class="point-ink">방화벽 &amp; ACL 정책:</strong> Cisco ASAv · pfSense 기반 망 분리 및 접근 통제 규칙 수립</span></li>
+                <li class="skill-item"><span class="bullet"></span><span><strong class="point-red">IDS / IPS 운용:</strong> Snort · Suricata 기반 침입 탐지 및 차단 룰셋 실습</span></li>
+                <li class="skill-item"><span class="bullet"></span><span><strong class="point-ink">네트워크 토폴로지:</strong> GNS3 기반 가상 망 설계 및 HSRP 라우터 이중화 구성</span></li>
+                <li class="skill-item"><span class="bullet"></span><span><strong class="point-ink">로그 &amp; 서버 모니터링:</strong> Wazuh · Zabbix · OSSEC을 활용한 기본 관제 연동</span></li>
               </ul>
             </div>
 
-            <!-- 2. Application & Zero Trust Security -->
+            <!-- 2. Dev & Systems -->
             <div class="skill-category-card">
-              <h3 class="category-title">02 / App &amp; Zero Trust</h3>
+              <h3 class="category-title">02 / Dev &amp; Systems</h3>
               <ul class="skill-list">
-                <li class="skill-item"><span class="bullet"></span><span><strong class="point-red">ZTNA</strong> 기기 인가 &amp; 최소권한 API 라우팅</span></li>
-                <li class="skill-item"><span class="bullet"></span><span><strong class="point-ink">WebAuthn Passkey</strong> &amp; JWKS 서명 검증</span></li>
-                <li class="skill-item"><span class="bullet"></span><span><strong class="point-red">XDR</strong> 무차별 대입(Brute-force) 탐지·차단</span></li>
-                <li class="skill-item"><span class="bullet"></span><span><strong class="point-ink">OWASP Top 10</strong> 진단 &amp; CSV 이스케이프</span></li>
-                <li class="skill-item"><span class="bullet"></span><span><strong class="point-ink">Supabase RLS</strong> 데이터 접근 통제 정책</span></li>
-              </ul>
-            </div>
-
-            <!-- 3. Development & System Administration -->
-            <div class="skill-category-card">
-              <h3 class="category-title">03 / Dev &amp; Systems</h3>
-              <ul class="skill-list">
-                <li class="skill-item"><span class="bullet"></span><span><strong class="point-red">Python</strong> 보안 자동화 &amp; 통계 검정(t-test)</span></li>
-                <li class="skill-item"><span class="bullet"></span><span><strong class="point-ink">Linux</strong> (Ubuntu · Rocky) 취약점 진단·조치</span></li>
-                <li class="skill-item"><span class="bullet"></span><span><strong class="point-ink">JavaScript (ES6+)</strong> 상태 머신 &amp; 웹 개발</span></li>
-                <li class="skill-item"><span class="bullet"></span><span><strong class="point-ink">Bash · PowerShell</strong> 운영 자동화 스크립트</span></li>
-                <li class="skill-item"><span class="bullet"></span><span><strong class="point-ink">Git</strong> 형상 관리 &amp; 민감정보(.env) 통제</span></li>
+                <li class="skill-item"><span class="bullet"></span><span><strong class="point-red">AI Cowork 업무 자동화:</strong> AI 도구를 활용한 반복 보안·문서 작업 및 데이터 처리 자동화</span></li>
+                <li class="skill-item"><span class="bullet"></span><span><strong class="point-red">바이브 코딩 (Vibe Coding):</strong> AI 페어 프로그래밍 기반 웹 도구 및 프로토타입 빠른 구현</span></li>
+                <li class="skill-item"><span class="bullet"></span><span><strong class="point-ink">Linux (Ubuntu · Rocky):</strong> 리눅스 서버 환경 구축, 기본 서비스 설정 및 권한 관리</span></li>
+                <li class="skill-item"><span class="bullet"></span><span><strong class="point-ink">Python &amp; Web Basics:</strong> 데이터 분석 스크립트 작성 및 HTML/CSS/JS 웹 페이지 구성</span></li>
               </ul>
             </div>
           </div>
 
-          <!-- 보유 자격 및 수료 사항 (이모티콘 없는 순수 에디토리얼 그리드) -->
+          <!-- 보유 자격 및 교육 수료 사항 (최종 취득 자격만 표기) -->
           <div class="certs-banner-box reveal-on-scroll">
             <div class="certs-title-area">
               <span class="certs-label">CERTIFICATIONS &amp; TRAINING</span>
-              <span class="certs-sub">국가공인 자격 및 보안 실무 교육 이수 내역</span>
+              <span class="certs-sub">보유 국가공인 자격증 및 실무 교육 수료 내역</span>
             </div>
             <div class="certs-badges-group">
               <div class="cert-badge highlight">
-                <span class="cert-code">CERT 01</span>
+                <span class="cert-code">CERT</span>
                 <span class="cert-name">리눅스마스터 2급</span>
-                <span class="cert-org">KAIT · 2026.01 합격</span>
-              </div>
-              <div class="cert-badge">
-                <span class="cert-code">CERT 02</span>
-                <span class="cert-name">정보처리기사 (필기)</span>
-                <span class="cert-org">HRDK · 2025.08 합격</span>
+                <span class="cert-org">KAIT · 2026.01 취득</span>
               </div>
               <div class="cert-badge">
                 <span class="cert-code">COURSE</span>
@@ -339,30 +343,28 @@
       </div>
     </section>
 
-    <!-- 03 Work Section (콤팩트 3대 프로젝트 + 포인트 컬러 요약 + 클릭 시 모달 팝업) -->
+    <!-- 03 Featured Work Section (기존 wonq-port 대표 보안 앱 & 논문 3선) -->
     <section id="work" class="section">
       <div class="container section-grid">
         <div class="grid-left reveal-on-scroll">
-          <span class="section-tag">03 — Work</span>
+          <span class="section-tag">03 — Featured</span>
         </div>
         <div class="grid-right">
           <div class="work-header-row reveal-on-scroll">
             <div>
-              <h2 class="section-heading" style="margin-bottom: 0.25rem;">대표 보안 프로젝트</h2>
-              <p class="body-text" style="font-size: 13.5px; color: var(--color-text-muted); margin: 0;">
-                카드를 클릭하면 <span class="point-red">세부 아키텍처 명세</span>와 <span class="point-ink">원문·실행 링크</span> 창이 열립니다.
+              <h2 class="section-heading">대표 보안 웹 아키텍처 &amp; 연구 논문</h2>
+              <p class="body-text">
+                직접 설계·배포한 <span class="point-red">제로트러스트 웹 서비스</span>와 <span class="point-ink">11만 건 피싱 URL 통계 연구</span>입니다. 카드를 클릭하면 세부 명세가 열립니다.
               </p>
             </div>
           </div>
 
-          <!-- 콤팩트 3열 카드 그리드 -->
           <div class="compact-projects-grid">
-
             <!-- Card 1: ZTNA·XDR 통합 보안 앱 -->
             <article class="compact-project-card reveal-on-scroll reveal-delay-1" data-project-key="ztna" tabindex="0" role="button" aria-haspopup="dialog" aria-label="ZTNA·XDR 통합 보안 웹 서비스 세부 정보 보기">
               <div class="compact-card-top">
                 <div class="compact-card-header">
-                  <span class="compact-project-num">PROJECT 01</span>
+                  <span class="compact-project-num">FEATURED 01</span>
                   <span class="compact-badge live">ZERO TRUST</span>
                 </div>
                 <h3 class="compact-project-title">ZTNA·XDR 통합 보안 웹 아키텍처</h3>
@@ -383,11 +385,11 @@
               </div>
             </article>
 
-            <!-- Card 2: 피싱 URL 형태학 분석 논문 & 진단기 웹앱 (통합) -->
+            <!-- Card 2: 피싱 URL 형태학 분석 논문 & 진단기 웹앱 -->
             <article class="compact-project-card reveal-on-scroll reveal-delay-2" data-project-key="phishing" tabindex="0" role="button" aria-haspopup="dialog" aria-label="피싱 URL 형태학 분석 논문 및 사전 진단기 세부 정보 보기">
               <div class="compact-card-top">
                 <div class="compact-card-header">
-                  <span class="compact-project-num">PROJECT 02</span>
+                  <span class="compact-project-num">FEATURED 02</span>
                   <span class="compact-badge live">PAPER + WEB APP</span>
                 </div>
                 <h3 class="compact-project-title">피싱 URL 형태학 논문 &amp; 사전 진단기</h3>
@@ -408,41 +410,87 @@
               </div>
             </article>
 
-            <!-- Card 3: 네트워크 인프라 망 분리 & 침입 탐지·통합 관제 (통합) -->
-            <article class="compact-project-card reveal-on-scroll reveal-delay-3" data-project-key="infra" tabindex="0" role="button" aria-haspopup="dialog" aria-label="네트워크 망 분리 및 침입 탐지·통합 관제 세부 정보 보기">
+            <!-- Card 3: 5종 장애 복원 & 프라이버시 보안 웹앱 모음 -->
+            <article class="compact-project-card reveal-on-scroll reveal-delay-3" data-project-key="resilience" tabindex="0" role="button" aria-haspopup="dialog" aria-label="장애 복원 아키텍처 및 보안 미니앱 세부 정보 보기">
               <div class="compact-card-top">
                 <div class="compact-card-header">
-                  <span class="compact-project-num">PROJECT 03</span>
-                  <span class="compact-badge infra">INFRA &amp; SIEM</span>
+                  <span class="compact-project-num">FEATURED 03</span>
+                  <span class="compact-badge infra">RESILIENT WEB</span>
                 </div>
-                <h3 class="compact-project-title">네트워크 망 분리 &amp; 침입 탐지·관제</h3>
+                <h3 class="compact-project-title">5종 장애 복원 보드 &amp; 보안 유틸리티</h3>
                 <ul class="compact-bullet-list">
-                  <li><strong class="point-ink">망 분리·이중화:</strong> Cisco ASAv 보안 레벨 차등 격리 및 HSRP 라우터 무중단 절체</li>
-                  <li><strong class="point-red">실시간 탐지·관제:</strong> Snort/Suricata 커스텀 룰셋 및 OSSEC HIDS·Zabbix 통합 감시</li>
+                  <li><strong class="point-ink">고가용성 상태 머신:</strong> Timeout·403·429·스키마 변조 시 LKG 보존 및 자동 폴백</li>
+                  <li><strong class="point-red">프라이버시 보호:</strong> 업로드 이미지 EXIF 메타데이터 자동 제거 스튜디오 및 미니게임</li>
                 </ul>
                 <div class="compact-tags-row">
-                  <span class="compact-tech-tag">Cisco ASAv</span>
-                  <span class="compact-tech-tag">GNS3</span>
-                  <span class="compact-tech-tag">Snort/Suricata</span>
-                  <span class="compact-tech-tag">OSSEC/Zabbix</span>
+                  <span class="compact-tech-tag">Fault Tolerance</span>
+                  <span class="compact-tech-tag">EXIF Stripper</span>
+                  <span class="compact-tech-tag">State Machine</span>
                 </div>
               </div>
               <div class="compact-card-bottom">
-                <span class="btn-card-action">토폴로지 · 룰셋 명세 보기 <span class="arrow-icon" aria-hidden="true">→</span></span>
-                <span class="compact-year-label">2025 ~ 2026</span>
+                <span class="btn-card-action">서브 웹앱 살펴보기 <span class="arrow-icon" aria-hidden="true">→</span></span>
+                <span class="compact-year-label">2026.09 ~ 10</span>
               </div>
             </article>
-
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 04 Contact Section -->
+    <!-- 04 Topology & Security Projects Archive (KK-wonq 프로젝트 통합 — 큼지막한 토폴로지 우선 노출 + 상세보기 모달) -->
+    <section id="topology-projects" class="section">
+      <div class="container section-grid">
+        <div class="grid-left reveal-on-scroll">
+          <span class="section-tag">04 — Topology</span>
+        </div>
+        <div class="grid-right">
+          <div class="work-header-row reveal-on-scroll" style="margin-bottom: 0.4rem;">
+            <div>
+              <h2 class="section-heading">단계별 보안 토폴로지 &amp; 실무 프로젝트</h2>
+              <p class="body-text">
+                전체 구성을 한눈에 파악할 수 있도록 <span class="point-red">대표 토폴로지·아키텍처 구조도</span>를 전면에 배치했습니다. 각 카드의 <strong>상세보기</strong> 또는 <strong>세부 모듈 태그</strong>를 클릭하면 내가 수행한 설정·탐지 룰·모의해킹 워크스루 전체를 확인할 수 있습니다.
+              </p>
+            </div>
+          </div>
+
+          <!-- 단계별 필터 탭 -->
+          <div class="topology-filter-bar reveal-on-scroll">
+            <div class="topology-tabs" role="tablist" aria-label="프로젝트 단계별 필터">
+              <button type="button" class="topology-tab-btn active" data-phase-filter="all" role="tab" aria-selected="true">
+                <span>전체 토폴로지</span>
+                <span class="topology-tab-count">4</span>
+              </button>
+              <button type="button" class="topology-tab-btn" data-phase-filter="phase1" role="tab" aria-selected="false">
+                <span>Phase 1 · 기초 망·NIDS/HIDS</span>
+                <span class="topology-tab-count">6</span>
+              </button>
+              <button type="button" class="topology-tab-btn" data-phase-filter="phase2" role="tab" aria-selected="false">
+                <span>Phase 2 · 통합 인프라·서버</span>
+                <span class="topology-tab-count">7</span>
+              </button>
+              <button type="button" class="topology-tab-btn" data-phase-filter="phase3" role="tab" aria-selected="false">
+                <span>Phase 3 · SIEM·웹 해킹·리버싱</span>
+                <span class="topology-tab-count">6</span>
+              </button>
+              <button type="button" class="topology-tab-btn" data-phase-filter="phase4" role="tab" aria-selected="false">
+                <span>Phase 4 · 팀 커머스 관제·CTF</span>
+                <span class="topology-tab-count">3</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 큼지막한 토폴로지 쇼케이스 그리드 (JS에서 렌더링) -->
+          <div id="topology-showcase-grid" class="topology-showcase-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 Contact Section -->
     <section id="contact" class="section">
       <div class="container section-grid">
         <div class="grid-left reveal-on-scroll">
-          <span class="section-tag">04 — Contact</span>
+          <span class="section-tag">05 — Contact</span>
         </div>
         <div class="grid-right">
           <h2 class="section-heading reveal-on-scroll">함께 일해요</h2>
@@ -458,13 +506,20 @@
 
           <div class="contact-meta-tags reveal-on-scroll">
             <span class="info-tag">전국 근무 및 원격 협업 가능</span>
-            <span class="info-tag">보안 엔지니어 · 네트워크 인프라 · 보안관제</span>
-            <span class="info-tag">대구대학교 컴퓨터소프트웨어전공</span>
+            <span class="info-tag">네트워크 인프라 · 정보보안 · 보안관제</span>
           </div>
 
           <div class="social-links reveal-on-scroll">
             <a href="https://github.com/wonq-Port/wonq-Port.github.io" target="_blank" rel="noopener noreferrer" class="btn-editorial">
-              <span>GitHub 포트폴리오</span>
+              <span>GitHub (wonq-Port)</span>
+              <span class="arrow-icon" aria-hidden="true">↗</span>
+            </a>
+            <a href="https://github.com/kk-wonq" target="_blank" rel="noopener noreferrer" class="btn-editorial">
+              <span>GitHub (kk-wonq)</span>
+              <span class="arrow-icon" aria-hidden="true">↗</span>
+            </a>
+            <a href="https://notion.so/wonq" target="_blank" rel="noopener noreferrer" class="btn-editorial">
+              <span>Notion 아카이브</span>
               <span class="arrow-icon" aria-hidden="true">↗</span>
             </a>
             <a href="https://github.com/wonq-Port/choi-bujang-secret-vault" target="_blank" rel="noopener noreferrer" class="btn-editorial">
@@ -479,19 +534,19 @@
       </div>
     </section>
 
-    <!-- 05 Private Section (Passkey Only) -->
+    <!-- 06 Private Section (Passkey Only) -->
     <section id="private" class="section">
       <div class="container section-grid">
         <div class="grid-left reveal-on-scroll">
-          <span class="section-tag">05 — Private</span>
+          <span class="section-tag">06 — Private</span>
         </div>
         <div class="grid-right">
           <h2 class="section-heading reveal-on-scroll">나만의 공간 (WebAuthn Passkey)</h2>
 
           <div id="auth-gate" class="auth-gate-box reveal-on-scroll">
             <div>
-              <strong style="font-size: 14px; display: block; margin-bottom: 0.2rem;">패스키(WebAuthn) 기반 관리자 전용 영역</strong>
-              <p class="body-text" style="font-size: 13px; color: var(--color-text-muted); margin: 0;">등록된 기기의 생체인증 또는 하드웨어 보안 키로만 열람할 수 있습니다.</p>
+              <strong style="font-size: 13.5px; display: block; margin-bottom: 0.15rem;">패스키(WebAuthn) 기반 관리자 전용 영역</strong>
+              <p class="body-text" style="font-size: 12.5px; color: var(--color-text-muted); margin: 0;">등록된 기기의 생체인증 또는 하드웨어 보안 키로만 열람할 수 있습니다.</p>
             </div>
             <div class="auth-actions">
               <button type="button" id="btn-register-passkey" class="game-btn">패스키 등록</button>
@@ -501,7 +556,7 @@
           <div id="passkey-status-msg" class="passkey-status-notice" role="status" aria-live="polite"></div>
 
           <div id="private-content-area" class="private-content-box" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;">
               <p class="body-text" style="margin: 0; font-weight: 700;">패스키 인증이 완료되었습니다.</p>
               <button type="button" id="btn-logout" class="btn-editorial">로그아웃</button>
             </div>
@@ -521,8 +576,8 @@
               </div>
             </div>
 
-            <div class="passkey-management" style="margin-top: 1.5rem; border-top: 1px dashed var(--color-border); padding-top: 1.25rem;">
-              <h3 class="category-title" style="margin-bottom: 0.5rem;">등록된 패스키 목록</h3>
+            <div class="passkey-management" style="margin-top: 1.25rem; border-top: 1px dashed var(--color-border); padding-top: 1rem;">
+              <h3 class="category-title" style="margin-bottom: 0.4rem;">등록된 패스키 목록</h3>
               <ul id="passkey-list" class="skill-list"></ul>
             </div>
           </div>
@@ -534,12 +589,12 @@
   <!-- Footer -->
   <footer class="footer">
     <div class="container footer-container">
-      <span class="footer-text">© 2026 이혜원 (Lee Hye-won) · All Rights Reserved</span>
+      <span class="footer-text">© 2026 이혜원 (Lee Hye-Won) · All Rights Reserved</span>
       <span class="footer-text">Information Security &amp; Network Infrastructure Portfolio</span>
     </div>
   </footer>
 
-  <!-- Project Detail Modal (카드 클릭 시 열리는 세부 사양 모달) -->
+  <!-- Unified Project & Topology Detail Modal -->
   <div id="detail-modal" class="detail-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modal-project-title">
     <div class="detail-modal-backdrop" id="detail-modal-backdrop"></div>
     <div class="detail-modal-card">
@@ -549,17 +604,43 @@
       </div>
       <h3 class="modal-project-title" id="modal-project-title">프로젝트 상세</h3>
 
+      <!-- SAR 요약 박스 (기본 프로젝트 및 토폴로지 개요) -->
       <div class="modal-sar-box" id="modal-sar-box">
         <div class="modal-sar-line" id="modal-sar-s"></div>
         <div class="modal-sar-line" id="modal-sar-a"></div>
         <div class="modal-sar-line" id="modal-sar-r"></div>
       </div>
 
-      <h4 class="modal-spec-heading">기술 아키텍처 및 검증 명세 (Technical Specifications)</h4>
-      <pre class="modal-specs-block" id="modal-specs-block"></pre>
+      <!-- 토폴로지 & 단계별 세부 실습 탐색기 (Phase 1~4 상세보기 시 활성화) -->
+      <div class="modal-topology-explorer" id="modal-topology-explorer">
+        <div>
+          <span class="topology-submodules-label">세부 수행 항목 선택 (클릭하여 실습 화면·워크스루 전환)</span>
+          <div class="modal-submodule-tabs" id="modal-submodule-tabs"></div>
+        </div>
+        <div class="modal-submodule-header">
+          <h4 class="modal-submodule-title" id="modal-submodule-title"></h4>
+          <p class="modal-submodule-desc" id="modal-submodule-desc"></p>
+          <div class="modal-submodule-tags" id="modal-submodule-tags"></div>
+        </div>
+        <div id="modal-gallery-container"></div>
+        <div class="modal-walkthrough-box" id="modal-walkthrough-box"></div>
+      </div>
+
+      <!-- 텍스트 아키텍처 명세 블록 -->
+      <div id="modal-specs-section">
+        <h4 class="modal-spec-heading">기술 아키텍처 및 검증 명세 (Technical Specifications)</h4>
+        <pre class="modal-specs-block" id="modal-specs-block"></pre>
+      </div>
 
       <div class="modal-actions-row" id="modal-actions-row"></div>
     </div>
+  </div>
+
+  <!-- Fullscreen Image Lightbox (이미지 클릭 시 원본 확대) -->
+  <div id="lightbox-overlay" class="lightbox-overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-label="이미지 확대 보기">
+    <button type="button" id="lightbox-close" class="lightbox-close" aria-label="확대 창 닫기">&times;</button>
+    <img id="lightbox-img" class="lightbox-img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="확대 이미지" />
+    <div id="lightbox-caption" class="lightbox-caption"></div>
   </div>
 
   <!-- JavaScript -->

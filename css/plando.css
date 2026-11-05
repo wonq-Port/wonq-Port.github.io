@@ -3232,3 +3232,480 @@ body.dark-theme .footer {
   height: 34px !important;
   padding: 0 !important;
 }
+
+
+/* ==========================================================================
+   Universal High-Contrast Dark Mode Fix (All Buttons, Tabs, Inputs, Badges & Cards)
+   Fixes washed-out (#f8fafc) buttons, invisible white-on-white text, and pale pills
+   ========================================================================== */
+[data-theme="dark"],
+body.dark-theme {
+  --color-bg: #090b10 !important;
+  --color-surface: #12151e !important;
+  --color-surface-alt: #1a1f2c !important;
+  --color-text-main: #f8fafc !important;
+  --color-text-secondary: #e2e8f0 !important;
+  --color-text-muted: #94a3b8 !important;
+  --color-text-subtle: #cbd5e1 !important;
+  --color-text-dim: #94a3b8 !important;
+  --color-accent-red: #ef4444 !important;
+  --color-accent-red-hover: #dc2626 !important;
+  --color-accent-red-soft: rgba(239, 68, 68, 0.16) !important;
+  --color-accent-green: #4ade80 !important;
+  --color-accent-green-soft: rgba(74, 222, 128, 0.15) !important;
+  --color-accent-blue: #38bdf8 !important;
+  --color-accent-blue-soft: rgba(56, 189, 248, 0.15) !important;
+  --color-border: rgba(255, 255, 255, 0.12) !important;
+  --color-border-darker: rgba(255, 255, 255, 0.22) !important;
+  --color-hover-bg: #1e2433 !important;
+  --color-card-bg: #12151e !important;
+  --paper: #090b10 !important;
+  --wash: #151924 !important;
+  --ink: #f8fafc !important;
+  --ink-2: #e2e8f0 !important;
+  --muted: #94a3b8 !important;
+  --line: rgba(255, 255, 255, 0.12) !important;
+  --line-dark: rgba(255, 255, 255, 0.22) !important;
+  --bg: #090b10 !important;
+  --surface: #12151e !important;
+  --surface-hi: #1c2230 !important;
+  --primary: #f8fafc !important;
+  --secondary: #e2e8f0 !important;
+  --border: rgba(255, 255, 255, 0.12) !important;
+  --border-md: rgba(255, 255, 255, 0.22) !important;
+  --accent: #ef4444 !important;
+  --accent-dim: rgba(239, 68, 68, 0.16) !important;
+  --green: #4ade80 !important;
+  --green-dim: rgba(74, 222, 128, 0.15) !important;
+  --orange: #fbbf24 !important;
+  --orange-dim: rgba(251, 191, 36, 0.15) !important;
+  --blue: #60a5fa !important;
+  --blue-dim: rgba(96, 165, 250, 0.15) !important;
+}
+
+/* 1. Fix Inverted / Washed-out Buttons (where background was var(--color-text-main), var(--ink), var(--primary), or #ffffff) */
+[data-theme="dark"] .nav-btn-overview:hover,
+body.dark-theme .nav-btn-overview:hover,
+[data-theme="dark"] .nav-dropdown.open .nav-btn-overview,
+body.dark-theme .nav-dropdown.open .nav-btn-overview,
+[data-theme="dark"] .motion-btn[aria-pressed="true"],
+body.dark-theme .motion-btn[aria-pressed="true"],
+[data-theme="dark"] .btn-editorial-dark,
+body.dark-theme .btn-editorial-dark {
+  background-color: #252b3b !important;
+  color: #ffffff !important;
+  border-color: #f87171 !important;
+}
+
+[data-theme="dark"] #btn-paste-run,
+body.dark-theme #btn-paste-run,
+[data-theme="dark"] #btn-batch-sample,
+body.dark-theme #btn-batch-sample,
+[data-theme="dark"] .btn-retry-inline,
+body.dark-theme .btn-retry-inline,
+[data-theme="dark"] .btn-reset-inline,
+body.dark-theme .btn-reset-inline,
+[data-theme="dark"] #export-btn,
+body.dark-theme #export-btn,
+[data-theme="dark"] .gate-btn-signup,
+body.dark-theme .gate-btn-signup,
+[data-theme="dark"] .btn-jpeg,
+body.dark-theme .btn-jpeg,
+[data-theme="dark"] .btn-dark,
+body.dark-theme .btn-dark,
+[data-theme="dark"] .btn-secondary,
+body.dark-theme .btn-secondary,
+[data-theme="dark"] .btn-sm,
+body.dark-theme .btn-sm,
+[data-theme="dark"] .btn-icon,
+body.dark-theme .btn-icon,
+[data-theme="dark"] .btn-test-login,
+body.dark-theme .btn-test-login,
+[data-theme="dark"] .btn-tpl-action,
+body.dark-theme .btn-tpl-action,
+[data-theme="dark"] .history-buttons button,
+body.dark-theme .history-buttons button,
+[data-theme="dark"] .preset-row button,
+body.dark-theme .preset-row button,
+[data-theme="dark"] .sample-row button,
+body.dark-theme .sample-row button,
+[data-theme="dark"] .segmented button,
+body.dark-theme .segmented button {
+  background-color: #1e2433 !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.24) !important;
+}
+
+[data-theme="dark"] #btn-paste-run:hover,
+body.dark-theme #btn-paste-run:hover,
+[data-theme="dark"] #btn-batch-sample:hover,
+body.dark-theme #btn-batch-sample:hover,
+[data-theme="dark"] .btn-retry-inline:hover,
+body.dark-theme .btn-retry-inline:hover,
+[data-theme="dark"] .btn-reset-inline:hover,
+body.dark-theme .btn-reset-inline:hover,
+[data-theme="dark"] #export-btn:hover,
+body.dark-theme #export-btn:hover,
+[data-theme="dark"] .gate-btn-signup:hover,
+body.dark-theme .gate-btn-signup:hover,
+[data-theme="dark"] .btn-jpeg:hover,
+body.dark-theme .btn-jpeg:hover,
+[data-theme="dark"] .btn-dark:hover,
+body.dark-theme .btn-dark:hover,
+[data-theme="dark"] .btn-secondary:hover,
+body.dark-theme .btn-secondary:hover,
+[data-theme="dark"] .btn-sm:hover,
+body.dark-theme .btn-sm:hover,
+[data-theme="dark"] .btn-icon:hover,
+body.dark-theme .btn-icon:hover,
+[data-theme="dark"] .btn-test-login:hover,
+body.dark-theme .btn-test-login:hover,
+[data-theme="dark"] .btn-tpl-action:hover,
+body.dark-theme .btn-tpl-action:hover,
+[data-theme="dark"] .history-buttons button:hover,
+body.dark-theme .history-buttons button:hover,
+[data-theme="dark"] .preset-row button:hover,
+body.dark-theme .preset-row button:hover,
+[data-theme="dark"] .sample-row button:hover,
+body.dark-theme .sample-row button:hover,
+[data-theme="dark"] .segmented button:hover:not(.active),
+body.dark-theme .segmented button:hover:not(.active) {
+  background-color: #283044 !important;
+  border-color: #f87171 !important;
+  color: #f87171 !important;
+}
+
+[data-theme="dark"] .segmented button.active,
+body.dark-theme .segmented button.active,
+[data-theme="dark"] .btn-sm.active,
+body.dark-theme .btn-sm.active {
+  background-color: #ef4444 !important;
+  border-color: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .btn-danger,
+body.dark-theme .btn-danger {
+  background-color: rgba(239, 68, 68, 0.14) !important;
+  border-color: rgba(248, 113, 113, 0.35) !important;
+  color: #fca5a5 !important;
+}
+
+[data-theme="dark"] .btn-danger:hover,
+body.dark-theme .btn-danger:hover {
+  background-color: #ef4444 !important;
+  border-color: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+/* 2. Fix Tab Bars & Hover States (Detector 7-tabs, Plando 4-tabs, Studio ratio/align buttons) */
+[data-theme="dark"] .tab-list,
+body.dark-theme .tab-list,
+[data-theme="dark"] #tab-bar,
+body.dark-theme #tab-bar,
+[data-theme="dark"] .align-button-group,
+body.dark-theme .align-button-group {
+  background-color: #141822 !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+[data-theme="dark"] .tab-list button:hover:not(.active),
+body.dark-theme .tab-list button:hover:not(.active),
+[data-theme="dark"] .tab-btn:hover:not(.active),
+body.dark-theme .tab-btn:hover:not(.active) {
+  background-color: #222836 !important;
+  color: #f87171 !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+[data-theme="dark"] .tab-list button.active,
+body.dark-theme .tab-list button.active,
+[data-theme="dark"] .tab-btn.active,
+body.dark-theme .tab-btn.active,
+[data-theme="dark"] .ratio-btn.active,
+body.dark-theme .ratio-btn.active,
+[data-theme="dark"] .btn-align.active,
+body.dark-theme .btn-align.active {
+  background-color: #ef4444 !important;
+  border-color: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .ratio-btn:not(.active),
+body.dark-theme .ratio-btn:not(.active) {
+  background-color: #181d29 !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .ratio-btn:not(.active):hover,
+body.dark-theme .ratio-btn:not(.active):hover {
+  background-color: #232a3b !important;
+  border-color: #f87171 !important;
+  color: #ffffff !important;
+}
+
+/* 3. Fix Quiz Buttons, Switches, kbd, Toasts, and Star Buttons */
+[data-theme="dark"] .quiz-opt-btn,
+body.dark-theme .quiz-opt-btn {
+  background-color: #181d29 !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .quiz-opt-btn:hover:not(.chosen),
+body.dark-theme .quiz-opt-btn:hover:not(.chosen) {
+  background-color: #232a3b !important;
+  border-color: #f87171 !important;
+  color: #f87171 !important;
+}
+
+[data-theme="dark"] .quiz-opt-btn.chosen,
+body.dark-theme .quiz-opt-btn.chosen {
+  background-color: #ef4444 !important;
+  border-color: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .switch,
+body.dark-theme .switch {
+  background-color: #1a1f2c !important;
+  border-color: rgba(255, 255, 255, 0.24) !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .switch.on,
+body.dark-theme .switch.on {
+  background-color: #16a34a !important;
+  border-color: #4ade80 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] kbd,
+body.dark-theme kbd {
+  background-color: #1e2433 !important;
+  border-color: rgba(255, 255, 255, 0.26) !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .app-toast,
+body.dark-theme .app-toast {
+  background-color: #1e2433 !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-left: 4px solid #ef4444 !important;
+}
+
+[data-theme="dark"] .star-btn,
+body.dark-theme .star-btn {
+  background-color: #181d29 !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .star-btn.active,
+body.dark-theme .star-btn.active {
+  background-color: #ef4444 !important;
+  border-color: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+/* 4. Fix Score Banners, Status Pills, Level Chips & Feedback Boxes in Dark Mode */
+[data-theme="dark"] .score-banner.safe,
+body.dark-theme .score-banner.safe,
+[data-theme="dark"] .quiz-feedback-box.correct,
+body.dark-theme .quiz-feedback-box.correct,
+[data-theme="dark"] .notice-banner.success,
+body.dark-theme .notice-banner.success {
+  background-color: rgba(21, 128, 61, 0.18) !important;
+  border-color: rgba(74, 222, 128, 0.4) !important;
+  color: #86efac !important;
+}
+
+[data-theme="dark"] .score-banner.warning,
+body.dark-theme .score-banner.warning,
+[data-theme="dark"] .error-alert-box,
+body.dark-theme .error-alert-box,
+[data-theme="dark"] .notice,
+body.dark-theme .notice,
+[data-theme="dark"] .alert-banner.warning,
+body.dark-theme .alert-banner.warning {
+  background-color: rgba(180, 83, 9, 0.2) !important;
+  border-color: rgba(251, 191, 36, 0.4) !important;
+  color: #fde68a !important;
+}
+
+[data-theme="dark"] .score-banner.danger,
+body.dark-theme .score-banner.danger,
+[data-theme="dark"] .quiz-feedback-box.incorrect,
+body.dark-theme .quiz-feedback-box.incorrect,
+[data-theme="dark"] .confirm-bar,
+body.dark-theme .confirm-bar,
+[data-theme="dark"] .error-explanation-box,
+body.dark-theme .error-explanation-box,
+[data-theme="dark"] .alert-banner.danger,
+body.dark-theme .alert-banner.danger,
+[data-theme="dark"] .notice-banner.error,
+body.dark-theme .notice-banner.error,
+[data-theme="dark"] .gate-error,
+body.dark-theme .gate-error {
+  background-color: rgba(185, 28, 28, 0.2) !important;
+  border-color: rgba(248, 113, 113, 0.4) !important;
+  color: #fca5a5 !important;
+}
+
+[data-theme="dark"] .error-action-hint,
+body.dark-theme .error-action-hint {
+  color: #fecaca !important;
+}
+
+[data-theme="dark"] .level-chip.safe,
+body.dark-theme .level-chip.safe,
+[data-theme="dark"] .status-ok,
+body.dark-theme .status-ok,
+[data-theme="dark"] .status-pill.fresh,
+body.dark-theme .status-pill.fresh,
+[data-theme="dark"] .privacy-pill,
+body.dark-theme .privacy-pill,
+[data-theme="dark"] .exif-safe-pill,
+body.dark-theme .exif-safe-pill {
+  background-color: rgba(21, 128, 61, 0.24) !important;
+  border-color: rgba(74, 222, 128, 0.4) !important;
+  color: #86efac !important;
+}
+
+[data-theme="dark"] .level-chip.warning,
+body.dark-theme .level-chip.warning,
+[data-theme="dark"] .status-warn,
+body.dark-theme .status-warn,
+[data-theme="dark"] .status-pill.stale,
+body.dark-theme .status-pill.stale {
+  background-color: rgba(180, 83, 9, 0.28) !important;
+  border-color: rgba(251, 191, 36, 0.45) !important;
+  color: #fde047 !important;
+}
+
+[data-theme="dark"] .level-chip.danger,
+body.dark-theme .level-chip.danger,
+[data-theme="dark"] .status-alert,
+body.dark-theme .status-alert,
+[data-theme="dark"] .status-pill.error,
+body.dark-theme .status-pill.error,
+[data-theme="dark"] .risk-char,
+body.dark-theme .risk-char {
+  background-color: rgba(185, 28, 28, 0.28) !important;
+  border-color: rgba(248, 113, 113, 0.45) !important;
+  color: #fca5a5 !important;
+}
+
+[data-theme="dark"] .change-comparison-pill.up,
+body.dark-theme .change-comparison-pill.up {
+  background-color: rgba(239, 68, 68, 0.2) !important;
+  color: #fca5a5 !important;
+}
+
+[data-theme="dark"] .change-comparison-pill.down,
+body.dark-theme .change-comparison-pill.down {
+  background-color: rgba(59, 130, 246, 0.22) !important;
+  color: #93c5fd !important;
+}
+
+[data-theme="dark"] .change-comparison-pill.flat,
+body.dark-theme .change-comparison-pill.flat {
+  background-color: rgba(148, 163, 184, 0.2) !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .url-visual .path,
+body.dark-theme .url-visual .path {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .neutral-char,
+body.dark-theme .neutral-char {
+  color: #94a3b8 !important;
+  border-bottom-color: #64748b !important;
+}
+
+[data-theme="dark"] .legend-neutral,
+body.dark-theme .legend-neutral {
+  background-color: #1e2433 !important;
+}
+
+[data-theme="dark"] .ratio-bar-track,
+body.dark-theme .ratio-bar-track,
+[data-theme="dark"] .bar-row > div,
+body.dark-theme .bar-row > div {
+  background-color: #1e2433 !important;
+}
+
+/* 5. Fix Plando Login Gate Overlay, Modals, Studio Template Cards & Game Cells in Dark Mode */
+[data-theme="dark"] .login-gate-overlay,
+body.dark-theme .login-gate-overlay {
+  background-color: rgba(9, 11, 16, 0.92) !important;
+}
+
+[data-theme="dark"] .template-card,
+body.dark-theme .template-card,
+[data-theme="dark"] .exec-item,
+body.dark-theme .exec-item,
+[data-theme="dark"] .time-stat-box,
+body.dark-theme .time-stat-box,
+[data-theme="dark"] .reflection-form,
+body.dark-theme .reflection-form,
+[data-theme="dark"] .history-item,
+body.dark-theme .history-item,
+[data-theme="dark"] .version-item,
+body.dark-theme .version-item {
+  background-color: #161b26 !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .modal-close,
+body.dark-theme .modal-close {
+  background-color: #232a3b !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .cell-btn.cell-o,
+body.dark-theme .cell-btn.cell-o {
+  background-color: rgba(21, 128, 61, 0.22) !important;
+  border-color: #4ade80 !important;
+  color: #4ade80 !important;
+}
+
+[data-theme="dark"] .cell-btn.cell-x,
+body.dark-theme .cell-btn.cell-x {
+  background-color: rgba(185, 28, 28, 0.22) !important;
+  border-color: #f87171 !important;
+  color: #f87171 !important;
+}
+
+[data-theme="dark"] .cell-btn.winning-cell,
+body.dark-theme .cell-btn.winning-cell {
+  background-color: rgba(234, 179, 8, 0.25) !important;
+  border-color: #facc15 !important;
+}
+
+[data-theme="dark"] .item-badge:not(.new),
+body.dark-theme .item-badge:not(.new) {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .submodule-chip,
+body.dark-theme .submodule-chip,
+[data-theme="dark"] .topology-zoom-hint,
+body.dark-theme .topology-zoom-hint {
+  background-color: #1a202c !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .submodule-chip:hover,
+body.dark-theme .submodule-chip:hover {
+  background-color: rgba(239, 68, 68, 0.2) !important;
+  border-color: #f87171 !important;
+  color: #fca5a5 !important;
+}

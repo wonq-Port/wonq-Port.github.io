@@ -350,10 +350,10 @@ document.addEventListener('DOMContentLoaded', () => {
       tr.innerHTML = `
         <td style="font-weight:700;">${rec.dateKey}</td>
         <td style="font-weight:700; color:var(--color-text-main);">${rec.value.toLocaleString('ko-KR', { minimumFractionDigits: 2 })} KRW</td>
-        <td style="color:${rec.changeVal > 0 ? 'var(--color-accent-red)' : (rec.changeVal < 0 ? '#1d4ed8' : 'inherit')}">${changeStr}</td>
+        <td style="color:${rec.changeVal > 0 ? 'var(--color-accent-red)' : (rec.changeVal < 0 ? 'var(--color-accent-blue)' : 'inherit')}">${changeStr}</td>
         <td style="font-size:12px;">${rec.sourceTimeKST}</td>
         <td style="font-size:12px;">${rec.fetchTimeKST}</td>
-        <td><span style="font-size:11px; padding:2px 6px; border-radius:2px; background:#f1f5f9;">보존 완료</span></td>
+        <td><span style="font-size:11px; padding:2px 6px; border-radius:2px; background:var(--color-surface-alt); color:var(--color-text-secondary); border:1px solid var(--color-border);">보존 완료</span></td>
       `;
       historyTableBody.appendChild(tr);
     });
